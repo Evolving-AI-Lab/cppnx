@@ -1,0 +1,22 @@
+This is the cppn-x implementation of the Evolving Artificial Intelligence Laboratory of the University of Wyoming.
+Current version: 0.1 (beta)
+
+Version: 0.1
+- First version to uploaded to the git repository.
+- Includes loading pic-breeder genome files, showing each node in the network as a small thumbnail.
+- Supports zooming, scrolling and moving nodes.
+- Supports selecting connections and changing there weight by sliding, clicking, writing a number or automatically scanning.
+
+Wish-list:
+- Labeling nodes and connections with color labels.
+- Writing the genomes including color information to a file.
+- Labeling nodes and connection with their id's and activation functions.
+- Create a picture for an arbitrary node.
+- Improve connection visualization with curved or 90 degree bend lines.
+- Automatic network scan where it zooms in on the output node, automatically selects a connection and scans over its weight, ask the user to give the connection a label, and then selects the next connection. At the end of this process you should have a fully annotated network.
+- Add or remove nodes and connections.
+- Automatically calculate and display various statistics such as modularity, hierarchy, red-blue modularity (and maybe split the network into even more parts).
+- Select different node placements (my circle style, graphviz style, layered style)
+- Produce a set of pictures for each connection.
+- Produce a movie for each connection.
+- Produce a single movie showing at the bottom which connection is altered and at the top the effect of altering that connection.

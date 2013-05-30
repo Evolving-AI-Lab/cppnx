@@ -1,0 +1,54 @@
+These are the installation steps for UNIX and MAC systems.
+
+*** Install cmake ***
+See www.cmake.org for instructions.
+
+
+*** Install the boost library ***
+Download the boost library from www.boost.org
+	Install preferably in the default location: /usr/local and build at least:
+	- boost_system
+	- boost_filesystem
+
+If you are on a unix based system you can:
+	- Extract the library to /usr/local
+	- Open a terminal and go to the boost directory (cd /usr/local/boost_1_53_0)
+	- Run: sudo bootstrap.sh
+	- Run: ./b2 install
+
+If you are on a windows system you can:
+	- Get an installer from www.boostpro.com
+Or:
+	- Extract the library to C:\Program Files\boost
+	- Open the command line a go the the boost directory (C:\Program Files\boost)
+	- Run: bootstrap
+	- Run: .\b2
+
+*** Install QT 4.8 ***
+See http://qt-project.org/downloads for instructions
+
+
+*** Compile cppn-x ***
+In general there are two way to install cppn-x
+
+== From a script ==
+- Open compile.sh and check that all paths are correct. The compile.sh will have additional comments for setting. 
+- Run compile.sh
+
+The executable 'cppn-x' should be placed in the 'out' folder.
+
+== Using cmake directly ==
+- Create a new folder, for example my_build (mkdir my_build)
+- Change the directory to this folder (cd my_build)
+- Run cmake, targeting this directory as the source directory (cmake ..)
+
+The executable 'cppn-x' should be placed in the 'out' folder.
+
+Note: the CMakeLists.txt has been configured to disallow 'in-source' builds.
+This not only means that running 'cmake .' results in an error,
+it also means that, if you accidentally run 'cmake .',
+other builds will also fail. 
+To resolve this situation remove CMakeCache.txt and CMakeFiles or run 'clean.sh'
+
+*** Run cppn-x ***
+Just run 'cppn-x' in the 'out' folder. Have Fun! 

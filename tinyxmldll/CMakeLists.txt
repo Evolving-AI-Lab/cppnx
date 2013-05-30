@@ -1,0 +1,81 @@
+cmake_minimum_required(VERSION 2.6)
+Project(tinyxmldll)
+
+IF(MSVC)
+
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /EHsc /RTCsu /W3")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /EHsc /RTCsu /W3")
+
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /EHsc")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /EHsc")
+
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /EHsc")
+SET(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /EHsc")
+
+SET(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /EHsc")
+SET(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} /EHsc")
+
+ELSE(MSVC)
+
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Wall -Wno-unused-variable")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -Wall -Wno-unused-variable")
+
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_DEBUG} -pg")
+SET(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_DEBUG} -pg")
+
+ENDIF(MSVC)
+
+ADD_DEFINITIONS(
+	-DTIXML_USE_STL
+	-D_USE_MATH_DEFINES
+	-DTINYXMLDLL_EXPORTS
+)
+
+
+#Set default locations:
+SET(
+	ZLIB_INCLUDE
+	"${CMAKE_CURRENT_SOURCE_DIR}/../zlib"
+	CACHE
+	FILEPATH 
+	"zlib include Directory"
+)
+
+
+#Set include directories:
+INCLUDE_DIRECTORIES(
+	include
+	${ZLIB_INCLUDE}
+)
+
+#Set link directories:
+LINK_DIRECTORIES(
+	${ZLIB_LIB}
+)
+
+#Set target:
+ADD_LIBRARY(
+	tinyxmldll 
+	SHARED
+
+	include/tinyxmldll.h
+
+	src/tinyxmldll.cpp
+	src/tinyxmlparserdll.cpp
+	src/tinyxmlerrordll.cpp
+)
+
+#Set libraries:
+TARGET_LINK_LIBRARIES(
+	tinyxmldll
+
+	debug
+	zlib_d
+
+	optimized
+	zlib
+)
+
+SET_TARGET_PROPERTIES(tinyxmldll PROPERTIES DEBUG_POSTFIX _d)
+
+
