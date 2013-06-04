@@ -39,28 +39,27 @@
 ****************************************************************************/
 #include "CE_CppnWidget.h"
 
+
 #include <QtGui>
 
 #include <math.h>
 #include <cmath>
 
 
-static const double Pi = 3.14159265358979323846264338327950288419717;
-
-class QSlider;
-
 //! [0]
-GraphWidget::GraphWidget(QWidget *parent)
-    : QGraphicsView(parent), timerId(0), edgeId(-1), sliderValue(0), selectedEdge(0)
+GraphWidget::GraphWidget(Window *window, QWidget *parent)
+    : QGraphicsView(parent), par_window(window), timerId(0), sliderValue(0), selectedEdge(0), selectedNode(0)
 {
-	cppn = shared_ptr<NEAT::GeneticIndividual>();
-	cppn_phen = shared_ptr<NEAT::FastNetwork<double> >();
+	cppn = shared_ptr<Cppn>();
+//	cppn_phen = shared_ptr<NEAT::FastNetwork<double> >();
 
     QGraphicsScene *scene = new QGraphicsScene(this);
     scene->setItemIndexMethod(QGraphicsScene::NoIndex);
-    scene->setSceneRect(-400, -600, 800, 1200);
+    scene->setSceneRect(-400, -1200, 800, 2400);
     connect(scene, SIGNAL(selectionChanged()), this, SLOT(selectEdge()));
     setScene(scene);
+    setDragMode(ScrollHandDrag);
+
 
     setCacheMode(CacheBackground);
     setViewportUpdateMode(BoundingRectViewportUpdate);
@@ -74,156 +73,39 @@ GraphWidget::GraphWidget(QWidget *parent)
 //! [1]
 
 
-
-
-void GraphWidget::updateNodes(){
-	double res =2;
-	int updates = 7;
-	double scale=1;
-	double dscale=1.4;
-	for(unsigned long x=0; x<width; x++){
-		for(unsigned long y=0; y<height; y++){
-			double xv = (double(x)/(double(width)/res) - (res/2))*scale;
-			double yv = (double(y)/(double(height)/res) - (res/2))*scale;
-
-			cppn_phen->reinitialize();
-			cppn_phen->setValue(io_map[INPUT_X], xv);
-			cppn_phen->setValue(io_map[INPUT_Y], yv);
-			cppn_phen->setValue(io_map[INPUT_BIAS], scale);
-			cppn_phen->setValue(io_map[INPUT_D], std::sqrt(float(xv*xv+yv*yv))*dscale);
-			cppn_phen->update(updates);
-
-			for(int i=0; i<nodes.size(); i++){
-				char grey = char(std::min(std::abs(cppn_phen->getValue(nodes[i]->getName())), 1.0)*255);
-				nodes[i]->setPixel(x, y, grey, grey, grey );
-			}
-		}
-	}
-
-	for(int i=0; i<nodes.size(); i++){
-		nodes[i]->update();
-	}
-}
-
-void GraphWidget::positionNodes(){
-	std::vector< std::vector <Node*> > layers;
-	layers.push_back(std::vector <Node*>());
-	std::vector <Node*> notPlaced = nodes;
-	std::vector <Node*> nextNotPlaced;
-	std::map <Node*, int> incommingEdges;
-
-	for(int i=0; i<nodes.size(); i++){
-		incommingEdges[nodes[i]]= nodes[i]->incomingEdges().size();
-		//std::cout << nodes[i]->incomingEdges().size() << std::endl;
-	}
-
-	while(notPlaced.size()>0){
-		nextNotPlaced.clear();
-		for(int i=0; i<notPlaced.size(); i++){
-//			std::cout << i <<" Incoming Edges: " << incommingEdges[notPlaced[i]] << std::endl;
-			if(incommingEdges[notPlaced[i]] <= 0){
-				layers.back().push_back(notPlaced[i]);
-			} else {
-				nextNotPlaced.push_back(notPlaced[i]);
-			}
-			//notPlaced[i]->
-		}
-
-		for(int i=0; i<layers.back().size(); i++){
-			QList<Edge *> outgoingEdges = layers.back()[i]->outgoingEdges();
-			foreach(Edge* outgoing_edge, outgoingEdges){
-				incommingEdges.find(outgoing_edge->destNode())->second = incommingEdges[outgoing_edge->destNode()]-1;
-			}
-		}
-
-		layers.push_back(std::vector <Node*>());
-
-//		std::cout << "Next not Placed: "  << nextNotPlaced.size() << std::endl;
-		notPlaced = nextNotPlaced;
-//		std::cout << "Not Placed: "  << notPlaced.size() << std::endl;
-	}
-
-
-
-	int k =1;
-	QPointF position1;
-	QPointF position2;
-	Node* edge1;
-	qreal distanceEdge1;
-	qreal distanceEdge2;
-
-	for(int i=0; i< layers.size(); i++){
-		for(int j=0; j< layers[i].size(); j++){
-			if(k%2 != 0){
-				position1 = QPointF(300 * std::cos(float(((Pi/(nodes.size()))*k)+ Pi/2)), 300 * std::sin(float(((Pi/(nodes.size()))*k)+ Pi/2)) );
-				position2 = QPointF(-300 * std::cos(float(((Pi/(nodes.size()))*k)+ Pi/2)), 300 * std::sin(float(((Pi/(nodes.size()))*k)+ Pi/2)) );
-			}
-			qreal distance1 = 0;
-			qreal distance2 = 0;
-			foreach(Edge* edge, layers[i][j]->incomingEdges()){
-				distance1 += QLineF(edge->sourceNode()->pos(), position1).length();
-				distance2 += QLineF(edge->sourceNode()->pos(), position2).length();
-			}
-
-
-			if(k%2 == 0){
-				if(distanceEdge1 + distance2 < distanceEdge2 +distance1){
-					edge1->setPos(position1);
-					layers[i][j]->setPos(position2);
-				} else {
-					edge1->setPos(position2);
-					layers[i][j]->setPos(position1);
-				}
-				edge1 = NULL;
-			}else {
-				edge1 = layers[i][j];
-				distanceEdge1 = distance1;
-				distanceEdge2 = distance2;
-			}
-			k++;
-		}
-	}
-
-	if(edge1 != NULL){
-		if(distanceEdge1 < distanceEdge2){
-			edge1->setPos(position1);
-		} else {
-			edge1->setPos(position2);
-		}
-	}
-
-}
-
-
 void GraphWidget::load(std::string filename)
 {
+
 	try{
+		CppnParser parser;
+		par_window->clearColorButtons();
+		cppn = parser.parse(filename, this);
+//		cppn_phen = shared_ptr<NEAT::FastNetwork<double> >(new NEAT::FastNetwork<double>(cppn->spawnFastPhenotypeStack<double>()));
 
-		std::map<int, Node*> nodeMap;
-		cppn = CppnParser::parse(filename, io_map);
-		cppn_phen = shared_ptr<NEAT::FastNetwork<double> >(new NEAT::FastNetwork<double>(cppn->spawnFastPhenotypeStack<double>()));
-
-		for(int i=0; i< cppn->getNodesCount();i++){
-			std::string name = cppn->getNode(i)->getName();
-			Node *node = new Node(this, i, name, width, height);
-			nodeMap[cppn->getNode(i)->getID()] = node;
-			nodes.push_back(node);
-			scene()->addItem(node);
-			node->setPos(0, -300 + 30*i);
-
+		scene()->clear();
+		for(size_t i=0; i< cppn->getNrOfNodes();i++){
+			scene()->addItem(cppn->getNode(i));
+		}
+		for(size_t i=0; i< cppn->getNrOfEdges();i++){
+			scene()->addItem(cppn->getEdge(i));
 		}
 
+		cppn->updateNodes();
 
-		//std::cout << cppn_phen->getLinkCount() << std::endl;
+		if(cppn->getNewFile()) cppn->positionNodes();
 
-		for(int i=0; i< cppn_phen->getLinkCount();i++){
-			//std::cout << "From: " << nodeMap[cppn->getLink(i)->getFromNodeID()] << " to: " <<  nodeMap[cppn->getLink(i)->getToNodeID()]<< std::endl;
-			Edge* edge = new Edge(this, nodeMap[cppn->getLink(i)->getFromNodeID()], nodeMap[cppn->getLink(i)->getToNodeID()], i, cppn->getLink(i)->getWeight());
-			scene()->addItem(edge);
-		}
+//
+//
+//		//std::cout << cppn_phen->getLinkCount() << std::endl;
+//
+//		for(int i=0; i< cppn_phen->getLinkCount();i++){
+//			//std::cout << "From: " << nodeMap[cppn->getLink(i)->getFromNodeID()] << " to: " <<  nodeMap[cppn->getLink(i)->getToNodeID()]<< std::endl;
+//			Edge* edge = new Edge(this, nodeMap[cppn->getLink(i)->getFromNodeID()], nodeMap[cppn->getLink(i)->getToNodeID()], i, cppn->getLink(i)->getWeight());
+//			scene()->addItem(edge);
+//		}
 
-		positionNodes();
-		updateNodes();
+//		positionNodes();
+//		updateNodes();
 	} catch(std::exception& e){
 		QString message(("Error reading file: " + filename + "\n" + std::string( e.what() )).c_str());
 		QMessageBox::information(this, tr("Unable to open file"), message);
@@ -237,6 +119,29 @@ void GraphWidget::load(std::string filename)
 //	std::cout << "It did not crash yet" << std::endl;
 
 }
+
+void GraphWidget::save(std::string filename)
+{
+
+	try{
+		CppnWriter writer(filename);
+		writer.write(cppn);
+//		cppn_phen = shared_ptr<NEAT::FastNetwork<double> >(new NEAT::FastNetwork<double>(cppn->spawnFastPhenotypeStack<double>()));
+
+	} catch(std::exception& e){
+		QString message(("Error reading file: " + filename + "\n" + std::string( e.what() )).c_str());
+		QMessageBox::information(this, tr("Unable to open file"), message);
+	}
+//	catch (std::ifstream::failure e) {
+//		//std::cout << e.what();
+//		//cppn = shared_ptr<NEAT::GeneticIndividual>();
+//		QString message(("Error reading file: " + filename + "\n" + std::string(e.what())).c_str());
+//		QMessageBox::information(this, tr("Unable to open file"), message);
+//	}
+//	std::cout << "It did not crash yet" << std::endl;
+
+}
+
 
 
 //! [2]
@@ -415,16 +320,17 @@ void GraphWidget::setValueF(double weight){
 	sliderValue=value;
 	emit sliderValueChanged(value);
 
-	if(edgeId >=0 && selectedEdge){
-		selectedEdge->setWeight(weight);
-		selectedEdge->update();
-		cppn_phen->getLink(edgeId)->weight=weight;
-		updateNodes();
+	if(selectedEdge){
+	//	selectedEdge->setWeight(weight);
+	//	selectedEdge->update();
+		cppn->setWeight(selectedEdge, weight);
+//		cppn_phen->getLink(edgeId)->weight=weight;
+//		updateNodes();
 	}
 }
 
 void GraphWidget::resetWeight(){
-	if(edgeId >=0 && selectedEdge){
+	if(selectedEdge){
 		emit sliderValueChangedF(selectedEdge->getOriginalWeight());
 	}
 }
@@ -442,14 +348,48 @@ void GraphWidget::scanWeight(){
 
 void GraphWidget::selectEdge(){
 	if(scene()->selectedItems().count() == 0){
-		edgeId = -1;
 		selectedEdge = NULL;
+		selectedNode = NULL;
 		killTimer(timerId);
+		par_window->showScrubberBar(false);
+//		par_window->showColorBar(false);
 		return;
 	}
+
 	selectedEdge = qgraphicsitem_cast<Edge*> ( scene()->selectedItems().front());
 	if(selectedEdge){
-		edgeId=selectedEdge->getId();
-		emit sliderValueChangedF(cppn_phen->getLink(edgeId)->weight);
+		emit sliderValueChangedF(selectedEdge->getWeight());
+		selectedNode = NULL;
+		par_window->showScrubberBar(true);
+//		par_window->showColorBar(false);
+
+	} else {
+		selectedNode = qgraphicsitem_cast<Node*> ( scene()->selectedItems().front());
+		selectedEdge = NULL;
+//		par_window->showColorBar(true);
+		par_window->showScrubberBar(false);
+
 	}
+
+
+}
+
+void GraphWidget::colorNode(QObject* object){
+	CE_ColorButton* colorButton = qobject_cast<CE_ColorButton*>(object);
+	if(colorButton && selectedNode){
+		selectedNode->setColor(colorButton->getColor());
+		selectedNode->update();
+	}
+}
+
+Window* GraphWidget::getWindow(){
+	return par_window;
+}
+
+void GraphWidget::positionNodesLayers(){
+	cppn->positionNodes();
+}
+
+void GraphWidget::positionNodesCircle(){
+	cppn->positionNodesCircle();
 }

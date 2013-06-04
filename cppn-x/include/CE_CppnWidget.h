@@ -47,10 +47,17 @@
 #include "CE_Node.h"
 #include "CE_Defines.h"
 #include "CE_CppnParser.h"
+#include "CE_Cppn.h"
+#include "CE_CppnWriter.h"
+#include "CE_ColorButton.h"
+#include "CE_Window.h"
+
 
 
 class Node;
 class Edge;
+class Cppn;
+class Window;
 
 //! [0]
 class GraphWidget : public QGraphicsView
@@ -58,11 +65,13 @@ class GraphWidget : public QGraphicsView
     Q_OBJECT
 
 public:
-    GraphWidget(QWidget *parent = 0);
+    GraphWidget(Window *window, QWidget *parent = 0);
 
     void itemMoved();
     void load(std::string filename);
+    void save(std::string filename);
     void edgeSelected(int id, Edge* selectedEdge);
+    Window* getWindow();
 
 public slots:
 //    void shuffle();
@@ -73,6 +82,9 @@ public slots:
     void selectEdge();
     void resetWeight();
     void scanWeight();
+    void colorNode(QObject*);
+    void positionNodesLayers();
+    void positionNodesCircle();
 
 signals:
 void sliderValueChanged(int newValue);
@@ -85,24 +97,25 @@ protected:
     void drawBackground(QPainter *painter, const QRectF &rect);
 
     void scaleView(qreal scaleFactor);
-    void updateNodes();
-    void positionNodes();
+//    void updateNodes();
+//    void positionNodes();
 
 
 
 private:
     int timerId;
-    shared_ptr<NEAT::GeneticIndividual> cppn;
-    shared_ptr<NEAT::FastNetwork<double> > cppn_phen;
-    std::vector<Node*> nodes;
-    io_map_t io_map;
+    shared_ptr<Cppn> cppn;
+    //shared_ptr<NEAT::FastNetwork<double> > cppn_phen;
+    //std::vector<Node*> nodes;
 
-    static const int width = 100;
-    static const int height = 100;
+    //static const int width = 100;
+    //static const int height = 100;
 
-    int edgeId;
+    //int edgeId;
     int sliderValue;
     Edge* selectedEdge;
+    Node* selectedNode;
+    Window *par_window;
 
 };
 //! [0]

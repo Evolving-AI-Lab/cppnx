@@ -47,15 +47,30 @@
 #include "CE_Node.h"
 
 //! [0]
-Node::Node(GraphWidget *graphWidget, int id, std::string name, int width, int height)
-    : graph(graphWidget), id(id), name(name)
+Node::Node(GraphWidget *graphWidget, std::string branch, std::string id, std::string type, std::string activationFunction_str, std::string label, int width, int height, QColor color)
+    : graph(graphWidget), branch(branch), id(id), nodetype(type),activationFunction_str(activationFunction_str), label(label), color(color)
 {
 
     setFlag(ItemIsMovable);
+    setFlag(ItemIsSelectable);
     setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
-    //setCacheMode(NoCache);
-    setZValue(-1);
+    setZValue(1);
+
+	if(activationFunction_str == XML_GAUSSIAN){
+		activationFunction = ACTIVATION_FUNCTION_GAUSSIAN;
+	} else if(activationFunction_str == XML_LINEAR){
+		activationFunction = ACTIVATION_FUNCTION_LINEAR;
+	} else if(activationFunction_str == XML_SIN){
+		activationFunction = ACTIVATION_FUNCTION_SIN;
+	} else if(activationFunction_str == XML_SIGMOID){
+		activationFunction = ACTIVATION_FUNCTION_SIGMOID;
+	} else if(activationFunction_str == XML_COS){
+		activationFunction = ACTIVATION_FUNCTION_COS;
+	} else {
+		throw JGTL::LocatedException("File contains unknown activation function: '" + activationFunction_str + "'");
+	}
+
 
     QImage* pixels = new QImage(width, height, QImage::Format_RGB32);
     pixels->fill(0);
@@ -88,78 +103,6 @@ QList<Edge *> Node::outgoingEdges() const
 
 //! [1]
 
-//! [2]
-//void Node::calculateForces()
-//{
-//    if (!scene() || scene()->mouseGrabberItem() == this) {
-//        newPos = pos();
-//        return;
-//    }
-////! [2]
-//
-////! [3]
-//    // Sum up all forces pushing this item away
-//    qreal xvel = 0;
-//    qreal yvel = 0;
-//    foreach (QGraphicsItem *item, scene()->items()) {
-//        Node *node = qgraphicsitem_cast<Node *>(item);
-//        if (!node)
-//            continue;
-//
-//        QPointF vec = mapToItem(node, 0, 0);
-//        qreal dx = vec.x();
-//        qreal dy = vec.y();
-//        double l = 2.0 * (dx * dx + dy * dy);
-//        if (l > 0) {
-//            xvel += (dx * 150.0) / l;
-//            yvel += (dy * 150.0) / l;
-//        }
-//    }
-////! [3]
-//
-////! [4]
-//    // Now subtract all forces pulling items together
-//    double weight = (edgeList.size() + 1) * 10;
-//    foreach (Edge *edge, edgeList) {
-//        QPointF vec;
-//        if (edge->sourceNode() == this)
-//            vec = mapToItem(edge->destNode(), 0, 0);
-//        else
-//            vec = mapToItem(edge->sourceNode(), 0, 0);
-//        xvel -= vec.x() / weight;
-//        yvel -= vec.y() / weight;
-//    }
-////! [4]
-//
-////! [5]
-//    if (qAbs(xvel) < 0.1 && qAbs(yvel) < 0.1)
-//        xvel = yvel = 0;
-////! [5]
-//
-////! [6]
-//    QRectF sceneRect = scene()->sceneRect();
-//    newPos = pos() + QPointF(xvel, yvel);
-//    newPos.setX(qMin(qMax(newPos.x(), sceneRect.left() + 10), sceneRect.right() - 10));
-//    newPos.setY(qMin(qMax(newPos.y(), sceneRect.top() + 10), sceneRect.bottom() - 10));
-//}
-//! [6]
-
-
-std::string Node::getName(){
-	return name;
-}
-
-//! [7]
-bool Node::advance()
-{
-    if (newPos == pos())
-        return false;
-
-    setPos(newPos);
-    return true;
-}
-//! [7]
-
 //! [8]
 QRectF Node::boundingRect() const
 {
@@ -170,7 +113,7 @@ QRectF Node::boundingRect() const
                   20 + adjust * 2, 20 + adjust * 2);
 #else
     qreal adjust = 2;
-    return QRectF( -20 - adjust, -20 - adjust, 40 + 2*adjust, 40 + 2*adjust);
+    return QRectF( -20 - adjust, (-20 - adjust) - 10, 40 + 2*adjust, 40 + 2*adjust + 10);
 #endif
 }
 //! [8]
@@ -219,8 +162,14 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 
 
     painter->drawImage(QRect(-20, -20, 40, 40), *pixels);
-    painter->setPen(QPen(Qt::black, 0));
-    painter->drawRect(QRect(-20, -20, 40, 40));
+    if (this->isSelected()){
+    	painter->setPen(QPen(color, 2));
+    	painter->drawRect(QRect(-20, -20, 40, 40));
+    }else{
+    	painter->setPen(QPen(color, 0));
+    	painter->drawRect(QRect(-20, -20, 40, 40));
+    }
+    painter->drawText(-20,-20, QString(label.c_str()));
 
 }
 //! [10]
@@ -268,4 +217,18 @@ void Node::setPixels(QImage* pixels_)
 
 void Node::setPixel(int x, int y, char r, char g, char b){
 	pixels->setPixel(x, y, qRgb(r, g, b));
+}
+
+void Node::setPixel(size_t index, char r, char g, char b ){
+	index = index*4;
+	pixels->bits()[index]=r;
+	pixels->bits()[index+1]=g;
+	pixels->bits()[index+2]=b;
+}
+
+void Node::setPixel(size_t index, char grey){
+	index = index*4;
+	pixels->bits()[index]=grey;
+	pixels->bits()[index+1]=grey;
+	pixels->bits()[index+2]=grey;
 }

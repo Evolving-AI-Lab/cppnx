@@ -50,4 +50,12 @@
 #define OUTPUT "ink"		//The name of the output node
 
 
+enum inputs{
+	input_x =0,
+	input_y =1,
+	input_d =2,
+	input_b =3,
+	nr_of_inputs =4
+};
+
 #endif /* VISUALIZE_DEFINES_H_ */

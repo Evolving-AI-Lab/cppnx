@@ -1,5 +1,5 @@
 This is the cppn-x implementation of the Evolving Artificial Intelligence Laboratory of the University of Wyoming.
-Current version: 0.1 (beta)
+Current version: 0.2 (beta)
 
 Version: 0.1
 - First version to uploaded to the git repository.
@@ -7,9 +7,13 @@ Version: 0.1
 - Supports zooming, scrolling and moving nodes.
 - Supports selecting connections and changing there weight by sliding, clicking, writing a number or automatically scanning.
 
-Wish-list:
+Version: 0.2
 - Labeling nodes and connections with color labels.
 - Writing the genomes including color information to a file.
+
+Wish-list:
+- Show negative values
+- Show output connection on the top of each node and show input connections on the bottom of each node.
 - Labeling nodes and connection with their id's and activation functions.
 - Create a picture for an arbitrary node.
 - Improve connection visualization with curved or 90 degree bend lines.

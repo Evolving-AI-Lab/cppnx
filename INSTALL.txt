@@ -9,6 +9,8 @@ Download the boost library from www.boost.org
 	Install preferably in the default location: /usr/local and build at least:
 	- boost_system
 	- boost_filesystem
+	- boost_thread
+	- boost_regex
 
 If you are on a unix based system you can:
 	- Extract the library to /usr/local
@@ -25,7 +27,7 @@ Or:
 	- Run: .\b2
 
 *** Install QT 4.8 ***
-See http://qt-project.org/downloads for instructions
+Go to http://qt-project.org/downloads and download QT 4.8
 
 
 *** Compile cppn-x ***

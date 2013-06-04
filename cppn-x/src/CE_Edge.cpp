@@ -51,8 +51,10 @@ static double TwoPi = 2.0 * Pi;
 const double Edge::m_click_easy_width = 10.0;
 
 //! [0]
-Edge::Edge(GraphWidget *graphWidget, Node *sourceNode, Node *destNode, int id, qreal weight, QGraphicsItem *parent, QGraphicsScene *scene)
-    : QGraphicsLineItem(0,0,2,2,parent,scene), graphWidget(graphWidget), id(id),  arrowSize(5), currentWeight(weight), originalWeight(weight)
+
+
+Edge::Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *sourceNode, Node *destNode, qreal weight, QColor color ,QGraphicsItem *parent, QGraphicsScene *scene)
+    : QGraphicsLineItem(0,0,2,2,parent,scene), graphWidget(graphWidget), branch(branch), id(id),  arrowSize(5), currentWeight(weight), originalWeight(weight), color(color)
 {
 	this->setFlag(QGraphicsItem::ItemIsSelectable);
     source = sourceNode;
@@ -206,8 +208,3 @@ QPainterPath Edge::shape() const
   return stroker.createStroke(path);
 }
 //! [6]
-
-void Edge::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-	graphWidget->edgeSelected(id, this);
-}

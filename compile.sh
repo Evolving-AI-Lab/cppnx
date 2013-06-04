@@ -16,14 +16,19 @@ rootDir=`pwd`
 # Set BOOST variables.
 # Note that the boost LIBRARYDIR variable itself will not be used if every library is supplied with its absolute path.
 # Leave BOOST_LIBRARIES blank for automattic detection of a boost library if possible (recommended)
-#boost_lib_ext=dylib
-#BOOST_INCLUDEDIR=/usr/local/include
-#BOOST_LIBRARYDIR=/usr/local/lib
-#BOOST_LIBRARIES=""
+boost_lib_ext=dylib
+BOOST_INCLUDEDIR=/usr/local/include
+BOOST_LIBRARYDIR=/usr/local/lib
+BOOST_LIBRARIES=""
 #BOOST_LIBRARIES+="${BOOST_LIBRARYDIR}/libboost_filesystem.${boost_lib_ext};"
 #BOOST_LIBRARIES+="${BOOST_LIBRARYDIR}/libboost_system.${boost_lib_ext};"
 #BOOST_LIBRARIES+="${BOOST_LIBRARYDIR}/libboost_thread.${boost_lib_ext};"
 #BOOST_LIBRARIES+="${BOOST_LIBRARYDIR}/libboost_regex.${boost_lib_ext}"
+
+#BOOST_LIBRARIES+="boost_filesystem;"
+#BOOST_LIBRARIES+="boost_system;"
+#BOOST_LIBRARIES+="boost_thread;"
+#BOOST_LIBRARIES+="boost_regex"
 
 # Set QT variables.
 # Leave blank for automatic detection (recommended)

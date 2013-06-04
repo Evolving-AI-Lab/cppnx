@@ -1,4 +1,5 @@
 #include "CE_Window.h"
+#include "CE_ActivationFunctions.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -16,16 +17,20 @@
 
 
 int main(int argc, char **argv) {
-	std::string examinerSourceFile = std::string(__FILE__);
-	size_t found = examinerSourceFile.find_last_of("/\\");
-	if(found == std::string::npos){
-		std::cout << "Sources not correctly compiled, __FILE__ macro failed to provide path to source-file\n Please clean and rebuild the CPPN Examiner." << std::endl;
-		exit(1);
-	}
+//	std::string examinerSourceFile = std::string(__FILE__);
+//	size_t found = examinerSourceFile.find_last_of("/\\");
+//	if(found == std::string::npos){
+//		std::cout << "Sources not correctly compiled, __FILE__ macro failed to provide path to source-file\n Please clean and rebuild the CPPN Examiner." << std::endl;
+//		exit(1);
+//	}
 
-	std::string root_dir = examinerSourceFile.substr(0,found-4);
-	NEAT::Globals::init(root_dir + "/settings.dat");
 
+
+//
+//	std::string root_dir = examinerSourceFile.substr(0,found-4);
+//	NEAT::Globals::init(root_dir + "/settings.dat");
+
+	act_functions::initializeActivationFunctions();
     QApplication app(argc, argv);
 //    qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
 //

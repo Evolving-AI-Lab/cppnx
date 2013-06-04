@@ -10,11 +10,17 @@ SET(cppn-x_SRCS
 	src/CE_Edge.cpp
 	src/CE_Window.cpp
 	src/CE_CppnWidget.cpp
+	src/CE_Cppn.cpp
+	src/CE_CppnParser.cpp
+	src/CE_ActivationFunctions.cpp
+	src/CE_CppnWriter.cpp
+	src/CE_ColorButton.cpp
 )
 
 SET(cppn-x_MOC_HDRS
 	include/CE_CppnWidget.h
 	include/CE_Window.h
+	include/CE_ColorButton.h
 )
 
 
@@ -72,11 +78,26 @@ SET(
 if(Boost_LIBRARIES)
 	message("Boost_LIBRARIES defined in compile.sh script")
 else(Boost_LIBRARIES)
-	message("Boost_LIBRARIES NOT defined. Running find_package")
-	unset(Boost_INCLUDE_DIRS CACHE)
-	unset(Boost_LIBRARY_DIRS CACHE)
+#	message("Boost_LIBRARIES NOT defined. Running find_package")
+#	unset(Boost_INCLUDE_DIRS CACHE)
+#	unset(Boost_LIBRARY_DIRS CACHE)
+#	unset(Boost_LIBRARIES CACHE)
+#	find_package( Boost 1.34 COMPONENTS filesystem system thread regex)
+endif(Boost_LIBRARIES)
+
+if(Boost_LIBRARIES)
+	message("Boost_LIBRARIES found using find package")
+else(Boost_LIBRARIES)
+	message("Boost_LIBRARIES NOT found using find package. Hoping the libraries paths are available somewhere.")
 	unset(Boost_LIBRARIES CACHE)
-	find_package( Boost 1.34 COMPONENTS filesystem system thread regex)
+	SET(
+		Boost_LIBRARIES
+		"boost_filesystem"
+		"boost_system"
+		"boost_thread"
+		"boost_regex"
+	)
+	
 endif(Boost_LIBRARIES)
 
 if(QT_GUI)

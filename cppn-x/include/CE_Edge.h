@@ -52,7 +52,7 @@ class Node;
 class Edge : public QGraphicsLineItem
 {
 public:
-    Edge(GraphWidget *graphWidget, Node *sourceNode, Node *destNode, int id = 0, qreal weight = 0 ,QGraphicsItem *parent = 0, QGraphicsScene *scene = 0);
+    Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *sourceNode, Node *destNode, qreal weight, QColor color, QGraphicsItem *parent = 0, QGraphicsScene *scene = 0);
 
     Node *sourceNode() const;
     Node *destNode() const;
@@ -61,10 +61,6 @@ public:
 
     enum { Type = UserType + 2 };
     int type() const { return Type; }
-    
-    int getId(){
-    	return id;
-    }
 
     void setWeight(qreal weight){
     	currentWeight = weight;
@@ -74,24 +70,52 @@ public:
     	return originalWeight;
     }
 
+    qreal getWeight(){
+    	return currentWeight;
+    }
+
+    void setIndex(size_t _index){
+    	index =_index;
+    }
+
+    size_t getIndex(){
+    	return index;
+    }
+
+    std::string getBranch(){
+    	return branch;
+    }
+
+    std::string getId(){
+    	return id;
+    }
+
+    QColor getColor(){
+    	return color;
+    }
+
 protected:
     QRectF boundingRect() const;
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     QPainterPath shape() const;
     
 private:
+    std::string branch;
+    std::string id;
     static const double m_click_easy_width;
     Node *source, *dest;
 
     QPointF sourcePoint;
     QPointF destPoint;
     qreal arrowSize;
-    QString edge_id;
-    int id;
+ //   QString edge_id;
+
     GraphWidget *graphWidget;
     qreal currentWeight;
     qreal originalWeight;
+    size_t index;
+
+    QColor color;
 };
 //! [0]
 

@@ -41,6 +41,7 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include "CE_Defines.h"
 #include "CE_Edge.h"
 #include "CE_CppnWidget.h"
 
@@ -62,7 +63,7 @@ class Node : public QGraphicsItem
 {
 
 public:
-    Node(GraphWidget *graphWidget, int id =0, std::string name = "", int width = 256, int height = 256);
+    Node(GraphWidget *graphWidget, std::string branch = "", std::string id = "", std::string type = "", std::string activationFunction_str=XML_SIGMOID, std::string label = "", int width = 256, int height = 256, QColor color = QColor(0,0,0));
     ~Node();
 
     void addIncommingEdge(Edge *edge);
@@ -74,7 +75,6 @@ public:
     int type() const { return Type; }
 
 //    void calculateForces();
-    bool advance();
 
     QRectF boundingRect() const;
     QPainterPath shape() const;
@@ -82,8 +82,51 @@ public:
 
     void setPixels(QImage* pixels_);
     void setPixel(int x, int y, char r, char g, char b);
+    void setPixel(size_t index, char r, char g, char b);
+    void setPixel(size_t index, char grey);
 
-    std::string getName();
+   // std::string getName(){return name;}
+    std::string getType(){return nodetype;}
+
+    void setActivationFunction(ActivationFunction _activationFunction){
+    	activationFunction =_activationFunction;
+    }
+
+    ActivationFunction getActivationFunction(){
+    	return activationFunction;
+    }
+
+    void setIndex(size_t _index){
+    	index =_index;
+    }
+
+    size_t getIndex(){
+    	return index;
+    }
+
+    std::string getLabel(){
+    	return label;
+    }
+
+    std::string getBranch(){
+    	return branch;
+    }
+
+    std::string getId(){
+    	return id;
+    }
+
+    std::string getXmlActivationFunction(){
+    	return activationFunction_str;
+    }
+
+    QColor getColor(){
+    	return color;
+    }
+
+    void setColor(QColor _color){
+    	color = _color;
+    }
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -94,11 +137,18 @@ protected:
 private:
     QList<Edge *> incomingEdgeList;
     QList<Edge *> outgoingEdgeList;
-    QPointF newPos;
     GraphWidget *graph;
     QImage* pixels;
-    int id;
-    std::string name;
+
+    std::string branch;
+    std::string id;
+    std::string nodetype;
+    std::string activationFunction_str;
+    std::string label;
+    ActivationFunction activationFunction;
+    QColor color;
+
+    size_t index;
 };
 //! [0]
 
