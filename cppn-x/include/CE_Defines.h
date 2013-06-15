@@ -8,8 +8,7 @@
 #ifndef VISUALIZE_DEFINES_H_
 #define VISUALIZE_DEFINES_H_
 
-#include "NEAT.h"
-#include <boost/shared_ptr.hpp>
+//#include <boost/shared_ptr.hpp>
 #include <string>
 #include <iostream>
 
@@ -48,7 +47,10 @@
 #define INPUT_D "d"			//The name of the node taking the y-axis as input
 #define INPUT_BIAS "bias"	//The name of the node bias node
 #define OUTPUT "ink"		//The name of the output node
-
+#define OUTPUT_INK "ink"
+#define OUTPUT_SATURATION "saturation"
+#define OUTPUT_HUE "hue"
+#define OUTPUT_BRIGTHNESS "brightness"
 
 enum inputs{
 	input_x =0,
@@ -57,5 +59,7 @@ enum inputs{
 	input_b =3,
 	nr_of_inputs =4
 };
+
+typedef double (*ActivationFunctionPt)(double);
 
 #endif /* VISUALIZE_DEFINES_H_ */

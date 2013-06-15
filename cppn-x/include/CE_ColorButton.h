@@ -8,21 +8,23 @@
 #ifndef CE_COLORBUTTON_H_
 #define CE_COLORBUTTON_H_
 
-#include <QObject>
+#include <QWidget>
 #include <QLabel>
 #include <QPushButton>
 #include <QPainter>
+#include <QAction>
+#include <QHBoxLayout>
 
 class QLabel;
 class QPushButton;
 class QObject;
+class QHBoxLayout;
 
-class CE_ColorButton : public QObject{
+class CE_ColorButton : public QWidget{
 	Q_OBJECT
 
 public:
-	CE_ColorButton(QLabel* label, QPushButton* colorButton, QPushButton* deleteButton, QColor color, QObject *parent = 0);
-	CE_ColorButton(QString text, QColor color, QObject *parent = 0);
+	CE_ColorButton(QString text, QColor color, QWidget *parent = 0);
 	virtual ~CE_ColorButton();
 
 	QLabel* getLabel(){
@@ -41,11 +43,22 @@ public:
 
 	std::string getText();
 
+	QAction* getColorAction(){
+		return colorAction;
+	}
+
+	QAction* getDeleteAction(){
+		return deleteAction;
+	}
+
 private:
 	QLabel* label;
 	QPushButton* colorButton;
 	QPushButton* deleteButton;
+	QHBoxLayout* colorButtonLayout;
 	QColor color;
+	QAction* colorAction;
+	QAction* deleteAction;
 };
 
 #endif /* CE_COLORBUTTON_H_ */

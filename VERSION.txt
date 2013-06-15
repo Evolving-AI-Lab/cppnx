@@ -11,11 +11,26 @@ Version: 0.2
 - Labeling nodes and connections with color labels.
 - Writing the genomes including color information to a file.
 
-Wish-list:
-- Show negative values
+Version: 0.3
+- Show negative values.
+- Save original weights.
+- Reset all button.
+- Reset scan on reset.
+- Increase speed of scan.
+- Labeled nodes with their activation functions.
+- Show labels more clearly.
 - Show output connection on the top of each node and show input connections on the bottom of each node.
-- Labeling nodes and connection with their id's and activation functions.
+- Separate panel for special nodes.
+- Labeled links with colors.
+- Prevent crashes by invalid options.
+- Added support for color genomes.
+- Added support multi-genome files.
+- Added a visualization of the final picture.
+- Works on windows.
+
+Wish-list:
 - Create a picture for an arbitrary node.
+- Less pixelated pictures.
 - Improve connection visualization with curved or 90 degree bend lines.
 - Automatic network scan where it zooms in on the output node, automatically selects a connection and scans over its weight, ask the user to give the connection a label, and then selects the next connection. At the end of this process you should have a fully annotated network.
 - Add or remove nodes and connections.

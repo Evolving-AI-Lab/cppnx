@@ -11,8 +11,9 @@
 #define CPPNPARSER_H_
 
 #include "CE_Defines.h"
-#include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
+//#include <boost/regex.hpp>
+//#include <boost/lexical_cast.hpp>
+//#include <boost/shared_ptr.hpp>
 #include <fstream>
 #include <JGTL_LocatedException.h>
 #include <map>
@@ -34,26 +35,39 @@ class GraphWidget;
 class CppnParser
 {
 public:
-	CppnParser():data_version(""), line(""), nextLine(true), lineNumber(0), parseCounter(0){
+	CppnParser():cppn(0), data_version(""), line(""), nextLine(true), lineNumber(0), parseCounter(0){
 
 	}
 
-	shared_ptr<Cppn> parse(std::string fileName, GraphWidget* widget);
+	Cppn* parse(std::string fileName, GraphWidget* widget);
 
 private:
-	void parseLine(boost::regex regex);
-	bool tryParseLine(boost::regex regex);
-	bool parseCount(boost::regex regex=count);
-	void parseHeader();
-	void parseNode();
-	void parseEdge();
-	void parseFooter();
-	void parseColorButton();
+	bool parseLine(std::string line, std::string expected);
+	std::string parseParameter(const std::string& line, std::string::iterator& currentChar, std::string::iterator& expectedChar);
+	bool parseExpected(const std::string& line, std::string::iterator& currentChar, const std::string& expected, std::string::iterator& expectedChar);
+	void parseWhiteSpace(std::string::iterator& it);
+
+
+//	void parseLine(boost::regex regex);
+//	bool tryParseLine(boost::regex regex);
+//	bool parseCount(boost::regex regex=count);
+	void parseLine(std::string regex);
+	bool tryParseLine(std::string regex);
+//	bool parseCount(std::string regex);
+	bool parseCount(std::string template_str);
+	void parseHeader(bool store);
+	void parseNode(bool store);
+	void parseEdge(bool store);
+//	void parseFooter(bool store);
+	void parseColorButton(bool store);
+	void parseGenome(bool store);
+	void parseParent(bool store);
 
 
 	std::ifstream myfile;
-	shared_ptr<Cppn> cppn;
-	boost::smatch m;
+	Cppn* cppn;
+//	boost::smatch m;
+	std::vector<std::string> m;
 
 	std::string data_version;
 	std::string line;
@@ -61,33 +75,6 @@ private:
 	size_t lineNumber;
 
 	int parseCounter;
-
-	static const boost::regex any;
-
-	static const boost::regex first_line;
-	static const boost::regex ionode;
-	static const boost::regex node;
-	static const boost::regex link;
-
-	static const boost::regex marking;
-	static const boost::regex activation;
-	static const boost::regex color;
-	static const boost::regex position;
-
-	static const boost::regex source;
-	static const boost::regex target;
-	static const boost::regex weight;
-
-
-	static const boost::regex cppn_data;
-	static const boost::regex nodes_count;
-	static const boost::regex link_count;
-
-	static const boost::regex buttons_count;
-	static const boost::regex text;
-
-	static const boost::regex count;
-	static const boost::regex data;
 };
 
 #endif /* CPPNPARSER_H_ */

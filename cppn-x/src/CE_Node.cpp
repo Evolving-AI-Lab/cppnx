@@ -43,12 +43,14 @@
 #include <QPainter>
 #include <QStyleOption>
 #include <iostream>
+#include <cmath>
 
 #include "CE_Node.h"
+#include "CE_FinalNodeView.h"
 
 //! [0]
-Node::Node(GraphWidget *graphWidget, std::string branch, std::string id, std::string type, std::string activationFunction_str, std::string label, int width, int height, QColor color)
-    : graph(graphWidget), branch(branch), id(id), nodetype(type),activationFunction_str(activationFunction_str), label(label), color(color)
+Node::Node(GraphWidget *graphWidget, std::string branch, std::string id, std::string type, std::string activationFunction_str, std::string label, std::string affinity, std::string bias, int width, int height, QColor color)
+    : graph(graphWidget), branch(branch), id(id), nodetype(type),activationFunction_str(activationFunction_str), label(label), affinity(affinity), bias(bias), color(color), nodeView(0), finalNodeView(0)
 {
 
     setFlag(ItemIsMovable);
@@ -58,15 +60,20 @@ Node::Node(GraphWidget *graphWidget, std::string branch, std::string id, std::st
     setZValue(1);
 
 	if(activationFunction_str == XML_GAUSSIAN){
-		activationFunction = ACTIVATION_FUNCTION_GAUSSIAN;
+		activationFunction = act_functions::gaussian;
+		activationFunction_short = "gau(x)";
 	} else if(activationFunction_str == XML_LINEAR){
-		activationFunction = ACTIVATION_FUNCTION_LINEAR;
+		activationFunction = act_functions::identity;
+		activationFunction_short = "lin(x)";
 	} else if(activationFunction_str == XML_SIN){
-		activationFunction = ACTIVATION_FUNCTION_SIN;
+		activationFunction = act_functions::sin;
+		activationFunction_short = "sin(x)";
 	} else if(activationFunction_str == XML_SIGMOID){
-		activationFunction = ACTIVATION_FUNCTION_SIGMOID;
+		activationFunction = act_functions::sigmoid;
+		activationFunction_short = "sig(x)";
 	} else if(activationFunction_str == XML_COS){
-		activationFunction = ACTIVATION_FUNCTION_COS;
+		activationFunction = act_functions::cos;
+		activationFunction_short = "cos(x)";
 	} else {
 		throw JGTL::LocatedException("File contains unknown activation function: '" + activationFunction_str + "'");
 	}
@@ -79,6 +86,7 @@ Node::Node(GraphWidget *graphWidget, std::string branch, std::string id, std::st
 //! [0]
 
 Node::~Node(){
+	resetNodeView();
 	delete (pixels);
 }
 
@@ -113,7 +121,7 @@ QRectF Node::boundingRect() const
                   20 + adjust * 2, 20 + adjust * 2);
 #else
     qreal adjust = 2;
-    return QRectF( -20 - adjust, (-20 - adjust) - 10, 40 + 2*adjust, 40 + 2*adjust + 10);
+    return QRectF( -half_width - adjust, (-half_height - adjust) - footerBarSize, node_width + 2*adjust, node_height + 2*adjust + footerBarSize*2);
 #endif
 }
 //! [8]
@@ -122,14 +130,9 @@ QRectF Node::boundingRect() const
 QPainterPath Node::shape() const
 {
     QPainterPath path;
-#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
-    // Add some extra space around the circle for easier touching with finger
-    path.addEllipse( -40, -40, 80, 80);
-#else
-    path.addRect(-20, -20, 40, 40);
 
-    //path.addEllipse(-10, -10, 20, 20);
-#endif
+    path.addRect(-half_width, -half_height, node_width, node_height);
+
     return path;
 }
 //! [9]
@@ -160,19 +163,45 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     //painter->drawEllipse(-10, -10, 20, 20);
    // std::cout << "Painting" << std::endl;
 
+//	painter->setRenderHint(QPainter::Antialiasing);
+    painter->drawImage(QRect(-half_width, -half_height, node_width, node_height), *pixels);
+    painter->fillRect(QRect(-half_width, half_height, node_width, footerBarSize), color);
 
-    painter->drawImage(QRect(-20, -20, 40, 40), *pixels);
     if (this->isSelected()){
-    	painter->setPen(QPen(color, 2));
-    	painter->drawRect(QRect(-20, -20, 40, 40));
+    	painter->setPen(QPen(Qt::black, 2));
+    	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height + footerBarSize));
     }else{
-    	painter->setPen(QPen(color, 0));
-    	painter->drawRect(QRect(-20, -20, 40, 40));
+    	painter->setPen(QPen(Qt::black, 0));
+    	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height + footerBarSize));
     }
-    painter->drawText(-20,-20, QString(label.c_str()));
+
+    painter->setPen(QPen(Qt::black, 0));
+    painter->drawRect(QRect(-half_width, half_height, node_width, footerBarSize));
+
+
+
+    if(color.lightness() < 128){
+    	painter->setPen(QPen(Qt::white, 0));
+    } else {
+    	painter->setPen(QPen(Qt::black, 0));
+    }
+
+    if(nodetype == XML_TYPE_INPUT){
+    	painter->drawText(-half_width,half_height+(footerBarSize-4), QString(label.c_str()));
+    } else{
+    	painter->drawText(-half_width,half_height+(footerBarSize-4), QString(activationFunction_short.c_str()));
+    	painter->setPen(QPen(Qt::black, 0));
+    	painter->drawText(-half_width,-half_height, QString(label.c_str()));
+    }
 
 }
 //! [10]
+
+void Node::updateAll(){
+	update();
+	if(nodeView) nodeView->update();
+}
+
 
 //! [11]
 QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
@@ -181,10 +210,10 @@ QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
     case ItemPositionHasChanged:
         foreach (Edge *edge, incomingEdgeList)
             edge->adjust();
-        graph->itemMoved();
+//        graph->itemMoved(this);
         foreach (Edge *edge, outgoingEdgeList)
         	edge->adjust();
-        graph->itemMoved();
+//        graph->itemMoved(this);
         break;
     default:
         break;
@@ -205,6 +234,7 @@ void Node::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     update();
     QGraphicsItem::mouseReleaseEvent(event);
+    graph->itemMoved(this);
 }
 //! [12]
 
@@ -214,6 +244,7 @@ void Node::setPixels(QImage* pixels_)
     pixels = pixels_;
 }
 //! [13]
+
 
 void Node::setPixel(int x, int y, char r, char g, char b){
 	pixels->setPixel(x, y, qRgb(r, g, b));
@@ -232,3 +263,44 @@ void Node::setPixel(size_t index, char grey){
 	pixels->bits()[index+1]=grey;
 	pixels->bits()[index+2]=grey;
 }
+
+void Node::setPixel(size_t index, const double& value){
+	size_t localindex = index*4;
+	char grey(std::min(std::abs(value), 1.0)*255);
+	char alt(std::min(std::max(value, 0.0), 1.0)*255);
+	pixels->bits()[localindex]=alt;
+	pixels->bits()[localindex+1]=alt;
+	pixels->bits()[localindex+2]=grey;
+
+
+
+	if(nodeView){
+		nodeView->setPixel(localindex, grey, alt);
+	}
+	if(finalNodeView){
+//		std::cout << "Hallo" <<std::endl;
+		char sat(std::min((value+1)/2, 1.0)*255);
+//		int hue(std::min((value+1)/2, 1.0)*360);
+//		int hue(std::min(std::abs(value), 1.0)*360);
+		int hue(std::min(value+1, 2.0)*360);
+		if(label == "saturation") finalNodeView->setSaturation(index, sat);
+		if(label == "brightness" || label == "ink") finalNodeView->setValue(index, grey);
+		if(label == "hue") finalNodeView->setHue(index, hue);
+	}
+}
+
+void Node::resetNodeView(bool toDelete){
+	if(nodeView){
+		if(toDelete){
+			nodeView->resetNode();
+			delete nodeView;
+		}
+		nodeView = 0;
+	}
+}
+
+void Node::setNodeView(NodeView* _nodeView){
+	resetNodeView();
+	nodeView = _nodeView;
+}
+

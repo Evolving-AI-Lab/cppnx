@@ -40,8 +40,8 @@
 
 #ifndef GRAPHWIDGET_H
 #define GRAPHWIDGET_H
+#include <JGTL_LocatedException.h>
 #include <QtGui/QGraphicsView>
-#include <boost/regex.hpp>
 #include <map>
 #include "CE_Edge.h"
 #include "CE_Node.h"
@@ -67,11 +67,22 @@ class GraphWidget : public QGraphicsView
 public:
     GraphWidget(Window *window, QWidget *parent = 0);
 
-    void itemMoved();
-    void load(std::string filename);
-    void save(std::string filename);
-    void edgeSelected(int id, Edge* selectedEdge);
+    void itemMoved(Node * node);
+    bool load(std::string filename);
+    bool save(std::string filename);
+//    void edgeSelected(int id, Edge* selectedEdge);
     Window* getWindow();
+    Node* getSelectedNode(){
+    	return selectedNode;
+    }
+
+    Edge* getSelectedEdge(){
+    	return selectedEdge;
+    }
+
+    int getGeneration(int min, int max);
+    void warning(std::string message);
+    void colorNode(QColor color);
 
 public slots:
 //    void shuffle();
@@ -81,22 +92,42 @@ public slots:
     void setValueF(double value);
     void selectEdge();
     void resetWeight();
+    void resetAllWeights();
     void scanWeight();
-    void colorNode(QObject*);
+    void colorNode(QWidget* object);
     void positionNodesLayers();
     void positionNodesCircle();
+
+
+    void addNode(Node* node);
+
+//    int minimumHeight() const{
+//    	std::cout << "min heigth" << std::endl;
+//    	return 200;
+//    }
+//
+//    QSize minimumSize() const;
+//    QSize minimumSizeHint() const;
+//
+//    int heightForWidth(int w) const{
+//    	std::cout << "hfw Used" << std::endl;
+//    	return 0;
+//    }
 
 signals:
 void sliderValueChanged(int newValue);
 void sliderValueChangedF(double newValue);
 
 protected:
-    void keyPressEvent(QKeyEvent *event);
+//    void keyPressEvent(QKeyEvent *event);
     void timerEvent(QTimerEvent *event);
     void wheelEvent(QWheelEvent *event);
-    void drawBackground(QPainter *painter, const QRectF &rect);
+//    void drawBackground(QPainter *painter, const QRectF &rect);
 
     void scaleView(qreal scaleFactor);
+//    void resizeEvent(QResizeEvent * event){
+//    	std::cout << "New size: " << size().height() << std::endl;
+//    }
 //    void updateNodes();
 //    void positionNodes();
 
@@ -104,7 +135,7 @@ protected:
 
 private:
     int timerId;
-    shared_ptr<Cppn> cppn;
+    Cppn* cppn;
     //shared_ptr<NEAT::FastNetwork<double> > cppn_phen;
     //std::vector<Node*> nodes;
 
@@ -117,6 +148,19 @@ private:
     Node* selectedNode;
     Window *par_window;
 
+    std::vector<Node*> x_sorted;
+    std::vector<Node*> y_sorted;
+
+    double left_border;
+    double right_border;
+    double top_border;
+    double bottom_border;
+
+    static const double left_border_min;
+    static const double right_border_min;
+    static const double top_border_min;
+    static const double bottom_border_min;
+    static const double extra_space;
 };
 //! [0]
 

@@ -54,7 +54,7 @@ const double Edge::m_click_easy_width = 10.0;
 
 
 Edge::Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *sourceNode, Node *destNode, qreal weight, QColor color ,QGraphicsItem *parent, QGraphicsScene *scene)
-    : QGraphicsLineItem(0,0,2,2,parent,scene), graphWidget(graphWidget), branch(branch), id(id),  arrowSize(5), currentWeight(weight), originalWeight(weight), color(color)
+    : QGraphicsLineItem(0,0,2,2,parent,scene), branch(branch), id(id),  arrowSize(5), graphWidget(graphWidget), currentWeight(weight), originalWeight(weight), color(color)
 {
 	this->setFlag(QGraphicsItem::ItemIsSelectable);
     source = sourceNode;
@@ -89,15 +89,19 @@ void Edge::adjust()
     prepareGeometryChange();
 
     if (length > qreal(20.)) {
-    	QPointF edgeOffset;
-    	if(abs(newline.dx()) > abs(newline.dy())){
-    		edgeOffset = QPointF((20/std::fabs(float(newline.dx())))*newline.dx(), (20/std::fabs(float(newline.dx())))*newline.dy());
-    	} else {
-    		edgeOffset = QPointF((20/std::fabs(float(newline.dy())))*newline.dx(), (20/std::fabs(float(newline.dy())))*newline.dy());
-    	}
+//    	QPointF edgeOffset;
+//    	if(abs(newline.dx()) > abs(newline.dy())){
 
-        sourcePoint = newline.p1() + edgeOffset;
-        destPoint = newline.p2() - edgeOffset;
+    	QPointF sourceOffset = QPointF(0, Node::half_height);
+    	QPointF targetOffset = QPointF(0, Node::half_height+Node::footerBarSize);
+
+//    		edgeOffset = QPointF((20/std::fabs(float(newline.dx())))*newline.dx(), (20/std::fabs(float(newline.dx())))*newline.dy());
+//    	} else {
+//    		edgeOffset = QPointF((20/std::fabs(float(newline.dy())))*newline.dx(), (20/std::fabs(float(newline.dy())))*newline.dy());
+//    	}
+
+        sourcePoint = newline.p1() - sourceOffset;
+        destPoint = newline.p2() + targetOffset;
     } else {
         sourcePoint = destPoint = newline.p1();
     }
@@ -128,6 +132,9 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 	if (!source || !dest)
 		return;
 
+	QPen pen;
+	QBrush brush;
+
 	QLineF line(sourcePoint, destPoint);
 	if (qFuzzyCompare(line.length(), qreal(0.)))
 		return;
@@ -135,42 +142,52 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
 	     //! [5]
 	// Draw the line itself
-	QColor color;
+
+
+
+
+
+
+	QColor connectionColor;
+	QColor labelColor = color;
+
 	if (this->isSelected())
 	{
 		if(currentWeight >= 0){
-			color = QColor(0,255,0);
+			connectionColor = QColor(0,255,0);
 		} else {
-			color = QColor(255,0,0);
+			connectionColor = QColor(255,0,0);
 		}
-		QPen pen;
-		pen.setColor(color);
-		//pen.setWidth(3);
-		pen.setWidthF(abs(currentWeight));
-		painter->setPen(pen);
-		QBrush brush;
-		brush.setColor(color);
-		brush.setStyle(Qt::SolidPattern);
-		painter->setBrush(brush);
+		labelColor = labelColor.lighter();
 	}
 	else
 	{
 		if(currentWeight >= 0){
-			color = QColor(0,150,0);
+			connectionColor = QColor(0,150,0);
 		} else {
-			color = QColor(150,0,0);
+			connectionColor = QColor(150,0,0);
 		}
 
-		QPen pen;
-		pen.setColor(color);
-		//pen.setWidth(3);
-		pen.setWidthF(abs(currentWeight));
-		painter->setPen(pen);
-		QBrush brush;
-		brush.setColor(color);
-		brush.setStyle(Qt::SolidPattern);
-		painter->setBrush(brush);
 	}
+
+	pen.setColor(labelColor);
+	pen.setWidthF(6.0);
+	painter->setPen(pen);
+	painter->drawLine(this->line());
+
+//	pen.setColor(Qt::black);
+//	pen.setWidthF(abs(currentWeight)+1);
+//	painter->setPen(pen);
+//	painter->drawLine(this->line());
+
+
+	pen.setColor(connectionColor);
+	pen.setWidthF(abs(currentWeight));
+	brush.setColor(connectionColor);
+	brush.setStyle(Qt::SolidPattern);
+	brush.setColor(connectionColor);
+	painter->setBrush(brush);
+	painter->setPen(pen);
 
 	//painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 	painter->drawLine(this->line());

@@ -94,6 +94,10 @@ public:
     	return color;
     }
 
+    void setColor(QColor _color){
+    	color = _color;
+    }
+
 protected:
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);

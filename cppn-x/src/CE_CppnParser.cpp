@@ -6,37 +6,32 @@
  */
 
 #include "CE_CppnParser.h"
-
-const boost::regex	CppnParser::any= boost::regex(".*");
-
-const boost::regex	CppnParser::first_line = boost::regex("<\?xml.*\?>");
-const boost::regex	CppnParser::ionode= boost::regex("\\s*<node label=\"(.*?)\" type=\"(.*?)\">");
-const boost::regex	CppnParser::node= boost::regex("\\s*<node type=\"(.*?)\">");
-const boost::regex	CppnParser::link= boost::regex("\\s*<link>");
-
-const boost::regex	CppnParser::marking= boost::regex("\\s*<marking branch=\"(\\d*)\" id=\"(\\d*)\"/>");
-const boost::regex	CppnParser::activation= boost::regex("\\s*<activation>(.*)</activation>");
-const boost::regex	CppnParser::color= boost::regex("\\s*<color>(\\d*) (\\d*) (\\d*)</color>");
-const boost::regex	CppnParser::position= boost::regex("\\s*<position>(.*) (.*)</position>");
-
-const boost::regex	CppnParser::source= boost::regex("\\s*<source branch=\"(\\d*)\" id=\"(\\d*)\"/>");
-const boost::regex	CppnParser::target= boost::regex("\\s*<target branch=\"(\\d*)\" id=\"(\\d*)\"/>");
-const boost::regex	CppnParser::weight= boost::regex("\\s*<weight>(.*)</weight>");
+#include "CE_Xml.h"
+#include "CE_Util.h"
 
 
-const boost::regex	CppnParser::cppn_data= boost::regex("\\s*<cppn-data version=\"(.*)\"/>");
-const boost::regex	CppnParser::nodes_count= boost::regex("\\s*<nodes count=\"(.*)\">");
-const boost::regex	CppnParser::link_count= boost::regex("\\s*<links count=\"(.*)\">");
-
-const boost::regex	CppnParser::buttons_count= boost::regex("\\s*<buttons count=\"(.*)\">");
-const boost::regex	CppnParser::text= boost::regex("\\s*<text>(.*)</text>");
-
-const boost::regex	CppnParser::count= boost::regex(".*count=\"(.*)\".*");
-
-const boost::regex	CppnParser::data= boost::regex("\\s*<data version=\"(.*)\">");
+#define parseEach(template_str,parser) while(parseCount(template_str)){parser;} parseLine(close(template_str));
 
 
-bool CppnParser::parseCount(boost::regex regex){
+std::string openClose(std::string template_str){
+	return std::string(ce_xml::getOpenXmlString(template_str) + "*" + ce_xml::getCloseXmlString(template_str));
+}
+
+std::string open(std::string template_str){
+	return std::string(ce_xml::getOpenXmlString(template_str, "*"));
+}
+
+std::string read(std::string template_str){
+	return std::string(ce_xml::getOneLineXmlString(template_str, "*"));
+}
+
+std::string close(std::string template_str){
+	return std::string(ce_xml::getCloseXmlString(template_str));
+}
+
+
+bool CppnParser::parseCount(std::string template_str){
+	std::string regex  = open(template_str);
 	if(parseCounter>1){
 		parseCounter--;
 		return true;
@@ -45,31 +40,32 @@ bool CppnParser::parseCount(boost::regex regex){
 		return false;
 	} else{
 		parseLine(regex);
-		parseCounter = lexical_cast<int>(m[1].str());
+//		parseCounter = boost::lexical_cast<int>(m[1]);
+		parseCounter = util::toInt(m[1]);
 		return parseCounter>0;
 	}
 }
-
-void CppnParser::parseLine(boost::regex regex){
+//
+//void CppnParser::parseLine(boost::regex regex){
+//	if(!myfile.good()) throw JGTL::LocatedException("Unexpected end of file.");
+//	if(nextLine){
+//		getline (myfile,line);
+//		lineNumber++;
+//	}
+//	if(regex_search(line, m, regex)){
+//		nextLine=true;
+//	} else {
+//		throw JGTL::LocatedException("Parse error on line: " + boost::lexical_cast<std::string>(lineNumber) + ".\nRead: "+ line + "\nExpected: " + regex.str());
+//	}
+//}
+//
+bool CppnParser::tryParseLine(std::string regex){
 	if(!myfile.good()) throw JGTL::LocatedException("Unexpected end of file.");
 	if(nextLine){
 		getline (myfile,line);
 		lineNumber++;
 	}
-	if(regex_search(line, m, regex)){
-		nextLine=true;
-	} else {
-		throw JGTL::LocatedException("Parse error on line: " + boost::lexical_cast<std::string>(lineNumber) + " :"+ line);
-	}
-}
-
-bool CppnParser::tryParseLine(boost::regex regex){
-	if(!myfile.good()) throw JGTL::LocatedException("Unexpected end of file.");
-	if(nextLine){
-		getline (myfile,line);
-		lineNumber++;
-	}
-	if(regex_search(line, m, regex)){
+	if(parseLine(line, regex)){
 		nextLine=true;
 		return true;
 	} else {
@@ -78,70 +74,123 @@ bool CppnParser::tryParseLine(boost::regex regex){
 	}
 }
 
-
-void CppnParser::parseHeader(){
-	//Parse first line
-	parseLine(first_line);
-	cppn->addHeaderLine(line);
-
-	if(tryParseLine(cppn_data)){
-		data_version = m[1].str();
-		cppn->setNewFile(false);
-	} else {
-		data_version = "raw";
-		cppn->setNewFile(true);
-	}
-
-	if(tryParseLine(data)){
-		cppn->addHeaderLine(line);
-	}
-
-	parseLine(any);
-	cppn->addHeaderLine(line);
-
-	parseLine(any);
-	cppn->addHeaderLine(line);
-
-	while(parseCount()){
-		cppn->addHeaderLine(line);
-		parseLine(any);
-	}
-
-	cppn->addHeaderLine(line);
-
-	parseLine(any);
-	cppn->addHeaderLine(line);
+void CppnParser::parseWhiteSpace(std::string::iterator& it){
+	while((*it) == ' ') it++;
 }
 
-void CppnParser::parseColorButton(){
+bool CppnParser::parseExpected(const std::string& line, std::string::iterator& currentChar,const std::string& expected, std::string::iterator& expectedChar){
+	while(currentChar != line.end() && expectedChar != expected.end()){
+//		std::cout << "cur: " << int (*currentChar) << " exp: " << int (*expectedChar) <<std::endl;
+		if((*currentChar)!=(*expectedChar)) return false;
+		currentChar++;
+		expectedChar++;
+	}
+
+//	std::cout << (expectedChar == expected.end()) << std::endl;
+	return expectedChar == expected.end();
+}
+
+std::string CppnParser::parseParameter(const std::string& line, std::string::iterator& currentChar, std::string::iterator& expectedChar){
+	std::string result = "";
+	while(currentChar != line.end()){
+		if( (*currentChar) == (*expectedChar) ) return result;
+		result.append(1, (*currentChar));
+		currentChar++;
+	}
+
+	return result;
+}
+
+bool CppnParser::parseLine(std::string line, std::string expected){
+	m.clear();
+	m.push_back(""); //Filler
+	std::string::iterator currentChar = line.begin();
+	std::string::iterator expectedChar = expected.begin();
+	parseWhiteSpace(currentChar);
+
+	parseExpected(line, currentChar, expected, expectedChar);
+	while((*expectedChar)=='*'){
+		expectedChar++;
+		m.push_back(parseParameter(line, currentChar, expectedChar));
+		parseExpected(line, currentChar, expected, expectedChar);
+	}
+
+	return expectedChar == expected.end();
+}
+
+
+void CppnParser::parseLine(std::string regex){
+	if(!myfile.good()) throw JGTL::LocatedException("Unexpected end of file.");
+	if(nextLine){
+		getline (myfile,line);
+		lineNumber++;
+	}
+	if(parseLine(line, regex)){
+		nextLine=true;
+	} else {
+		throw JGTL::LocatedException("Parse error on line: " + util::toString(lineNumber) + ".\nRead: "+ line + "\nExpected: " + regex);
+	}
+}
+
+
+void CppnParser::parseHeader(bool store){
+	//Parse first line
+//	parseLine(first_line);
+	if(!tryParseLine(ce_xml::getFirstLine())) parseLine("<?xml*?>");
+
+	if(tryParseLine(read(ce_xml::cppn_data))){
+//		data_version = m[1].str();
+		data_version = m[1];
+		if(store) cppn->setNewFile(false);
+	} else {
+		data_version = "raw";
+		if(store) cppn->setNewFile(true);
+	}
+
+	if(tryParseLine(open(ce_xml::data))){
+//		if(store) cppn->setDataVersion(m[1].str());
+		if(store) cppn->setDataVersion(m[1]);
+	} else {
+		if(store) cppn->setDataVersion("1.0");
+	}
+}
+
+void CppnParser::parseColorButton(bool store){
 	std::string text_str;
 	int r;
 	int g;
 	int b;
 	QColor color_q(0, 0, 0);
 
-	parseLine(any);
-	parseLine(text);
-	text_str = m[1].str();
+	parseLine(open(ce_xml::color_button));
+	parseLine(openClose(ce_xml::text));
+//	text_str = m[1].str();
+	text_str = m[1];
 
-	parseLine(color);
-	r = lexical_cast<int>(m[1].str());
-	g = lexical_cast<int>(m[2].str());
-	b = lexical_cast<int>(m[3].str());
+	parseLine(read(ce_xml::color));
+//	r = boost::lexical_cast<int>(m[1].str());
+//	g = boost::lexical_cast<int>(m[2].str());
+//	b = boost::lexical_cast<int>(m[3].str());
+	r = util::toInt(m[1]);
+	g = util::toInt(m[2]);
+	b = util::toInt(m[3]);
 	color_q = QColor (r, g, b);
 
-	parseLine(any);
+	parseLine(close(ce_xml::color_button));
 
-	cppn->addColorButton(text_str, color_q);
+	if(store) cppn->addColorButton(text_str, color_q);
 }
 
-void CppnParser::parseNode(){
+
+void CppnParser::parseNode(bool store){
 	std::string type;
-	std::string label;
+	std::string label="";
 	std::string branch;
+	std::string bias = "0.0";
+	std::string affinity = "grey";
 	std::string id;
 	std::string activation_function;
-	QColor color_q(0, 0, 0);
+	QColor color_q(255, 255, 255);
 	QPointF position_q(0, 0);
 	int r;
 	int g;
@@ -149,41 +198,70 @@ void CppnParser::parseNode(){
 	double x;
 	double y;
 
-	if(tryParseLine(node)){
-		type = m[1].str();
-	} else {
-		parseLine(ionode);
-		label = m[1].str();
-		type = m[2].str();
+	if(tryParseLine(open(ce_xml::node))){
+//		type = m[1].str();
+		type = m[1];
+	} else if(tryParseLine(open(ce_xml::ionode))){
+//		label = m[1].str();
+//		type = m[2].str();
+		label = m[1];
+		type = m[2];
+	} else if(tryParseLine(open(ce_xml::colornode))){
+//		std::cout << "colornode" <<std::endl;
+//		affinity = m[1].str();
+//		bias = m[2].str();
+//		type = m[3].str();
+		affinity = m[1];
+		bias = m[2];
+		type = m[3];
+	} else{
+		parseLine(open(ce_xml::iocolornode));
+//		affinity = m[1].str();
+//		bias = m[2].str();
+//		label = m[3].str();
+//		type = m[4].str();
+		affinity = m[1];
+		bias = m[2];
+		label = m[3];
+		type = m[4];
 	}
 
-	parseLine(marking);
-	branch = m[1].str();
-	id = m[2].str();
+	parseLine(read(ce_xml::marking));
+//	branch = m[1].str();
+//	id = m[2].str();
+	branch = m[1];
+	id = m[2];
 
-	parseLine(activation);
-	activation_function = m[1].str();
+	parseLine(openClose(ce_xml::activation));
+//	activation_function = m[1].str();
+	activation_function = m[1];
 
 	if(data_version == "1.0"){
-		parseLine(color);
-		r = lexical_cast<int>(m[1].str());
-		g = lexical_cast<int>(m[2].str());
-		b = lexical_cast<int>(m[3].str());
+		parseLine(read(ce_xml::color));
+//		r = boost::lexical_cast<int>(m[1].str());
+//		g = boost::lexical_cast<int>(m[2].str());
+//		b = boost::lexical_cast<int>(m[3].str());
+		r = util::toInt(m[1]);
+		g = util::toInt(m[2]);
+		b = util::toInt(m[3]);
 		color_q = QColor (r, g, b);
 
-		parseLine(position);
-		x = lexical_cast<double>(m[1].str());
-		y = lexical_cast<double>(m[2].str());
+		parseLine(read(ce_xml::position));
+//		x = boost::lexical_cast<double>(m[1].str());
+//		y = boost::lexical_cast<double>(m[2].str());
+		x = util::toDouble(m[1]);
+		y = util::toDouble(m[2]);
 		position_q = QPointF (x, y);
 
 	}
 
-	parseLine(any);
+	parseLine(close(ce_xml::node));
 
-	cppn->addNode(branch, id, type, activation_function, label, position_q, color_q);
+//	std::cout << "Parsed line: " << lineNumber << " label: " << label <<std::endl;
+	if(store) cppn->addNode(branch, id, type, activation_function, label, affinity, bias, position_q, color_q);
 }
 
-void CppnParser::parseEdge(){
+void CppnParser::parseEdge(bool store){
 	std::string branch;
 	std::string id;
 	std::string source_branch;
@@ -197,76 +275,138 @@ void CppnParser::parseEdge(){
 	QColor color_q(255, 255, 255);
 
 	//Parse first line
-	parseLine(any);
+	parseLine(open(ce_xml::link));
 
-	parseLine(marking);
-	branch = m[1].str();
-	id = m[2].str();
+	parseLine(read(ce_xml::marking));
+//	branch = m[1].str();
+//	id = m[2].str();
+	branch = m[1];
+	id = m[2];
 
-	parseLine(source);
-	source_branch = m[1].str();
-	source_id = m[2].str();
+	parseLine(read(ce_xml::source));
+//	source_branch = m[1].str();
+//	source_id = m[2].str();
+	source_branch = m[1];
+	source_id = m[2];
 
-	parseLine(target);
-	target_branch = m[1].str();
-	target_id = m[2].str();
+	parseLine(read(ce_xml::target));
+//	target_branch = m[1].str();
+//	target_id = m[2].str();
+	target_branch = m[1];
+	target_id = m[2];
 
-	parseLine(weight);
-	weight_f = lexical_cast<double>(m[1].str());
+	parseLine(openClose(ce_xml::weight));
+//	weight_f = boost::lexical_cast<double>(m[1].str());
+	weight_f = util::toDouble(m[1]);
 
 	if(data_version == "1.0"){
-		parseLine(color);
-		r = lexical_cast<int>(m[1].str());
-		g = lexical_cast<int>(m[2].str());
-		b = lexical_cast<int>(m[3].str());
+		parseLine(read(ce_xml::color));
+//		r = boost::lexical_cast<int>(m[1].str());
+//		g = boost::lexical_cast<int>(m[2].str());
+//		b = boost::lexical_cast<int>(m[3].str());
+		r = util::toInt(m[1]);
+		g = util::toInt(m[2]);
+		b = util::toInt(m[3]);
 		color_q = QColor (r, g, b);
 	}
 
-	parseLine(any);
+	parseLine(close(ce_xml::link));
 
-	cppn->addConnection(branch, id, source_branch, source_id, target_branch, target_id, weight_f, color_q);
+//	std::cout << "Parsed line: " << lineNumber <<std::endl;
+	if(store) cppn->addConnection(branch, id, source_branch, source_id, target_branch, target_id, weight_f, color_q);
 }
 
 
-void CppnParser::parseFooter(){
-	while(myfile.good()){
-		parseLine(any);
-		cppn->addFooterLine(line);
+//void CppnParser::parseFooter(bool store){
+//	while(myfile.good()){
+//		parseLine(any);
+//		if(store) cppn->addFooterLine(line);
+//	}
+//}
+
+void CppnParser::parseParent(bool store){
+	parseLine(read(ce_xml::identifier));
+//	if(store) cppn->addParent(m[1].str(), m[2].str());
+	if(store) cppn->addParent(m[1], m[2]);
+}
+
+void CppnParser::parseGenome(bool store){
+	//Set genome
+	if(tryParseLine(open(ce_xml::genome))){
+//		if(store) cppn->setGenome(m[1].str());
+		if(store) cppn->setGenome(m[1]);
+	} else {
+		parseLine(open(ce_xml::genomePhen));
+//		if(store) cppn->setGenome(m[1].str(), m[2].str());
+		if(store) cppn->setGenome(m[1], m[2]);
 	}
+
+	//Set identifier
+	parseLine(read(ce_xml::identifier));
+//	if(store) cppn->setIdentifier(m[1].str(), m[2].str());
+	if(store) cppn->setIdentifier(m[1], m[2]);
+
+	//Set parents
+	parseEach(ce_xml::parent_count, parseParent(store));
+
+	//Parse buttons
+	if(data_version == "1.0"){
+		parseEach(ce_xml::buttons_count, parseColorButton(store));
+	}
+
+	//Parse nodes
+	parseEach(ce_xml::nodes_count, parseNode(store));
+	//Parse Links
+	parseEach(ce_xml::link_count, parseEdge(store));
+	parseLine(close(ce_xml::genome));
 }
 
 
-shared_ptr<Cppn> CppnParser::parse(std::string fileName, GraphWidget* widget){
-	cppn = shared_ptr<Cppn>(new Cppn(widget));
+Cppn* CppnParser::parse(std::string fileName, GraphWidget* widget){
+	cppn = new Cppn(widget);
 	myfile.open(fileName.c_str());
 
-	parseHeader();
+	parseHeader(true);
 
+	if(tryParseLine(open(ce_xml::storage))){
+//		int read_min = boost::lexical_cast<int>(m[2].str());
+//		int read_max = boost::lexical_cast<int>(m[1].str());
+		int read_min = util::toInt(m[2]);
+		int read_max = util::toInt(m[1]);
 
-	if(data_version == "1.0"){
-		parseLine(buttons_count);
-		int nr_of_buttons = lexical_cast<int>(m[1].str());
-		for(int i=0; i<nr_of_buttons; i++){
-			parseColorButton();
+		std::streampos beforeCount = myfile.tellg();
+
+		int min = std::numeric_limits<int>::max();
+		int max = std::numeric_limits<int>::min();
+		while(tryParseLine(open(ce_xml::generation))){
+//			int nr = boost::lexical_cast<int>(m[1].str());
+			int nr = util::toInt(m[1]);
+			if(nr < min) min = nr;
+			if(nr > max) max = nr;
+			parseGenome(false);
+			parseLine(close(ce_xml::generation));
 		}
-		parseLine(any);
+
+		if(read_min != min) widget->warning("There exist generations smaller than the minimum generation in this file. File might be corrupted.");
+		if(read_max != max) widget->warning("There exist generations greater than the maximum generation in this file. File might be corrupted.");
+
+
+		myfile.seekg(beforeCount);
+		nextLine=true;
+
+
+		int generationNr = widget->getGeneration(min, max);
+		while(tryParseLine(open(ce_xml::generation))){
+//			int nr = boost::lexical_cast<int>(m[1].str());
+//			int nr = boost::lexical_cast<int>(m[1]);
+			int nr = util::toInt(m[1]);
+			if(nr == generationNr) break;
+			parseGenome(false);
+			parseLine(close(ce_xml::generation));
+		}
 	}
 
-
-	parseLine(nodes_count);
-	int nr_of_nodes = lexical_cast<int>(m[1].str());
-	for(int i=0; i<nr_of_nodes; i++){
-		parseNode();
-	}
-	parseLine(any);
-
-	parseLine(link_count);
-	int nr_of_edges = lexical_cast<int>(m[1].str());
-
-	for(int i=0; i<nr_of_edges; i++){
-		parseEdge();
-	}
-	parseFooter();
+	parseGenome(true);
 
 	return cppn;
 }

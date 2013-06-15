@@ -3,8 +3,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
 #include <limits>
 #include <QApplication>
 #include <QWidget>
@@ -32,27 +30,12 @@ int main(int argc, char **argv) {
 
 	act_functions::initializeActivationFunctions();
     QApplication app(argc, argv);
-//    qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
-//
-
-
     Window dialog;
-#if defined(Q_OS_SYMBIAN)
-    dialog.showMaximized();
-#else
+//    dialog.connect(&app, SIGNAL(aboutToQuit()), &dialog, SLOT(onExit()));
+
     dialog.show();
-#endif
 
 
-
-#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
-    mainWindow.menuBar()->addAction("Shuffle", widget, SLOT(shuffle()));
-    mainWindow.menuBar()->addAction("Zoom In", widget, SLOT(zoomIn()));
-    mainWindow.menuBar()->addAction("Zoom Out", widget, SLOT(zoomOut()));
-    mainWindow.showMaximized();
-#else
-//    mainWindow.show();
-#endif
     return app.exec();
 
 

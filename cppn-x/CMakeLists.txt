@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 project(cppn-x)
 
-find_package(Qt4 REQUIRED)
+set(CMAKE_PREFIX_PATH C:\\Qt\\4.8.4)
+find_package(Qt4 REQUIRED QtCore QtGui)
 
 include(${QT_USE_FILE})
 
@@ -15,6 +16,8 @@ SET(cppn-x_SRCS
 	src/CE_ActivationFunctions.cpp
 	src/CE_CppnWriter.cpp
 	src/CE_ColorButton.cpp
+	src/CE_NodeView.cpp
+	src/CE_FinalNodeView.cpp
 )
 
 SET(cppn-x_MOC_HDRS
@@ -49,98 +52,64 @@ SET(
 	"JGTL include directory"
 )
 
-SET(
-	NEAT_INCLUDE
-	"${CMAKE_CURRENT_SOURCE_DIR}/../NEAT/include"
-	CACHE
-	FILEPATH 
-	"NEAT include directory"
-) 
-
-SET(
-	TINYXMLDLL_INCLUDE
-	"${CMAKE_CURRENT_SOURCE_DIR}/../tinyxmldll/include"
-	CACHE
-	FILEPATH 
-	"TinyXMLDLL include directory"
-) 
-
-SET(
-	QT_INCLUDE
-	"/Library/Frameworks/QtCore.framework/Versions/4/Headers"
-	"/Library/Frameworks/QtGui.framework/Versions/4/Headers"
-	CACHE
-	FILEPATH 
-	"QT include directories"
-)
+#SET(
+#	QT_INCLUDE
+#	"/Library/Frameworks/QtCore.framework/Versions/4/Headers"
+#	"/Library/Frameworks/QtGui.framework/Versions/4/Headers"
+#	CACHE
+#	FILEPATH 
+#	"QT include directories"
+#)
 #Adding /usr/local/Qt4.8/mkspecs/macx-g++ if things fail might work
 
-if(Boost_LIBRARIES)
-	message("Boost_LIBRARIES defined in compile.sh script")
-else(Boost_LIBRARIES)
-#	message("Boost_LIBRARIES NOT defined. Running find_package")
-#	unset(Boost_INCLUDE_DIRS CACHE)
-#	unset(Boost_LIBRARY_DIRS CACHE)
-#	unset(Boost_LIBRARIES CACHE)
-#	find_package( Boost 1.34 COMPONENTS filesystem system thread regex)
-endif(Boost_LIBRARIES)
+message("Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}") 
 
-if(Boost_LIBRARIES)
-	message("Boost_LIBRARIES found using find package")
-else(Boost_LIBRARIES)
-	message("Boost_LIBRARIES NOT found using find package. Hoping the libraries paths are available somewhere.")
-	unset(Boost_LIBRARIES CACHE)
-	SET(
-		Boost_LIBRARIES
-		"boost_filesystem"
-		"boost_system"
-		"boost_thread"
-		"boost_regex"
-	)
-	
-endif(Boost_LIBRARIES)
+if(Boost_INCLUDE_DIRS)
+	message("Boost_INCLUDE_DIRS defined in compile.sh script")
+else(Boost_INCLUDE_DIRS)
+	message("Boost_INCLUDE_DIRS NOT defined. Running find_package")
+	unset(Boost_INCLUDE_DIRS CACHE)
+	find_package( Boost 1.34 )
+endif(Boost_INCLUDE_DIRS)
 
-if(QT_GUI)
-	message("QT_GUI defined in compile.sh script")
-else(QT_GUI)
-	message("QT_GUI NOT defined. Running find_library")
-	unset(QT_GUI CACHE)
-	FIND_LIBRARY(QT_GUI QtGui)
-endif(QT_GUI)
+#if(QT_GUI)
+#	message("QT_GUI defined in compile.sh script")
+#else(QT_GUI)
+#	message("QT_GUI NOT defined. Running find_library")
+#	unset(QT_GUI CACHE)
+#	FIND_LIBRARY(QT_GUI QtGui)
+#endif(QT_GUI)
 
-if(QT_CORE)
-	message("QT_CORE defined in compile.sh script")
-else(QT_CORE)
-	message("QT_CORE NOT defined. Running find_library")
-	unset(QT_CORE CACHE)
-	FIND_LIBRARY(QT_CORE QtCore)
-endif(QT_CORE)
+#if(QT_CORE)
+#	message("QT_CORE defined in compile.sh script")
+#else(QT_CORE)
+#	message("QT_CORE NOT defined. Running find_library")
+#	unset(QT_CORE CACHE)
+#	FIND_LIBRARY(QT_CORE QtCore)
+#endif(QT_CORE)
+
+
+#if ( NOT Qt_FOUND OR NOT QtCore_FOUND )
+#  message(FATAL_ERROR "Package Qt and component QtXml required, but not found!")
+#endif( NOT Qt_FOUND OR NOT QtCore_FOUND )
 
 #Print libraries found
 message("Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}") 
-message("Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}") 
-message("Boost_LIBRARIES   : ${Boost_LIBRARIES}") 
-message("QT_GUI : ${QT_GUI}") 
-message("QT_CORE: ${QT_CORE}") 
-
+message("QT_LIBRARIES : ${QT_LIBRARIES}")
+message("QT_INCLUDES : ${QT_INCLUDES}")
 
 
 
 #Set include directories:
 INCLUDE_DIRECTORIES(
 	include
-	${NEAT_INCLUDE}
 	${JGTL_INCLUDE}
-	${TINYXMLDLL_INCLUDE}
 	${Boost_INCLUDE_DIRS}
-	${QT_INCLUDE}
+	${QT_INCLUDES}
 )
 
 #Set link directories:
 LINK_DIRECTORIES(
-	${NEAT_LIB}
-	${TINYXMLDLL_LIB}
-	${Boost_LIBRARY_DIRS}
 	${QT_LIB}
 )
 
@@ -152,26 +121,10 @@ ADD_EXECUTABLE(
 	${cppn-x_MOC_SRCS}
 )
 
-ADD_DEPENDENCIES(cppn-x NEAT)
-
 #Set libraries:
 TARGET_LINK_LIBRARIES(
 	cppn-x
-	${Boost_LIBRARIES}
-	${QT_GUI}
-	${QT_CORE}
-
-	debug
-	tinyxmldll_d
-
-	optimized
-	tinyxmldll
-
-	debug
-	NEAT_d
-
-	optimized
-	NEAT		
+	${QT_LIBRARIES}	
 )
 
 

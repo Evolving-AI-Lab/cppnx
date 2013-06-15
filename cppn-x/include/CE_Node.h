@@ -45,12 +45,15 @@
 #include "CE_Edge.h"
 #include "CE_CppnWidget.h"
 
+
 #include <QGraphicsItem>
 #include <QList>
 #include <QPointer>
 
 class Edge;
 class GraphWidget;
+class NodeView;
+class FinalNodeView;
 QT_BEGIN_NAMESPACE
 class QGraphicsSceneMouseEvent;
 QT_END_NAMESPACE
@@ -63,7 +66,7 @@ class Node : public QGraphicsItem
 {
 
 public:
-    Node(GraphWidget *graphWidget, std::string branch = "", std::string id = "", std::string type = "", std::string activationFunction_str=XML_SIGMOID, std::string label = "", int width = 256, int height = 256, QColor color = QColor(0,0,0));
+    Node(GraphWidget *graphWidget, std::string branch = "", std::string id = "", std::string type = "", std::string activationFunction_str=XML_SIGMOID, std::string label = "", std::string affinity = "", std::string bias = "", int width = 256, int height = 256, QColor color = QColor(0,0,0));
     ~Node();
 
     void addIncommingEdge(Edge *edge);
@@ -84,15 +87,18 @@ public:
     void setPixel(int x, int y, char r, char g, char b);
     void setPixel(size_t index, char r, char g, char b);
     void setPixel(size_t index, char grey);
+    void setPixel(size_t index, const double& value);
+
+    void updateAll();
 
    // std::string getName(){return name;}
     std::string getType(){return nodetype;}
 
-    void setActivationFunction(ActivationFunction _activationFunction){
+    void setActivationFunction(ActivationFunctionPt _activationFunction){
     	activationFunction =_activationFunction;
     }
 
-    ActivationFunction getActivationFunction(){
+    ActivationFunctionPt getActivationFunction(){
     	return activationFunction;
     }
 
@@ -128,6 +134,29 @@ public:
     	color = _color;
     }
 
+    void setNodeView(NodeView* _nodeView);
+    void resetNodeView(bool toDelete = true);
+
+    NodeView* getNodeView(){
+    	return nodeView;
+    }
+
+    void setFinalNodeView(FinalNodeView* _nodeView){
+    	finalNodeView = _nodeView;
+    }
+
+    std::string getAffinity(){return affinity;};
+    std::string getBias(){return bias;};
+
+    size_t y_index;
+    size_t x_index;
+
+    static const int node_width = 40;
+    static const int node_height = 40;
+    static const int half_width = 20;
+    static const int half_height = 20;
+    static const int footerBarSize = 15;
+
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
@@ -143,12 +172,19 @@ private:
     std::string branch;
     std::string id;
     std::string nodetype;
+    std::string activationFunction_short;
     std::string activationFunction_str;
     std::string label;
-    ActivationFunction activationFunction;
+    std::string affinity;
+    std::string bias;
+
+    ActivationFunctionPt activationFunction;
     QColor color;
 
     size_t index;
+    NodeView* nodeView;
+    FinalNodeView* finalNodeView;
+
 };
 //! [0]
 

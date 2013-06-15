@@ -7,12 +7,14 @@
 
 #include "CE_Cppn.h"
 #include <queue>
+#include <set>
+#include <cmath>
 
 
 static const double Pi = 3.14159265358979323846264338327950288419717;
 
-void Cppn::addNode(std::string branch, std::string id, std::string type, std::string activationFunction, std::string label, QPointF position, QColor color){
-	Node* QTnode = new Node(widget, branch, id, type, activationFunction, label, width, height, color);
+void Cppn::addNode(std::string branch, std::string id, std::string type, std::string activationFunction, std::string label, std::string affinity, std::string bias, QPointF position, QColor color){
+	Node* QTnode = new Node(widget, branch, id, type, activationFunction, label, affinity, bias, width, height, color);
 	if(label == INPUT_X){
 		nodes[input_x]=QTnode;
 		QTnode->setIndex(input_x);
@@ -25,6 +27,18 @@ void Cppn::addNode(std::string branch, std::string id, std::string type, std::st
 	} else if(label == INPUT_BIAS){
 		nodes[input_b]=QTnode;
 		QTnode->setIndex(input_b);
+	} else if(label == OUTPUT_INK){
+		QTnode->setFinalNodeView(finalNodeView);
+		nodes.push_back(QTnode);
+	} else if(label == OUTPUT_SATURATION){
+		QTnode->setFinalNodeView(finalNodeView);
+		nodes.push_back(QTnode);
+	} else if(label == OUTPUT_HUE){
+		QTnode->setFinalNodeView(finalNodeView);
+		nodes.push_back(QTnode);
+	} else if(label == OUTPUT_BRIGTHNESS){
+		QTnode->setFinalNodeView(finalNodeView);
+		nodes.push_back(QTnode);
 	} else {
 		nodes.push_back(QTnode);
 	}
@@ -42,16 +56,13 @@ void Cppn::addConnection(std::string branch, std::string id, std::string source_
 	numberOfEdges++;
 }
 
-void Cppn::setWeight(Edge* edge, double weight){
+void Cppn::setWeight(Edge* edge, double weight, bool update){
 	if(edge->getWeight() == weight) return;
+	if(!validPhenotype) buildPhenotype();
 	edge->setWeight(weight);
 	edge->update();
-	if(validPhenotype){
-		linkWeights[edge->getIndex()]=weight;
-		//updateNodes();
-	}
-	//updateNodes(edge->destNode());
-	updateFromLink(edge);
+	linkWeights[edge->getIndex()]=weight;
+	if(update) updateFromLink(edge);
 }
 
 
@@ -60,8 +71,8 @@ void Cppn::updateNodes(){
 	if(!validPhenotype) buildPhenotype();
 
 	//Set input values
-	for(unsigned long x=0; x<width; x++){
-		for(unsigned long y=0; y<height; y++){
+	for(int x=0; x<width; x++){
+		for(int y=0; y<height; y++){
 			double xv = (double(x)/(double(width)/2) - 1);
 			double yv = (double(y)/(double(height)/2) - 1);
 			size_t index = x + y*width;
@@ -80,7 +91,13 @@ void Cppn::updateNodes(){
 //			std::cout << "Index: " << xy_index << std::endl;
 			updateNode(currentNode, xy_index);
 		}
+		phenotypeNodes[currentNode]->updateAll();
 	}
+
+	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+		finalNodeView->updateFinalView(xy_index);
+	}
+	finalNodeView->update();
 }
 
 std::vector< std::vector <Node*> > Cppn::buildLayers(){
@@ -90,14 +107,14 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 	std::vector <Node*> nextNotPlaced;
 	std::map <Node*, int> incommingEdges;
 
-	for(int i=0; i<nodes.size(); i++){
+	for(size_t i=0; i<nodes.size(); i++){
 		incommingEdges[nodes[i]]= nodes[i]->incomingEdges().size();
 		//std::cout << nodes[i]->incomingEdges().size() << std::endl;
 	}
 
 	while(notPlaced.size()>0){
 		nextNotPlaced.clear();
-		for(int i=0; i<notPlaced.size(); i++){
+		for(size_t i=0; i<notPlaced.size(); i++){
 			if(incommingEdges[notPlaced[i]] <= 0){
 				layers.back().push_back(notPlaced[i]);
 			} else {
@@ -105,7 +122,7 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 			}
 		}
 
-		for(int i=0; i<layers.back().size(); i++){
+		for(size_t i=0; i<layers.back().size(); i++){
 			QList<Edge *> outgoingEdges = layers.back()[i]->outgoingEdges();
 			foreach(Edge* outgoing_edge, outgoingEdges){
 				incommingEdges.find(outgoing_edge->destNode())->second = incommingEdges[outgoing_edge->destNode()]-1;
@@ -121,26 +138,27 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 
 
 void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastSource){
-	switch(node->getActivationFunction()){
-	case ACTIVATION_FUNCTION_SIGMOID:
-		activationFunctions[index]=act_functions::sigmoid;
-		break;
-	case ACTIVATION_FUNCTION_LINEAR:
-		activationFunctions[index]=act_functions::identity;
-		break;
-	case ACTIVATION_FUNCTION_SIN:
-		activationFunctions[index]=act_functions::sin;
-		break;
-	case ACTIVATION_FUNCTION_COS:
-		activationFunctions[index]=act_functions::cos;
-		break;
-	case ACTIVATION_FUNCTION_GAUSSIAN:
-		activationFunctions[index]=act_functions::gaussian;
-		break;
-	default:
-		throw JGTL::LocatedException("Unknow activation function: '" + boost::lexical_cast<std::string>(node->getActivationFunction()) + "'");
-		break;
-	}
+	activationFunctions[index]=node->getActivationFunction();
+//	switch(node->getActivationFunction()){
+//	case ACTIVATION_FUNCTION_SIGMOID:
+//		activationFunctions[index]=act_functions::sigmoid;
+//		break;
+//	case ACTIVATION_FUNCTION_LINEAR:
+//		activationFunctions[index]=act_functions::identity;
+//		break;
+//	case ACTIVATION_FUNCTION_SIN:
+//		activationFunctions[index]=act_functions::sin;
+//		break;
+//	case ACTIVATION_FUNCTION_COS:
+//		activationFunctions[index]=act_functions::cos;
+//		break;
+//	case ACTIVATION_FUNCTION_GAUSSIAN:
+//		activationFunctions[index]=act_functions::gaussian;
+//		break;
+//	default:
+//		throw JGTL::LocatedException("Unknow activation function: '" + boost::lexical_cast<std::string>(node->getActivationFunction()) + "'");
+//		break;
+//	}
 	node->setIndex(index);
 	phenotypeNodes[index]=node;
 
@@ -191,7 +209,7 @@ void Cppn::buildPhenotype(){
 
 	//Put the input nodes in the right order
 	Node* inputs[4];
-	for(int i=0; i<layers[0].size(); i++ ){
+	for(size_t i=0; i<layers[0].size(); i++ ){
 		if(layers[0][i]->getType() == XML_TYPE_INPUT){
 			inputs[layers[0][i]->getIndex()] = layers[0][i];
 		}
@@ -203,8 +221,8 @@ void Cppn::buildPhenotype(){
 	}
 
 	//Process the rest
-	for(int i=0; i< layers.size(); i++){
-		for(int j=0; j< layers[i].size(); j++){
+	for(size_t i=0; i< layers.size(); i++){
+		for(size_t j=0; j< layers[i].size(); j++){
 
 
 			if(layers[i][j]->getType() == XML_TYPE_INPUT){
@@ -267,8 +285,8 @@ void Cppn::positionNodesCircle(){
 	qreal distanceEdge1;
 	qreal distanceEdge2;
 
-	for(int i=0; i< layers.size(); i++){
-		for(int j=0; j< layers[i].size(); j++){
+	for(size_t i=0; i< layers.size(); i++){
+		for(size_t j=0; j< layers[i].size(); j++){
 			if(k%2 != 0){
 				position1 = QPointF(300 * std::cos(float(((Pi/(nodes.size()))*k)+ Pi/2)), 300 * std::sin(float(((Pi/(nodes.size()))*k)+ Pi/2)) );
 				position2 = QPointF(-300 * std::cos(float(((Pi/(nodes.size()))*k)+ Pi/2)), 300 * std::sin(float(((Pi/(nodes.size()))*k)+ Pi/2)) );
@@ -315,9 +333,9 @@ void Cppn::positionNodes(){
 
 	int scale = 70;
 
-	for(int i=0; i< layers.size(); i++){
-		for(int j=0; j< layers[i].size(); j++){
-			position = QPointF(j*scale-(int(layers[i].size())-1)*(scale/2), -(i*scale-(int(layers.size())-1)*(scale/2)));
+	for(size_t i=0; i< layers.size(); i++){
+		for(size_t j=0; j< layers[i].size(); j++){
+			position = QPointF(int(j)*scale-(int(layers[i].size())-1)*(scale/2), -(int(i)*scale-(int(layers.size())-1)*(scale/2)));
 			layers[i][j]->setPos(position);
 		}
 	}
@@ -339,8 +357,13 @@ void Cppn::updateFromLink(Edge* edge){
 			updateNode(toUpdate[i], xy_index);
 		}
 
-		phenotypeNodes[toUpdate[i]]->update();
+		phenotypeNodes[toUpdate[i]]->updateAll();
 	}
+
+	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+		finalNodeView->updateFinalView(xy_index);
+	}
+	finalNodeView->update();
 }
 
 
@@ -364,22 +387,24 @@ inline void Cppn::updateNode(const size_t& node, const size_t& xy_index, const d
 	}
 
 	//Apply the activation function
-//	std::cout << "Activate function: " << (void *)activationFunctions[node] << std::endl;
-//	std::cout << "sigmoid function: " << (void *)act_functions::sigmoid << std::endl;
-//	std::cout << "identity function: " << (void *)act_functions::identity << std::endl;
-//	std::cout << "sin function: " << (void *)act_functions::sin << std::endl;
-//	std::cout << "cos function: " << (void *)act_functions::cos << std::endl;
-//	std::cout << "gaussian function: " << (void *)act_functions::gaussian << std::endl;
-
 	nodeChache[index]= (*activationFunctions[node])(nodeChache[index]);
-//	std::cout << "Done" << std::endl;
-	phenotypeNodes[node]->setPixel(xy_index, char(std::min(std::abs(nodeChache[index]), 1.0)*255));
+	phenotypeNodes[node]->setPixel(xy_index, nodeChache[index]);
 
 	//Calculate outgoing links
 	//std::cout << "lastTargets[node] " << lastTargets[node] << " lastTargets[node+1] " << lastTargets[node+1] <<std::endl;
 	for(size_t i = lastTargets[node]; i<lastTargets[node+1]; i++){
 		linkChache[xy_index+i*width*height]=nodeChache[index]*linkWeights[i];
 	}
+}
+
+inline void Cppn::updateNode(const size_t& node){
+	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+		updateNode(node, xy_index);
+	}
+	phenotypeNodes[node]->updateAll();
+}
+void Cppn::updateNode(Node* node){
+	updateNode(node->getIndex());
 }
 
 

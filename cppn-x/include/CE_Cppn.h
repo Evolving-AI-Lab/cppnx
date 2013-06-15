@@ -13,6 +13,7 @@
 #include "CE_CppnWidget.h"
 #include "CE_ActivationFunctions.h"
 #include "CE_ColorButton.h"
+#include "CE_FinalNodeView.h"
 //#include "NEAT_Defines.h"
 //#include "NEAT_STL.h"
 
@@ -21,7 +22,7 @@ class Node;
 class Edge;
 
 
-typedef double (*ActivationFunctionPt)(double);
+
 
 class Cppn {
 public:
@@ -33,33 +34,37 @@ public:
 		lastSources(0),
 		nodeSources(0),
 		phenotypeNodes(0),
-		numberOfNodes(0),
-		numberOfEdges(0),
 		nodeChache(0),
 		linkChache(0),
 		toUpdate(0),
 		toUpdateStart(0),
+		numberOfNodes(0),
+		numberOfEdges(0),
 		widget(widget),
 		nodes(nr_of_inputs),
 		edges(0),
 		nodeMap(),
 		validPhenotype(false),
 		newFile(false)
-	{
 
+	{
+		finalNodeView = new FinalNodeView(width, height);
 	}
 
 	~Cppn(){
 		deletePhenotype();
+//		delete finalNodeView;
 	}
 
-	void addNode(std::string branch, std::string id, std::string type, std::string activationFunction, std::string label, QPointF position, QColor color);
+	void addNode(std::string branch, std::string id, std::string type, std::string activationFunction, std::string label, std::string affinity, std::string bias, QPointF position, QColor color);
 	void addConnection(std::string branch, std::string id, std::string source_branch, std::string source_id, std::string target_branch, std::string target_id, double weight, QColor color_q);
-	void setWeight(Edge* edge, double weight);
+	void setWeight(Edge* edge, double weight, bool update = true);
 	void updateNodes();
 
 	void buildPhenotype();
 	inline void updateNode(const size_t& node, const size_t& xy_index, const double& initialValue = 0);
+	inline void updateNode(const size_t& node);
+	void updateNode(Node* node);
 //	inline void updateLink(const size_t& node, const size_t& link, const size_t& xy_index);
 
 	void positionNodes();
@@ -99,10 +104,52 @@ public:
 		return newFile;
 	}
 
+	//Genome getters and setters
+	void setGenome(std::string _age = "unknown", std::string _phenotype = "grey"){
+		age = _age;
+		phenotype = _phenotype;
+	}
+
+	std::string getAge(){
+		return age;
+	}
+
+	std::string getPhenotype(){
+		return phenotype;
+	}
+
+	//Identifier getters and setters
+	void setIdentifier(std::string _branch = "unknown", std::string _id = "unknown"){
+		branch = _branch;
+		id = _id;
+	}
+
+	std::string getBranch(){return branch;}
+	std::string getId(){return id;}
+
+	//Parent getters and setters
+	void addParent(std::string branch = "unknown", std::string id = "unknown"){
+		parent_branches.push_back(branch);
+		parent_ids.push_back(id);
+	}
+
+	size_t getNrOfParents(){return parent_ids.size();}
+	std::string getParentBranch(size_t index){return parent_branches[index];}
+	std::string getParentId(size_t index){return parent_ids[index];}
+
+	//Data version getters and setters
+	void setDataVersion(std::string _dataVersion = "unknown"){dataVersion = _dataVersion;}
+	std::string getDataVersion(){return dataVersion;}
+
+	//Color button getters and setters
 	size_t getNrOfColorButtons();
 	CE_ColorButton* getColorButton(size_t i);
 	void addColorButton(std::string text, QColor color);
 
+
+	FinalNodeView* getFinalNodeView(){
+		return finalNodeView;
+	}
 
 private:
 	void updateFromLink(Edge* edge);
@@ -155,6 +202,17 @@ private:
     std::vector<std::string> footerLines;
 
     bool newFile;
+    FinalNodeView* finalNodeView;
+
+    //File only data
+    std::string age;
+    std::string phenotype;
+    std::string branch;
+    std::string id;
+    std::string dataVersion;
+    std::vector<std::string> parent_branches;
+    std::vector<std::string> parent_ids;
+
 
 //    QList<CE_ColorButton*> buttons;
 };

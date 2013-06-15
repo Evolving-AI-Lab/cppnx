@@ -67,4 +67,4 @@ SET(
 
 
 
-subdirs (NEAT cppn-x zlib tinyxmldll)
+subdirs (cppn-x)

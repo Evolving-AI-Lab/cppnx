@@ -8,75 +8,115 @@
 #include "CE_CppnWriter.h"
 #include <iostream>
 #include <iomanip>
+#include "CE_Xml.h"
+#include "CE_Util.h"
 
 const std::string CppnWriter::version = "1.0";
+
+#define writeEach(template_str,count,writer) open(template_str, count); for(size_t i=0; i<count; i++){writer;} close(template_str);
 
 
 std::string indent(size_t nr){
 	return std::string (nr*4, ' ');
 }
 
-void CppnWriter::write(shared_ptr<Cppn> cppn){
-	output << cppn->getHeaderLine(0) << "\n";
-	output << "<cppn-data version=\"" << version << "\"/>\n";
-	for(size_t i=1; i<cppn->getNrOfHeaderLines(); i++){
-		output << cppn->getHeaderLine(i) << "\n";
-	}
 
-	output << indent(2) << "<buttons count=\"" << cppn->getNrOfColorButtons() << "\">\n";
-	for(size_t i=0; i<cppn->getNrOfColorButtons(); i++){
-		writeColorButton(cppn->getColorButton(i));
-	}
-	output << indent(2) << "</buttons>\n";
+template <typename Param1, typename Param2, typename Param3, typename Param4>
+void CppnWriter::open(std::string template_str, Param1 param1, Param2 param2, Param3 param3, Param4 param4){
+	std::ostringstream param1_stream;
+	std::ostringstream param2_stream;
+	std::ostringstream param3_stream;
+	std::ostringstream param4_stream;
+	param1_stream << std::setprecision(16) << param1;
+	param2_stream << std::setprecision(16) << param2;
+	param3_stream << std::setprecision(16) << param3;
+	param4_stream << std::setprecision(16) << param4;
 
-	output << indent(2) << "<nodes count=\"" << cppn->getNrOfNodes() << "\">\n";
-	for(size_t i=0; i<cppn->getNrOfNodes(); i++){
-		writeNode(cppn->getNode(i));
-	}
+	output << indent(indentCt) + ce_xml::getOpenXmlString(template_str, param1_stream.str(), param2_stream.str(), param3_stream.str(), param4_stream.str()) << "\n";
+	indentCt++;
+}
 
-	output << indent(2) << "</nodes>\n";
+//void CppnWriter::open(std::string template_str, std::string param1, std::string param2, std::string param3, std::string param4){
+//	output << indent(indentCt) + ce_xml::getOpenXmlString(template_str, param1, param2, param3, param4) << "\n";
+//	indentCt++;
+//}
+//
+//void CppnWriter::open(std::string template_str, size_t param1){
+//	output << indent(indentCt) + ce_xml::getOpenXmlString(template_str, param1) << "\n";
+//	indentCt++;
+//}
 
-	output << indent(2) << "<links count=\"" << cppn->getNrOfEdges() << "\">\n";
-	for(size_t i=0; i<cppn->getNrOfEdges(); i++){
-		writeEdge(cppn->getEdge(i));
-	}
+void CppnWriter::close(std::string template_str){
+	indentCt--;
+	output << indent(indentCt) + ce_xml::getCloseXmlString(template_str) << "\n";
+}
 
-	output << indent(2) << "</links>\n";
+//void CppnWriter::write(std::string template_str, std::string param1, std::string param2, std::string param3, std::string param4){
+//	output << indent(indentCt) + ce_xml::getOneLineXmlString(template_str, param1, param2, param3, param4) << "\n";
+//}
 
-	for(size_t i=1; i<cppn->getNrOfFooterLines(); i++){
-		output << cppn->getFooterLine(i) << "\n";
-	}
+template <typename Param1, typename Param2, typename Param3, typename Param4>
+void CppnWriter::write(std::string template_str, Param1 param1, Param2 param2, Param3 param3, Param4 param4){
+	std::ostringstream param1_stream;
+	std::ostringstream param2_stream;
+	std::ostringstream param3_stream;
+	std::ostringstream param4_stream;
+	param1_stream << std::setprecision(16) << param1;
+	param2_stream << std::setprecision(16) << param2;
+	param3_stream << std::setprecision(16) << param3;
+	param4_stream << std::setprecision(16) << param4;
+
+	output << indent(indentCt) + ce_xml::getOneLineXmlString(template_str, param1_stream.str(), param2_stream.str(), param3_stream.str(), param4_stream.str()) << "\n";
+}
+
+//void CppnWriter::openClose(std::string template_str, std::string param){
+//	output << indent(indentCt) + ce_xml::getOpenAndCloseXmlString(template_str, param) << "\n";
+//}
+
+template <typename ParamType>
+void CppnWriter::openClose(std::string template_str, ParamType param){
+	output << indent(indentCt) << ce_xml::getOpenXmlString(template_str) << param << ce_xml::getCloseXmlString(template_str) << "\n";
+}
+
+
+void CppnWriter::write(Cppn* cppn){
+	output << ce_xml::getFirstLine() << "\n";
+	write(ce_xml::cppn_data, version);
+	open(ce_xml::data, cppn->getDataVersion());
+	open(ce_xml::genomePhen, cppn->getAge(), cppn->getPhenotype());
+	write(ce_xml::identifier, cppn->getBranch(), cppn->getId());
+
+	writeEach(ce_xml::parent_count, cppn->getNrOfParents(), write(ce_xml::identifier, cppn->getParentBranch(i), cppn->getParentId(i)));
+	writeEach(ce_xml::buttons_count, cppn->getNrOfColorButtons(), writeColorButton(cppn->getColorButton(i)););
+	writeEach(ce_xml::nodes_count, cppn->getNrOfNodes(), writeNode(cppn->getNode(i)););
+	writeEach(ce_xml::link_count, cppn->getNrOfEdges(), writeEdge(cppn->getEdge(i)););
+
+	close(ce_xml::genomePhen);
+	close(ce_xml::data);
 }
 
 void CppnWriter::writeNode(Node* node){
-	if(node->getType() == XML_TYPE_HIDDEN){
-		output << indent(3) <<  "<node type=\"" << node->getType() << "\">\n";
-	} else {
-		output << indent(3) << "<node label=\"" << node->getLabel() << "\" type=\"" << node->getType() << "\">\n";
-	}
-
-
-	output << indent(4) << "<marking branch=\"" << node->getBranch() << "\" id=\""<< node->getId() <<"\"/>\n";
-	output << indent(4) << "<activation>" << node->getXmlActivationFunction() << "</activation>\n";
-	output << indent(4) << "<color>" << node->getColor().red() << " " << node->getColor().green() << " " << node->getColor().blue() << "</color>\n";
-	output << indent(4) << "<position>" << std::setprecision(17) << node->pos().x() << " " << node->pos().y() << "</position>\n";
-	output << indent(3) << "</node>\n";
-
+	open(ce_xml::iocolornode, node->getAffinity(), node->getBias(), node->getLabel(), node->getType());
+	write(ce_xml::marking, node->getBranch(), node->getId());
+	openClose(ce_xml::activation, node->getXmlActivationFunction());
+	write(ce_xml::color, node->getColor().red(), node->getColor().green(), node->getColor().blue());
+	write(ce_xml::position, node->pos().x(), node->pos().y());
+	close(ce_xml::colornode);
 }
 
 void CppnWriter::writeEdge(Edge* edge){
-	output << indent(3) << "<link>\n";
-	output << indent(4) << "<marking branch=\"" << edge->getBranch() << "\" id=\"" << edge->getId() << "\"/>\n";
-	output << indent(4) << "<source branch=\"" << edge->sourceNode()->getBranch() << "\" id=\"" << edge->sourceNode()->getId() << "\"/>\n";
-	output << indent(4) << "<target branch=\"" << edge->destNode()->getBranch() << "\" id=\"" << edge->destNode()->getId() << "\"/>\n";
-	output << indent(4) << "<weight>" << std::setprecision(17) << edge->getWeight() << "</weight>\n";
-	output << indent(4) << "<color>" << edge->getColor().red() << " " << edge->getColor().green() << " " << edge->getColor().blue() << "</color>\n";
-	output << indent(3) << "</link>\n";
+	open(ce_xml::link);
+	write(ce_xml::marking, edge->getBranch(), edge->getId());
+	write(ce_xml::source,  edge->sourceNode()->getBranch(),  edge->sourceNode()->getId());
+	write(ce_xml::target, edge->destNode()->getBranch(), edge->destNode()->getId());
+	openClose(ce_xml::weight, util::toString(edge->getOriginalWeight()));
+	write(ce_xml::color, edge->getColor().red(), edge->getColor().green(), edge->getColor().blue());
+	close(ce_xml::link);
 }
 
 void CppnWriter::writeColorButton(CE_ColorButton* colorButton){
-	output << indent(3) << "<colorButton>\n";
-	output << indent(4) << "<text>" << colorButton->getText() << "</text>\n";
-	output << indent(4) << "<color>" << colorButton->getColor().red() << " " << colorButton->getColor().green() << " " << colorButton->getColor().blue() << "</color>\n";
-	output << indent(3) << "</colorButton>\n";
+	open(ce_xml::color_button);
+	openClose(ce_xml::text, colorButton->getText());
+	write(ce_xml::color, colorButton->getColor().red(), colorButton->getColor().green(), colorButton->getColor().blue());
+	close(ce_xml::color_button);
 }
