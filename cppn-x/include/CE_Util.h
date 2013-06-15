@@ -10,6 +10,10 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <fstream>
+#include <iostream>
+#include <istream>
+#include <ostream>
 
 
 namespace util{
