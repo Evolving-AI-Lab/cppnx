@@ -8,6 +8,7 @@
 #include "CE_CppnParser.h"
 #include "CE_Xml.h"
 #include "CE_Util.h"
+#include <limits>
 
 
 #define parseEach(template_str,parser) while(parseCount(template_str)){parser;} parseLine(close(template_str));

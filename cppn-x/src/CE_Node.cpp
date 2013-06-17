@@ -266,7 +266,9 @@ void Node::setPixel(size_t index, char grey){
 
 void Node::setPixel(size_t index, const double& value){
 	size_t localindex = index*4;
-	char grey(std::min(std::abs(value), 1.0)*255);
+	//Grey does not use the min() function to prevent a bug on windows.
+	char grey = 255;
+	if(std::abs(value) < 1.0) grey = std::abs(value)*255;
 	char alt(std::min(std::max(value, 0.0), 1.0)*255);
 	pixels->bits()[localindex]=alt;
 	pixels->bits()[localindex+1]=alt;

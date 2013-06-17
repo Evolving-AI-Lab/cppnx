@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <stdio.h>
 
 #define CREATE_PAUSE(X) {cout << X << "\nPress enter to continue" << endl;string line;getline(cin,line);}
 

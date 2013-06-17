@@ -1,56 +1,72 @@
-These are the installation steps for UNIX and MAC systems.
+This files contains the installation instructions for cppn-x. 
+These installations have been tested on Windows XP (SP 3) and Mac OS X 10.6.8,
+but they might work on other systems as well.
 
-*** Install cmake ***
-See www.cmake.org for instructions.
+Please chose the instructions for the system that most closely resembles yours
+and mail to joost.hui@gmail.com, providing as much information as possible, 
+if you encounter any problems.
 
-
-*** Install the boost library ***
-Download the boost library from www.boost.org
-	Install preferably in the default location: /usr/local and build at least:
-	- boost_system
-	- boost_filesystem
-	- boost_thread
-	- boost_regex
-
-If you are on a unix based system you can:
-	- Extract the library to /usr/local
-	- Open a terminal and go to the boost directory (cd /usr/local/boost_1_53_0)
-	- Run: sudo bootstrap.sh
-	- Run: ./b2 install
-
-If you are on a windows system you can:
-	- Get an installer from www.boostpro.com
-Or:
-	- Extract the library to C:\Program Files\boost
-	- Open the command line a go the the boost directory (C:\Program Files\boost)
-	- Run: bootstrap
-	- Run: .\b2
+****************************
+*** UNIX and MAC systems ***
+****************************
+These are the installation instructions for MAC and UNIX based systems.
+Because of a recent MAC specific fix, there is a good chance that it will not compile on UNIX.
+If this is the case, open compile.sh, remove the arguments to quake, and try again.
 
 *** Install QT 4.8 ***
-Go to http://qt-project.org/downloads and download QT 4.8
-
+For Mac:
+- Download 'Qt libraries 4.8.4 for Mac (185 MB)' from http://qt-project.org/downloads.
+For UNIX:
+- Download 'Qt libraries 4.8.4 for embedded Linux (226 MB)' from http://qt-project.org/downloads.
+For both:
+- Execute the installer and follow the instructions.
 
 *** Compile cppn-x ***
-In general there are two way to install cppn-x
-
-== From a script ==
 - Open compile.sh and check that all paths are correct. The compile.sh will have additional comments for setting. 
 - Run compile.sh
 
-The executable 'cppn-x' should be placed in the 'out' folder.
-
-== Using cmake directly ==
-- Create a new folder, for example my_build (mkdir my_build)
-- Change the directory to this folder (cd my_build)
-- Run cmake, targeting this directory as the source directory (cmake ..)
-
-The executable 'cppn-x' should be placed in the 'out' folder.
-
-Note: the CMakeLists.txt has been configured to disallow 'in-source' builds.
-This not only means that running 'cmake .' results in an error,
-it also means that, if you accidentally run 'cmake .',
-other builds will also fail. 
-To resolve this situation remove CMakeCache.txt and CMakeFiles or run 'clean.sh'
+For UNIX:
+- The executable 'cppn-x' should be placed in the 'build' folder.
+For MAC:
+- The app 'cppn-x.app' should be placed in the 'build' folder.
 
 *** Run cppn-x ***
-Just run 'cppn-x' in the 'out' folder. Have Fun! 
+For UNIX:
+- Run 'cppn-x' in the 'build' folder.
+For MAC:
+- Open 'cppn-x.app' in the 'build' folder from a finder window or execute build/cppn.app/Contents/MacOS/cppn-x.
+
+****************************
+***** Windows systems ******
+****************************
+These instructions use the open source 'MinGW' (Minimalist GNU for windows) to install both QT and cppn-x.
+It is probably possible to install everything using Visual Studio 2008 or Visual Studio 2010,
+but this has not been tested and no instructions are available.
+
+*** Install MinGW 4.4 ***
+- Download MinGW-gcc-4.4.0 (MinGW-gcc440_1.zip) from: http://nosymbolfound.blogspot.com/2012/12/since-until-now-qt-under-windows-is.html
+- Extract where you wish to install MinGW (there will not be an installer) and remember where you put it.
+
+The MinGW variant of QT explicitly states that it needs MinGW 4.4 in order to function properly when using the pre-compiled binaries.
+More recent versions are reported to function properly when compiling QT yourself, but these instructions use the pre-compiled binaries.
+
+*** Install QT 4.8.4 ***
+- Download 'Qt libraries 4.8.4 for Windows (minGW 4.4, 317 MB)' from: http://qt-project.org/downloads
+- Execute the installer (qt-win-opensource-4.8.4-mingw.exe) and follow the instructions.
+	- You can install QT anywhere but you have to remember the installation directory.
+	- When, during the installation of QT, you are asked where MinGW is installed,
+	  make sure you provide the installation directory you remembered in the step above. 
+	  You can now forget this directory.
+
+*** Install cppn-x 0.3 ***
+- Open (edit) qt-path.bat and make sure the path points to the bin directory in the QT installation directory you remembered in the previous step.
+  As such, the second line should read something like: set PATH=C:\path\to\qt\4.8.4\bin
+  Don't forget to save this file.
+- Run compile.bat
+- An executable (cppn-x.exe) should now be present in build\release
+
+*** Run cppn-x 0.3 ***
+Usually you can just run build\release\cppn-x.exe
+If that doesn't work due to dll errors, try running it using run.bat
+
+Have fun using it, and please let me know if there are any features missing from this build.

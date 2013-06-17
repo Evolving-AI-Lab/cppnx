@@ -28,6 +28,11 @@ Version: 0.3
 - Added a visualization of the final picture.
 - Works on windows.
 
+Known issues:
+- When adding an input node to the side bar the node will turn black.
+  Manipulating other nodes will cause these nodes to behave weirdly as well.
+  To fix this bug, go to 'edit -> reset all', and select all affected nodes such that they will be updated.
+
 Wish-list:
 - Create a picture for an arbitrary node.
 - Less pixelated pictures.
