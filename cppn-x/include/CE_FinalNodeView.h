@@ -15,6 +15,9 @@ public:
 	FinalNodeView(int width = 256, int height = 256);
 	virtual ~FinalNodeView();
 
+    enum { Type = UserType + FINALVIEW_TYPE };
+    virtual int type() const { return Type; }
+
 	void setHue(const size_t& index, const int& value){
 		hue[index] = value;
 	}

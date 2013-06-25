@@ -54,7 +54,7 @@ const double Edge::m_click_easy_width = 10.0;
 
 
 Edge::Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *sourceNode, Node *destNode, qreal weight, QColor color ,QGraphicsItem *parent, QGraphicsScene *scene)
-    : QGraphicsLineItem(0,0,2,2,parent,scene), branch(branch), id(id),  arrowSize(5), graphWidget(graphWidget), currentWeight(weight), originalWeight(weight), color(color)
+    : QGraphicsLineItem(0,0,2,2,parent,scene), branch(branch), id(id),  arrowSize(5), graphWidget(graphWidget), currentWeight(weight), originalWeight(weight), color(color), _flash(0)
 {
 	this->setFlag(QGraphicsItem::ItemIsSelectable);
     source = sourceNode;
@@ -145,23 +145,33 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
 
 
-
-
-
 	QColor connectionColor;
 	QColor labelColor = color;
 
-	if (this->isSelected())
-	{
+	if(_flash == -1){
 		if(currentWeight >= 0){
 			connectionColor = QColor(0,255,0);
 		} else {
 			connectionColor = QColor(255,0,0);
 		}
 		labelColor = labelColor.lighter();
-	}
-	else
-	{
+
+	} else if(_flash == 1){
+		if(currentWeight >= 0){
+			connectionColor = QColor(0,255,0);
+		} else {
+			connectionColor = QColor(255,0,0);
+		}
+		labelColor = labelColor.darker();
+
+	} else if (this->isSelected()){
+		if(currentWeight >= 0){
+			connectionColor = QColor(0,255,0);
+		} else {
+			connectionColor = QColor(255,0,0);
+		}
+		labelColor = labelColor.lighter();
+	}else{
 		if(currentWeight >= 0){
 			connectionColor = QColor(0,150,0);
 		} else {

@@ -28,8 +28,8 @@ public:
 	NodeView(Node* node, int width = 256, int height = 256);
 	virtual ~NodeView();
 
-    enum { Type = UserType + 4 };
-    int type() const { return Type; }
+    enum { Type = UserType + NODEVIEW_TYPE };
+    virtual int type() const { return Type; }
 
 //    void calculateForces();
 
@@ -50,6 +50,10 @@ public:
 
     Node* getNode(){
     	return node;
+    }
+
+    QImage* getImage(){
+    	return pixels;
     }
 
 //    void setColor(QColor _color){

@@ -13,8 +13,13 @@
 #include "CE_ColorButton.h"
 #include "CE_NodeView.h"
 #include "CE_Node.h"
+
 #include <QtGui>
 #include <iostream>
+
+#ifdef USE_FFMPEG
+#include "QVideoEncoder.h"
+#endif //USE_FFMPEG
 
 
 QT_BEGIN_NAMESPACE
@@ -32,6 +37,7 @@ QT_END_NAMESPACE
 class CE_ColorButton;
 class GraphWidget;
 class Node;
+class Edge;
 class NodeView;
 
 //! [0]
@@ -48,6 +54,18 @@ public slots:
     void addNodeView();
     void deleteNodeView();
     void unlabel();
+    void captureScreen();
+    void startScan();
+    void stopScan();
+    void colorNode(QWidget* object);
+
+    void resetWeight();
+    void resetAllWeights();
+    void setValue(int value);
+    void setValueF(double value);
+
+    void updateSidebarSelection();
+    void updateMainSelection();
 
 
 public:
@@ -69,15 +87,29 @@ public:
     void clearNodeViews();
     void actualSave(const QString& fileName);
 
+signals:
+    void sliderValueChanged(int newValue);
+    void sliderValueChangedF(double newValue);
+
+protected:
+    void timerEvent(QTimerEvent *event);
+
 private:
+    void resetWeights(QList<QGraphicsItem*> items, bool batch);
     void setNodeviewPosition(NodeView* node, size_t index);
     void setNodeviewPositions();
     void setSidebarSceneRect();
     void addNodeView(Node* node);
     void deleteNodeView(NodeView* nodeToDelete);
     void createMenu();
-    void createHorizontalGroupBox();
-    void createGridGroupBox();
+    void createWeightBar();
+    void createLabelBar();
+    void captureFrame();
+    void stopCapture();
+    void nodeViewSelected(bool selected);
+    void nodeSelected(bool selected);
+    void edgeSelected(bool selected, Edge* edge);
+    void colorNode(QColor color);
 
     Cppn* cppn;
     QMenuBar *menuBar;
@@ -103,6 +135,7 @@ private:
     QAction* deleteViewNodeAction;
     QAction *addLabelAction;
     QAction *unlabelAction;
+    QAction *screenCaptureAction;
 
     QString currentFileName;
 
@@ -131,6 +164,21 @@ private:
 
     static const int sidebarMargin = 20;
     static const int betweenNodeMargin = 20;
+
+    bool edgeIsSelected;
+    Edge* selectedEdge;
+    bool nodeIsSelected;
+
+    int timerId;
+    bool capture;
+    Edge* scannedEdge;
+    QString captureDirectory;
+    QList<NodeView*> nodeViewsToBeCaptured;
+
+#ifdef USE_FFMPEG
+    QList<QVideoEncoder*> nodeViewEncoders;
+    QVideoEncoder encoder;
+#endif //USE_FFMPEG
 };
 //! [0]
 

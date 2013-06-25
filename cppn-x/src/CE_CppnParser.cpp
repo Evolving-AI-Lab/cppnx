@@ -8,10 +8,51 @@
 #include "CE_CppnParser.h"
 #include "CE_Xml.h"
 #include "CE_Util.h"
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
 #include <limits>
+#include <zip.h>
 
 
 #define parseEach(template_str,parser) while(parseCount(template_str)){parser;} parseLine(close(template_str));
+
+CppnParser::CppnParser(std::string fileName, GraphWidget* widget):cppn(0), widget(widget), data_version(""), line(""), nextLine(true), lineNumber(0), parseCounter(0){
+	cppn = new Cppn(widget);
+
+	unsigned found = fileName.find_last_of(".");
+	if(fileName.substr(found+1) == "zip"){
+		//Open the ZIP archive
+		int err = 0;
+		zip *z = zip_open(fileName.c_str(), 0, &err);
+
+		//Search for the file of given name
+		const char *name = "a";
+		struct zip_stat st;
+		zip_stat_init(&st);
+		zip_stat(z, name, 0, &st);
+
+		//Alloc memory for its uncompressed contents
+		char *contents = new char[st.size];
+
+		//Read the compressed file
+		zip_file *f = zip_fopen(z, "a", 0);
+		zip_fread(f, contents, st.size);
+		zip_fclose(f);
+		std::string contentStr(contents);
+
+		//And close the archive
+		zip_close(z);
+		myfile = new std::istringstream(contentStr);
+		delete [] contents;
+	} else {
+		myfile = new std::ifstream(fileName.c_str());
+	}
+}
+
+CppnParser::~CppnParser(){
+	delete myfile;
+}
 
 
 std::string openClose(std::string template_str){
@@ -61,9 +102,9 @@ bool CppnParser::parseCount(std::string template_str){
 //}
 //
 bool CppnParser::tryParseLine(std::string regex){
-	if(!myfile.good()) throw JGTL::LocatedException("Unexpected end of file.");
+	if(!myfile->good()) throw JGTL::LocatedException("Unexpected end of file.");
 	if(nextLine){
-		getline (myfile,line);
+		getline (*myfile,line);
 		lineNumber++;
 	}
 	if(parseLine(line, regex)){
@@ -121,9 +162,9 @@ bool CppnParser::parseLine(std::string line, std::string expected){
 
 
 void CppnParser::parseLine(std::string regex){
-	if(!myfile.good()) throw JGTL::LocatedException("Unexpected end of file.");
+	if(!myfile->good()) throw JGTL::LocatedException("Unexpected end of file.");
 	if(nextLine){
-		getline (myfile,line);
+		getline (*myfile,line);
 		lineNumber++;
 	}
 	if(parseLine(line, regex)){
@@ -363,24 +404,18 @@ void CppnParser::parseGenome(bool store){
 }
 
 
-Cppn* CppnParser::parse(std::string fileName, GraphWidget* widget){
-	cppn = new Cppn(widget);
-	myfile.open(fileName.c_str());
-
+Cppn* CppnParser::parse(){
 	parseHeader(true);
 
 	if(tryParseLine(open(ce_xml::storage))){
-//		int read_min = boost::lexical_cast<int>(m[2].str());
-//		int read_max = boost::lexical_cast<int>(m[1].str());
 		int read_min = util::toInt(m[2]);
 		int read_max = util::toInt(m[1]);
 
-		std::streampos beforeCount = myfile.tellg();
+		std::streampos beforeCount = myfile->tellg();
 
 		int min = std::numeric_limits<int>::max();
 		int max = std::numeric_limits<int>::min();
 		while(tryParseLine(open(ce_xml::generation))){
-//			int nr = boost::lexical_cast<int>(m[1].str());
 			int nr = util::toInt(m[1]);
 			if(nr < min) min = nr;
 			if(nr > max) max = nr;
@@ -392,7 +427,7 @@ Cppn* CppnParser::parse(std::string fileName, GraphWidget* widget){
 		if(read_max != max) widget->warning("There exist generations greater than the maximum generation in this file. File might be corrupted.");
 
 
-		myfile.seekg(beforeCount);
+		myfile->seekg(beforeCount);
 		nextLine=true;
 
 

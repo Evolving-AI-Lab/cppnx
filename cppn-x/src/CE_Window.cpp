@@ -11,8 +11,15 @@
 #include "CE_Util.h"
 
 
+
+
 Window::Window()
 {
+    edgeIsSelected = false;
+    selectedEdge = NULL;
+    scannedEdge = NULL;
+    nodeIsSelected = false;
+
 	currentFileName.clear();
 	cppn = 0;
 	graphWidget = new GraphWidget(this);
@@ -24,14 +31,15 @@ Window::Window()
     createMenu();
 
 
-    createHorizontalGroupBox();
-    horizontalGroupBox->hide();
-    createGridGroupBox();
+    createWeightBar();
+    horizontalGroupBox->setDisabled(true);
+    createLabelBar();
 
-    connect(slider, SIGNAL(valueChanged(int)), graphWidget, SLOT(setValue(int)));
-    connect(graphWidget, SIGNAL(sliderValueChanged(int)), slider, SLOT(setValue(int)));
-    connect(graphWidget, SIGNAL(sliderValueChangedF(double)), spinBox, SLOT(setValue(double)));
-    connect(spinBox, SIGNAL(valueChanged(double)), graphWidget, SLOT(setValueF(double)));
+    connect(slider, SIGNAL(valueChanged(int)), this, SLOT(setValue(int)));
+    connect(spinBox, SIGNAL(valueChanged(double)), this, SLOT(setValueF(double)));
+    connect(this, SIGNAL(sliderValueChanged(int)), slider, SLOT(setValue(int)));
+    connect(this, SIGNAL(sliderValueChangedF(double)), spinBox, SLOT(setValue(double)));
+
 
 //    QGroupBox* leftGroupBox = new QGroupBox;
 //    leftGroupBox->setFlat(true);
@@ -50,6 +58,9 @@ Window::Window()
     scene->setSceneRect(0, 0, NodeView::node_width, NodeView::node_height);
     sidebar->setAlignment(Qt::AlignTop);
     sidebar->setScene(scene);
+
+    connect(sidebar->scene(), SIGNAL(selectionChanged()), this, SLOT(updateSidebarSelection()));
+    connect(graphWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(updateMainSelection()));
 
 
 //    rightLayout->addWidget(sidebar);
@@ -76,6 +87,8 @@ Window::Window()
     setLayout(mainLayout);
 
     setWindowTitle(tr("Cppn-X"));
+    capture=false;
+    timerId=0;
 }
 
 Window::~Window(){
@@ -164,6 +177,11 @@ void Window::createMenu()
     unlabelAction->setStatusTip(tr("Remove a label from an existing object."));
     unlabelAction->setDisabled(true);
 
+    screenCaptureAction = new QAction(tr("capture"), this);
+    screenCaptureAction->setShortcut(tr("Alt+C"));
+    screenCaptureAction->setStatusTip(tr("Capture the current screen"));
+    screenCaptureAction->setDisabled(true);
+
     fileMenu->addAction(exitAction);
     fileMenu->addAction(loadAction);
     fileMenu->addAction(saveAction);
@@ -186,6 +204,7 @@ void Window::createMenu()
     editMenu->addAction(scanAction);
     editMenu->addAction(addViewNodeAction);
     editMenu->addAction(deleteViewNodeAction);
+    editMenu->addAction(screenCaptureAction);
     editMenu->addSeparator();
     editMenu->addMenu(posMenu);
     editMenu->addSeparator();
@@ -193,22 +212,23 @@ void Window::createMenu()
     menuBar->addMenu(editMenu);
 
     //Connect actions
-    connect(resetAllAction, SIGNAL(triggered()), graphWidget, SLOT(resetAllWeights()));
-    connect(resetAction, SIGNAL(triggered()), graphWidget, SLOT(resetWeight()));
+    connect(resetAllAction, SIGNAL(triggered()), this, SLOT(resetAllWeights()));
+    connect(resetAction, SIGNAL(triggered()), this, SLOT(resetWeight()));
     connect(loadAction, SIGNAL(triggered()), this, SLOT(load()));
     connect(saveAction, SIGNAL(triggered()), this, SLOT(save()));
     connect(saveAsAction, SIGNAL(triggered()), this, SLOT(saveAs()));
     connect(exitAction, SIGNAL(triggered()), this, SLOT(close ()));
     connect(circleAction, SIGNAL(triggered()), graphWidget, SLOT(positionNodesLayers()));
     connect(layerAction, SIGNAL(triggered()), graphWidget, SLOT(positionNodesCircle()));
-    connect(scanAction, SIGNAL(triggered()), graphWidget, SLOT(scanWeight()));
+    connect(scanAction, SIGNAL(triggered()), this, SLOT(startScan()));
     connect(addViewNodeAction, SIGNAL(triggered()), this, SLOT(addNodeView()));
     connect(deleteViewNodeAction, SIGNAL(triggered()), this, SLOT(deleteNodeView()));
     connect(addLabelAction, SIGNAL(triggered()), this, SLOT(addColorButton()));
     connect(unlabelAction, SIGNAL(triggered()), this, SLOT(unlabel()));
+    connect(screenCaptureAction, SIGNAL(triggered()), this, SLOT(captureScreen()));
 }
 
-void Window::createHorizontalGroupBox()
+void Window::createWeightBar()
 {
     horizontalGroupBox = new QGroupBox(tr("Modify weights"));
     QHBoxLayout *layout = new QHBoxLayout;
@@ -229,14 +249,24 @@ void Window::createHorizontalGroupBox()
     reset->setText(tr("reset"));
     connect(reset, SIGNAL(clicked()), resetAction, SLOT(trigger()));
 
+    QPushButton* resetAll = new QPushButton;
+    resetAll->setText(tr("reset all"));
+    connect(resetAll, SIGNAL(clicked()), resetAllAction, SLOT(trigger()));
+
     QPushButton* scan = new QPushButton;
     scan->setText(tr("scan"));
     connect(scan, SIGNAL(clicked()), scanAction, SLOT(trigger()));
 
+    QPushButton* scanAndCapture = new QPushButton;
+    scanAndCapture->setText(tr("film"));
+    connect(scanAndCapture, SIGNAL(clicked()), screenCaptureAction, SLOT(trigger()));
+
     layout->addWidget(slider);
     layout->addWidget(spinBox);
     layout->addWidget(reset);
+    layout->addWidget(resetAll);
     layout->addWidget(scan);
+    layout->addWidget(scanAndCapture);
 
     horizontalGroupBox->setLayout(layout);
 }
@@ -307,7 +337,7 @@ CE_ColorButton* Window::getColorButton(size_t i){
 	return buttons[i];
 }
 
-void Window::createGridGroupBox()
+void Window::createLabelBar()
 {
 	//Create 'add label' button
 	addLabel = new QPushButton;
@@ -338,7 +368,7 @@ void Window::createGridGroupBox()
     deleteSignalMapper = new QSignalMapper (this) ;
     colorSignalMapper = new QSignalMapper (this) ;
     connect (deleteSignalMapper, SIGNAL(mapped(QWidget*)), this, SLOT(deleteColorButton(QWidget*))) ;
-    connect (colorSignalMapper, SIGNAL(mapped(QWidget*)), graphWidget, SLOT(colorNode(QWidget*)));
+    connect (colorSignalMapper, SIGNAL(mapped(QWidget*)), this, SLOT(colorNode(QWidget*)));
 
 
     //Connect add label button
@@ -350,7 +380,7 @@ void Window::createGridGroupBox()
 void Window::load(){
 	QString newFileName = QFileDialog::getOpenFileName(this,
 	         tr("Open Genome File"), "",
-	         tr("XML File (*.xml);;All Files (*)"));
+	         tr("Genome file (*.xml;*.zip);;All Files (*)"));
 	if(newFileName.isEmpty()) return;
 
 	try{
@@ -359,17 +389,11 @@ void Window::load(){
 			addLabel->setDisabled(false);
 			labelName->setDisabled(false);
 			resetAllAction->setDisabled(false);
-			resetAction->setDisabled(false);
 			saveAction->setDisabled(false);
 			saveAsAction->setDisabled(false);
 			circleAction->setDisabled(false);
 			layerAction->setDisabled(false);
-			scanAction->setDisabled(false);
 			addLabelAction->setDisabled(false);
-			addViewNodeAction->setDisabled(false);
-			deleteViewNodeAction->setDisabled(false);
-			unlabelAction->setDisabled(false);
-			unlabelButton->setDisabled(false);
 		}
 
 		clearNodeViews();
@@ -425,7 +449,7 @@ void Window::clearNodeViews(){
 void Window::setNodeviewPositions(){
 	size_t index = 0;
 	foreach(QGraphicsItem* item, sidebar->scene()->items()){
-		NodeView* node = qgraphicsitem_cast<NodeView*> (item);
+		NodeView* node = util::multiCast<NodeView*, FinalNodeView*> (item);
 		if(node){
 			setNodeviewPosition(node, index);
 			index++;
@@ -451,17 +475,16 @@ void Window::addNodeView(Node* node){
 }
 
 void Window::addNodeView(){
-    if(graphWidget->getSelectedNode()){
-    	addNodeView(graphWidget->getSelectedNode());
-    }
+	foreach(QGraphicsItem* item, graphWidget->scene()->selectedItems()){
+		Node* node = qgraphicsitem_cast<Node*> (item);
+		if(node) addNodeView(node);
+	}
 }
 
 void Window::deleteNodeView(){
-	if(sidebar->scene()->selectedItems().count()){
-		NodeView* node = qgraphicsitem_cast<NodeView*> ( sidebar->scene()->selectedItems().front());
-		if(node){
-			deleteNodeView(node);
-		}
+	foreach(QGraphicsItem* item, sidebar->scene()->selectedItems()){
+		NodeView* node = qgraphicsitem_cast<NodeView*> (item);
+		if(node) deleteNodeView(node);
 	}
 }
 
@@ -469,7 +492,7 @@ void Window::closeEvent(QCloseEvent * event){
 	if(isWindowModified ()){
 //		 QMessageBox msgBox(tr("String"),tr("String"), QMessageBox::Question, 10, 10, 10, this, Qt::Drawer);
 //		 QMessageBox msgBox(QMessageBox::Question,tr("String"),tr("String"), QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this, Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint |  Qt::Sheet);
-		 QMessageBox msgBox(QMessageBox::Question,tr("String"),tr("String"), QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this, Qt::Dialog);
+		 QMessageBox msgBox(QMessageBox::Question,tr("Save as"),"The file " + currentFileName +  " has been modified.", QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this, Qt::Dialog);
 		 msgBox.setWindowModality ( Qt::WindowModal);
 
 		 msgBox.setText("The file " + currentFileName +  " has been modified.");
@@ -496,6 +519,240 @@ void Window::closeEvent(QCloseEvent * event){
 
 }
 
-void Window::unlabel(){
-	graphWidget->colorNode(Qt::white);
+
+
+void Window::captureScreen(){
+	nodeViewsToBeCaptured.clear();
+	capture=true;
+	captureDirectory = QFileDialog::getExistingDirectory(this, tr("Chose save directory"));
+//	captureDirectory = QFileDialog::getSaveFileName(this, tr("Chose save directory"), "");
+
+
+	this->setFixedSize(this->width(),this->height());
+	QDir().mkdir(captureDirectory + "/fullApplication");
+
+#ifdef USE_FFMPEG
+	nodeViewEncoders.clear();
+	encoder.createFile(captureDirectory + "/fullApplication.mpg",this->width(),this->height(),18000,10);
+#endif USE_FFMPEG
+
+	QList<QGraphicsItem*> graphicsItemsToBeEncoded = sidebar->scene()->selectedItems();
+	foreach(QGraphicsItem* item, graphicsItemsToBeEncoded){
+		NodeView* nodeView = util::multiCast<NodeView*, FinalNodeView*>(item);
+		if(nodeView){
+			nodeViewsToBeCaptured.append(nodeView);
+			QDir().mkdir(captureDirectory + "/node" + util::toQString(nodeViewsToBeCaptured.size()));
+
+#ifdef USE_FFMPEG
+			QVideoEncoder* nodeViewEncoder = new QVideoEncoder();
+			nodeViewEncoder->createFile(captureDirectory + "/node" + util::toQString(nodeViewsToBeCaptured.size()) + ".mpg",256,256,262144,10);
+			nodeViewEncoders.append(nodeViewEncoder);
+
+//			encoder.createFile(captureDirectory + "/node" + util::toQString(nodeViewsToBeCaptured.size()) + ".mpg",256,256,18000,10);
+#endif USE_FFMPEG
+		}
+	}
+
+
+	startScan();
+	captureFrame();
+
 }
+
+void Window::startScan(){
+//	std::cout << timerId <<std::endl;
+	if(!timerId){
+		scannedEdge = selectedEdge;
+		if(scannedEdge){
+			timerId = startTimer(10);
+			slider->setValue(0);
+		}
+	} else {
+		stopScan();
+	}
+}
+
+void Window::captureFrame(){
+	//		QPixmap test = QPixmap::grabWindow(this->winId(), 0, 0, 1024, 768);
+	QPixmap test = QPixmap::grabWidget(this, 0, 0, this->width(), this->height());
+	QString name = captureDirectory + "/fullApplication/frame" + util::toQString(slider->value()) + ".jpg";
+	test.save(name);
+
+#ifdef USE_FFMPEG
+	QImage image = test.toImage();
+	image = image.convertToFormat(QImage::Format_RGB32);
+	encoder.encodeImage(image);
+#endif USE_FFMPEG
+
+//	std::cout << "nodesToBeCaptured: " << nodeViewsToBeCaptured.size() << std::endl;
+
+	for(int i=0; i<nodeViewsToBeCaptured.size(); i++){
+		QImage nodeViewImage = nodeViewsToBeCaptured[i]->getImage()->copy(0,0,256,256);
+		QString name = captureDirectory + "/node" + util::toQString(i+1) + "/frame"+ util::toQString(slider->value()) + ".jpg";
+		nodeViewImage.save(name);
+
+#ifdef USE_FFMPEG
+//		image = image.convertToFormat(QImage::Format_RGB32);
+		nodeViewEncoders[i]->encodeImage(nodeViewImage);
+//		encoder.encodeImage(nodeViewImage);
+
+#endif USE_FFMPEG
+	}
+
+
+}
+
+void Window::stopCapture(){
+	QCoreApplication::processEvents();
+
+	for(int i=0; i<24; i++){
+		captureFrame();
+	}
+
+	this->setMaximumSize(16777215, 16777215);
+	this->setMinimumSize(0, 0);
+	capture=false;
+	nodeViewsToBeCaptured.clear();
+
+#ifdef USE_FFMPEG
+	foreach(QVideoEncoder* nodeViewEncoder, nodeViewEncoders){
+		delete(nodeViewEncoder);
+	}
+	nodeViewEncoders.clear();
+	encoder.close();
+#endif USE_FFMPEG
+}
+
+void Window::stopScan(){
+	killTimer(timerId);
+	timerId=0;
+	if(scannedEdge){
+		scannedEdge->flash(false);
+		scannedEdge->update();
+	}
+
+	if(capture) stopCapture();
+}
+
+void Window::timerEvent(QTimerEvent *event)
+{
+	Q_UNUSED(event);
+
+//	while (slider->value() < 100){
+	slider->setValue(slider->value()+1);
+	if(capture) captureFrame();
+	if(slider->value() >= 100) stopScan();
+	if(scannedEdge && slider->value()%5 == 0) scannedEdge->flash(true);
+//	}
+}
+
+
+void Window::nodeViewSelected(bool selected){
+	deleteViewNodeAction->setEnabled(selected);
+}
+
+void Window::nodeSelected(bool selected){
+	if(nodeIsSelected == selected) return;
+	nodeIsSelected = selected;
+	addLabelAction->setEnabled(selected);
+	addViewNodeAction->setEnabled(selected);
+	unlabelAction->setEnabled(selected);
+	unlabelButton->setEnabled(selected);
+
+}
+
+void Window::edgeSelected(bool selected, Edge* edge){
+	if(edgeIsSelected == selected) return;
+	edgeIsSelected = selected;
+	selectedEdge = edge;
+	resetAction->setEnabled(selected);
+	scanAction->setEnabled(selected);
+	addLabelAction->setEnabled(selected);
+	unlabelAction->setEnabled(selected);
+	unlabelButton->setEnabled(selected);
+	horizontalGroupBox->setEnabled(selected);
+	screenCaptureAction->setEnabled(selected);
+	if(selected) emit sliderValueChangedF(edge->getWeight());
+}
+
+void Window::updateSidebarSelection(){
+	bool nodeIsViewSelected = false;
+
+	foreach(QGraphicsItem* item, sidebar->scene()->selectedItems()){
+		if(qgraphicsitem_cast<NodeView*>(item)) nodeIsViewSelected = true;
+	}
+
+	nodeViewSelected(nodeIsViewSelected);
+}
+
+void Window::updateMainSelection(){
+	stopScan();
+	nodeSelected(false);
+	edgeSelected(false, NULL);
+
+	foreach(QGraphicsItem* item, graphWidget->scene()->selectedItems()){
+		if(qgraphicsitem_cast<Node*>(item)) nodeSelected(true);
+		if(qgraphicsitem_cast<Edge*>(item)) edgeSelected(true, qgraphicsitem_cast<Edge*>(item));
+		if(edgeIsSelected && nodeIsSelected) break;
+	}
+}
+
+void Window::unlabel(){
+	colorNode(Qt::white);
+}
+
+void Window::colorNode(QWidget* object){
+	CE_ColorButton* colorButton = qobject_cast<CE_ColorButton*>(object);
+	if(colorButton) colorNode(colorButton->getColor());
+}
+
+
+void Window::colorNode(QColor color){
+	foreach(QGraphicsItem* item, graphWidget->scene()->selectedItems()){
+		Node* node = qgraphicsitem_cast<Node*>(item);
+		if(node){
+			node->setColor(color);
+		} else {
+			Edge* edge = qgraphicsitem_cast<Edge*>(item);
+			if(edge){
+				edge->setColor(color);
+			}
+		}
+		item->update();
+	}
+	setWindowModified(true);
+}
+
+void Window::resetWeight(){
+	resetWeights(graphWidget->scene()->selectedItems(), false);
+}
+
+void Window::resetAllWeights(){
+	resetWeights(graphWidget->scene()->items(), true);
+}
+
+void Window::resetWeights(QList<QGraphicsItem*> items, bool batch){
+	stopScan();
+	foreach(QGraphicsItem* item, items){
+		Edge* edge = qgraphicsitem_cast<Edge*>(item);
+		if(edge) cppn->setWeight(edge, edge->getOriginalWeight(), !batch);
+	}
+	if(batch) cppn->updateNodes();
+	if(selectedEdge) sliderValueChangedF(selectedEdge->getWeight());
+}
+
+void Window::setValue(int value){
+	double newWeight = (float(value))*0.06-3;
+	emit sliderValueChangedF(newWeight);
+}
+
+void Window::setValueF(double weight){
+	int value = round(((weight+3)/6)*100);
+	emit sliderValueChanged(value);
+	if(selectedEdge){
+		if(selectedEdge->getWeight() != weight)
+			cppn->setWeight(selectedEdge, weight);
+	}
+
+}
+

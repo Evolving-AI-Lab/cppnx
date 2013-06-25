@@ -67,7 +67,7 @@ GraphWidget::GraphWidget(Window *window, QWidget *parent)
     QGraphicsScene *scene = new QGraphicsScene(this);
     scene->setSceneRect(left_border, top_border, (-left_border)+right_border, (-top_border)+bottom_border);
 //    scene->setItemIndexMethod(QGraphicsScene::NoIndex);
-    connect(scene, SIGNAL(selectionChanged()), this, SLOT(selectEdge()));
+//    connect(scene, SIGNAL(selectionChanged()), this, SLOT(selectEdge()));
     setScene(scene);
 
 
@@ -97,10 +97,9 @@ GraphWidget::GraphWidget(Window *window, QWidget *parent)
 
 bool GraphWidget::load(std::string filename)
 {
-
-	CppnParser parser;
 	par_window->clearColorButtons();
-	cppn = parser.parse(filename, this);
+	CppnParser parser(filename, this);
+	cppn = parser.parse();
 	par_window->setCppn(cppn);
 	//		cppn_phen = shared_ptr<NEAT::FastNetwork<double> >(new NEAT::FastNetwork<double>(cppn->spawnFastPhenotypeStack<double>()));
 
@@ -267,6 +266,9 @@ void GraphWidget::timerEvent(QTimerEvent *event)
 
     if(sliderValue <101){
     	setValue(sliderValue+1);
+    	QPixmap test = QPixmap::grabWindow(par_window->winId());
+    	std::string name = "/Users/joost/test" + util::toString(sliderValue) + ".jpg";
+    	test.save(name.c_str());
     }else{
     	killTimer(timerId);
     	timerId=0;

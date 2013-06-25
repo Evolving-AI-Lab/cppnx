@@ -28,19 +28,31 @@ Version: 0.3
 - Added a visualization of the final picture.
 - Works on windows.
 
+Version: 0.4
+- Slightly improved positioning.
+- Wider spread of nodes in layered positioning.
+- Now able to open .zip files directly.
+- Better support for selecting multiple connections/nodes at once.
+- Options will now properly grey out when not available.
+- Can now produce a set of pictures for each connection.
+- Can now produce a movie for each connection (highly experimental).
+- Fixed a bug where adding an input node to the sidebar would turn the node black.
+- Fixed a bug where nodes could suddenly change position when selecting and deselecting nodes and connections.
+- Fixed a known memory leak when opening files.
+
+
 Known issues:
-- When adding an input node to the side bar the node will turn black.
-  Manipulating other nodes will cause these nodes to behave weirdly as well.
-  To fix this bug, go to 'edit -> reset all', and select all affected nodes such that they will be updated.
+- None
 
 Wish-list:
 - Create a picture for an arbitrary node.
+- Scan interaction effects.
+- Support for knockout experiments.
+- Save/Load both original and current weights.
 - Less pixelated pictures.
 - Improve connection visualization with curved or 90 degree bend lines.
 - Automatic network scan where it zooms in on the output node, automatically selects a connection and scans over its weight, ask the user to give the connection a label, and then selects the next connection. At the end of this process you should have a fully annotated network.
 - Add or remove nodes and connections.
+- Copy nodes according to "node duplication".
 - Automatically calculate and display various statistics such as modularity, hierarchy, red-blue modularity (and maybe split the network into even more parts).
 - Select different node placements (my circle style, graphviz style, layered style)
-- Produce a set of pictures for each connection.
-- Produce a movie for each connection.
-- Produce a single movie showing at the bottom which connection is altered and at the top the effect of altering that connection.

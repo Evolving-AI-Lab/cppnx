@@ -35,11 +35,10 @@ class GraphWidget;
 class CppnParser
 {
 public:
-	CppnParser():cppn(0), data_version(""), line(""), nextLine(true), lineNumber(0), parseCounter(0){
+	CppnParser(std::string fileName, GraphWidget* widget);
+	virtual ~CppnParser();
 
-	}
-
-	Cppn* parse(std::string fileName, GraphWidget* widget);
+	Cppn* parse();
 
 private:
 	bool parseLine(std::string line, std::string expected);
@@ -64,8 +63,9 @@ private:
 	void parseParent(bool store);
 
 
-	std::ifstream myfile;
+	std::istream* myfile;
 	Cppn* cppn;
+	GraphWidget* widget;
 //	boost::smatch m;
 	std::vector<std::string> m;
 

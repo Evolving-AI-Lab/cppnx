@@ -74,7 +74,7 @@ public:
     QList<Edge *> incomingEdges() const;
     QList<Edge *> outgoingEdges() const;
 
-    enum { Type = UserType + 1 };
+    enum { Type = UserType + NODE_TYPE };
     int type() const { return Type; }
 
 //    void calculateForces();

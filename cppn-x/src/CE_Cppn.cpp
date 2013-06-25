@@ -9,6 +9,7 @@
 #include <queue>
 #include <set>
 #include <cmath>
+#include <algorithm>
 
 
 static const double Pi = 3.14159265358979323846264338327950288419717;
@@ -274,6 +275,27 @@ void Cppn::buildPhenotype(){
 	validPhenotype=true;
 }
 
+
+qreal getLength(std::vector<Node*> layer, std::vector<QPointF> positions){
+	qreal result = 0;
+	for(size_t i=0; i< layer.size(); i++){
+		foreach(Edge* edge, layer[i]->incomingEdges()){
+			result += QLineF(edge->sourceNode()->pos(), positions[i]).length();
+		}
+	}
+
+	return result;
+}
+
+bool compareIds(std::vector<Node*> layer1, std::vector<Node*> layer2){
+	for(size_t i=0; i< layer1.size(); i++){
+		if(layer1[i]->getId() < layer2[i]->getId()) return true;
+		if(layer1[i]->getId() > layer2[i]->getId()) return false;
+	}
+
+	return false;
+}
+
 void Cppn::positionNodesCircle(){
 	std::vector< std::vector <Node*> > layers = buildLayers();
 
@@ -331,12 +353,31 @@ void Cppn::positionNodes(){
 
 	QPointF position;
 
-	int scale = 70;
+	int xscale = 200;
+	int yscale = 100;
 
 	for(size_t i=0; i< layers.size(); i++){
-		for(size_t j=0; j< layers[i].size(); j++){
-			position = QPointF(int(j)*scale-(int(layers[i].size())-1)*(scale/2), -(int(i)*scale-(int(layers.size())-1)*(scale/2)));
-			layers[i][j]->setPos(position);
+		size_t layerSize = layers[i].size();
+		std::vector<QPointF> positions(layerSize);
+
+		for(size_t j=0; j< layerSize; j++){
+			positions[j] = QPointF(int(j)*xscale-(int(layerSize)-1)*(xscale/2), -(int(i)*yscale-(int(layers.size())-1)*(yscale/2)));
+		}
+		Node** currentLayer = layers[i].data();
+		std::sort (currentLayer, currentLayer+layerSize);
+		std::vector<Node*> shortestLayout = layers[i];
+		qreal shortestLength = getLength(shortestLayout, positions);
+
+		do {
+			qreal currentLength = getLength(layers[i], positions);
+		    if(currentLength<shortestLength || (currentLength==shortestLength && compareIds(layers[i], shortestLayout))){
+		    	shortestLength = currentLength;
+		    	shortestLayout = layers[i];
+		    }
+		} while ( std::next_permutation(currentLayer, currentLayer+layerSize) );
+
+		for(size_t j=0; j< layerSize; j++){
+			shortestLayout[j]->setPos(positions[j]);
 		}
 	}
 
@@ -398,8 +439,14 @@ inline void Cppn::updateNode(const size_t& node, const size_t& xy_index, const d
 }
 
 inline void Cppn::updateNode(const size_t& node){
-	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
-		updateNode(node, xy_index);
+	if(node <nr_of_inputs){
+		for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+			updateNode(node, xy_index, nodeChache[xy_index+node*width*height]);
+		}
+	} else {
+		for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+			updateNode(node, xy_index);
+		}
 	}
 	phenotypeNodes[node]->updateAll();
 }

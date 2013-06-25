@@ -59,8 +59,12 @@ public:
 
     void adjust();
 
-    enum { Type = UserType + 2 };
+    enum { Type = UserType + EDGE_TYPE };
     int type() const { return Type; }
+
+    void resetWeight(){
+    	setWeight(originalWeight);
+    }
 
     void setWeight(qreal weight){
     	currentWeight = weight;
@@ -98,12 +102,24 @@ public:
     	color = _color;
     }
 
+    void flash(bool flashOn){
+//    	std::cout << flashOn << " " << _flash <<std::endl;
+    	if(flashOn && _flash != 0){
+    		_flash = -1*_flash;
+    	} else if(flashOn) {
+    		_flash = 1;
+    	} else {
+    		_flash = 0;
+    	}
+    }
+
 protected:
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     QPainterPath shape() const;
     
 private:
+
     std::string branch;
     std::string id;
     static const double m_click_easy_width;
@@ -120,6 +136,7 @@ private:
     size_t index;
 
     QColor color;
+    int _flash;
 };
 //! [0]
 

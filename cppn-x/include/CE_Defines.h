@@ -52,6 +52,12 @@
 #define OUTPUT_HUE "hue"
 #define OUTPUT_BRIGTHNESS "brightness"
 
+#define NODE_TYPE 1
+#define EDGE_TYPE 2
+#define NODEVIEW_TYPE 3
+#define FINALVIEW_TYPE 4
+
+
 enum inputs{
 	input_x =0,
 	input_y =1,

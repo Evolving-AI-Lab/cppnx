@@ -140,6 +140,7 @@ QPainterPath Node::shape() const
 //! [10]
 void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
+	Q_UNUSED(option);
 //    painter->setPen(Qt::NoPen);
 //    painter->setBrush(Qt::darkGray);
 //    painter->drawEllipse(-7, -7, 20, 20);
