@@ -61,19 +61,19 @@ Node::Node(GraphWidget *graphWidget, std::string branch, std::string id, std::st
 
 	if(activationFunction_str == XML_GAUSSIAN){
 		activationFunction = act_functions::gaussian;
-		activationFunction_short = "gau(x)";
+		activationFunction_short = "gau()";
 	} else if(activationFunction_str == XML_LINEAR){
 		activationFunction = act_functions::identity;
-		activationFunction_short = "lin(x)";
+		activationFunction_short = "lin()";
 	} else if(activationFunction_str == XML_SIN){
 		activationFunction = act_functions::sin;
-		activationFunction_short = "sin(x)";
+		activationFunction_short = "sin()";
 	} else if(activationFunction_str == XML_SIGMOID){
 		activationFunction = act_functions::sigmoid;
-		activationFunction_short = "sig(x)";
+		activationFunction_short = "sig()";
 	} else if(activationFunction_str == XML_COS){
 		activationFunction = act_functions::cos;
-		activationFunction_short = "cos(x)";
+		activationFunction_short = "cos()";
 	} else {
 		throw JGTL::LocatedException("File contains unknown activation function: '" + activationFunction_str + "'");
 	}

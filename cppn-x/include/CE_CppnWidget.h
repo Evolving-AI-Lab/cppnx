@@ -90,7 +90,7 @@ public slots:
     void zoomOut();
     void setValue(int value);
     void setValueF(double value);
-    void selectEdge();
+//    void selectEdge();
     void resetWeight();
     void resetAllWeights();
     void scanWeight();

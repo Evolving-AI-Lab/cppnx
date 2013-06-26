@@ -127,6 +127,7 @@ SOURCES += zlib/adler32.c \
            cppn-x/src/CE_Node.cpp \
            cppn-x/src/CE_NodeView.cpp \
            cppn-x/src/CE_Window.cpp \
+           cppn-x/src/CE_VerticalScrollArea.cpp \
            libzip-0.11.1/lib/mkstemp.c \
            libzip-0.11.1/lib/zip_add.c \
            libzip-0.11.1/lib/zip_add_dir.c \

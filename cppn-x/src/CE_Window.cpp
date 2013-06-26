@@ -19,26 +19,23 @@ Window::Window()
     selectedEdge = NULL;
     scannedEdge = NULL;
     nodeIsSelected = false;
+    labelMode = onlyLabels;
 
 	currentFileName.clear();
 	cppn = 0;
 	graphWidget = new GraphWidget(this);
+    connect(graphWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(updateMainSelection()));
 
 //	graphWidget->setFixedHeight(300);
 
 //	graphWidget->scene()->height();
 //	std::cout << graphWidget->heightForWidth(200) <<std::endl;
     createMenu();
-
-
     createWeightBar();
-    horizontalGroupBox->setDisabled(true);
     createLabelBar();
+    createNodeViewBar();
 
-    connect(slider, SIGNAL(valueChanged(int)), this, SLOT(setValue(int)));
-    connect(spinBox, SIGNAL(valueChanged(double)), this, SLOT(setValueF(double)));
-    connect(this, SIGNAL(sliderValueChanged(int)), slider, SLOT(setValue(int)));
-    connect(this, SIGNAL(sliderValueChangedF(double)), spinBox, SLOT(setValue(double)));
+
 
 
 //    QGroupBox* leftGroupBox = new QGroupBox;
@@ -51,16 +48,9 @@ Window::Window()
 //    QVBoxLayout* rightLayout = new QVBoxLayout;
 
 
-    sidebar = new QGraphicsView(this);
-    sidebar->setMinimumSize(NodeView::node_width + sidebarMargin, NodeView::node_height + sidebarMargin);
-    QGraphicsScene *scene = new QGraphicsScene(sidebar);
-    scene->setItemIndexMethod(QGraphicsScene::NoIndex);
-    scene->setSceneRect(0, 0, NodeView::node_width, NodeView::node_height);
-    sidebar->setAlignment(Qt::AlignTop);
-    sidebar->setScene(scene);
 
-    connect(sidebar->scene(), SIGNAL(selectionChanged()), this, SLOT(updateSidebarSelection()));
-    connect(graphWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(updateMainSelection()));
+
+
 
 
 //    rightLayout->addWidget(sidebar);
@@ -82,33 +72,20 @@ Window::Window()
     mainLayout = new QHBoxLayout;
     mainLayout->addLayout(leftLayout, 1);
     mainLayout->addWidget(sidebar, 0);
-    mainLayout->addWidget(gridGroupBox, 0);
+    mainLayout->addLayout(colorMainLayout, 0);
+//    mainLayout->addLayout(colorMainLayout, 0);
     mainLayout->setMenuBar(menuBar);
     setLayout(mainLayout);
 
-    setWindowTitle(tr("Cppn-X"));
+    setWindowTitle(tr("Untitled"));
     capture=false;
     timerId=0;
+
+
 }
 
 Window::~Window(){
 
-}
-
-void Window::showScrubberBar(bool visible){
-	if(visible){
-		horizontalGroupBox->show();
-	} else {
-		horizontalGroupBox->hide();
-	}
-}
-
-void Window::showColorBar(bool visible){
-	if(visible){
-		gridGroupBox->show();
-	} else {
-		gridGroupBox->hide();
-	}
 }
 
 void Window::createMenu()
@@ -177,10 +154,19 @@ void Window::createMenu()
     unlabelAction->setStatusTip(tr("Remove a label from an existing object."));
     unlabelAction->setDisabled(true);
 
-    screenCaptureAction = new QAction(tr("capture"), this);
-    screenCaptureAction->setShortcut(tr("Alt+C"));
+    screenCaptureAction = new QAction(tr("Film"), this);
+    screenCaptureAction->setShortcut(tr("Alt+F"));
     screenCaptureAction->setStatusTip(tr("Capture the current screen"));
     screenCaptureAction->setDisabled(true);
+
+    labelOnlyAction = new QAction(tr("Label only"), this);
+    labelOnlyAction->setStatusTip(tr("Capture the current screen"));
+
+    signOnlyAction = new QAction(tr("Sign only"), this);
+    signOnlyAction->setStatusTip(tr("Capture the current screen"));
+
+    labelAndSignAction = new QAction(tr("Sign and label"), this);
+    labelAndSignAction->setStatusTip(tr("Capture the current screen"));
 
     fileMenu->addAction(exitAction);
     fileMenu->addAction(loadAction);
@@ -211,6 +197,12 @@ void Window::createMenu()
     editMenu->addMenu(labelMenu);
     menuBar->addMenu(editMenu);
 
+    viewMenu= new QMenu(tr("&View"), this);
+    viewMenu->addAction(labelOnlyAction);
+    viewMenu->addAction(signOnlyAction);
+    viewMenu->addAction(labelAndSignAction);
+    menuBar->addMenu(viewMenu);
+
     //Connect actions
     connect(resetAllAction, SIGNAL(triggered()), this, SLOT(resetAllWeights()));
     connect(resetAction, SIGNAL(triggered()), this, SLOT(resetWeight()));
@@ -226,6 +218,23 @@ void Window::createMenu()
     connect(addLabelAction, SIGNAL(triggered()), this, SLOT(addColorButton()));
     connect(unlabelAction, SIGNAL(triggered()), this, SLOT(unlabel()));
     connect(screenCaptureAction, SIGNAL(triggered()), this, SLOT(captureScreen()));
+
+
+    connect(labelOnlyAction, SIGNAL(triggered()), this, SLOT(setLabelOny()));
+    connect(signOnlyAction, SIGNAL(triggered()), this, SLOT(setSignOny()));
+    connect(labelAndSignAction, SIGNAL(triggered()), this, SLOT(setBoth()));
+}
+
+void Window::createNodeViewBar()
+{
+    sidebar = new QGraphicsView(this);
+    sidebar->setMinimumSize(NodeView::node_width + sidebarMargin, NodeView::node_height + sidebarMargin);
+    QGraphicsScene *scene = new QGraphicsScene(sidebar);
+    scene->setItemIndexMethod(QGraphicsScene::NoIndex);
+    scene->setSceneRect(0, 0, NodeView::node_width, NodeView::node_height);
+    sidebar->setAlignment(Qt::AlignTop);
+    sidebar->setScene(scene);
+    connect(sidebar->scene(), SIGNAL(selectionChanged()), this, SLOT(updateSidebarSelection()));
 }
 
 void Window::createWeightBar()
@@ -239,11 +248,15 @@ void Window::createWeightBar()
     slider->setTickInterval(10);
     slider->setSingleStep(1);
     slider->setRange(0, 100);
+    connect(slider, SIGNAL(valueChanged(int)), this, SLOT(setValue(int)));
+    connect(this, SIGNAL(sliderValueChanged(int)), slider, SLOT(setValue(int)));
 
     spinBox = new QDoubleSpinBox;
     spinBox->setMinimum(-3);
     spinBox->setMaximum(3);
     spinBox->setSingleStep(0.06);
+    connect(spinBox, SIGNAL(valueChanged(double)), this, SLOT(setValueF(double)));
+    connect(this, SIGNAL(sliderValueChangedF(double)), spinBox, SLOT(setValue(double)));
 
     QPushButton* reset = new QPushButton;
     reset->setText(tr("reset"));
@@ -268,8 +281,81 @@ void Window::createWeightBar()
     layout->addWidget(scan);
     layout->addWidget(scanAndCapture);
 
+
+    horizontalGroupBox->setDisabled(true);
     horizontalGroupBox->setLayout(layout);
+
+
 }
+
+void Window::createLabelBar()
+{
+	//Create 'add label' button
+	addLabel = new QPushButton;
+	addLabel->setText(tr("add label"));
+	addLabel->setDisabled(true);
+
+	unlabelButton = new QPushButton;
+	unlabelButton->setText(tr("unlabel"));
+	unlabelButton->setDisabled(true);
+
+	//Create 'add label' text field
+	labelName = new QLineEdit;
+	labelName->setDisabled(true);
+
+
+
+
+    colorLabelLayout = new QVBoxLayout();
+    colorLabelLayout->setAlignment(Qt::AlignTop);
+//    colorMainLayout->setSizeConstraint(QVBoxLayout::SetMinimumSize);
+
+//    colorLabelWidget = new QWidget();
+//    colorLabelWidget->setLayout(colorLabelLayout);
+
+
+    QPushButton* test = new QPushButton;
+    test->setText(tr("add label"));
+
+	labelBar = new VerticalScrollArea();
+	labelBar->m_scrollAreaWidgetContents->setLayout(colorLabelLayout);
+
+
+	//Create color layout
+    colorMainLayout = new QVBoxLayout();
+    colorMainLayout->setAlignment(Qt::AlignTop);
+    colorMainLayout->addWidget(labelName);
+    colorMainLayout->addWidget(addLabel);
+    colorMainLayout->addWidget(unlabelButton);
+    colorMainLayout->addWidget(labelBar);
+
+    //Create color groupbox (should this really be a groupbox?)
+
+//	labelBar->setLayout(colorMainLayout);
+
+//	labelBar->setWidget(gridGroupBox);
+
+//    gridGroupBox = new QGroupBox(tr("Labels"));
+//    gridGroupBox->setLayout(colorMainLayout);
+
+
+
+
+    //Create signal mappers
+    deleteSignalMapper = new QSignalMapper (this) ;
+    colorSignalMapper = new QSignalMapper (this) ;
+    connect (deleteSignalMapper, SIGNAL(mapped(QWidget*)), this, SLOT(deleteColorButton(QWidget*))) ;
+    connect (colorSignalMapper, SIGNAL(mapped(QWidget*)), this, SLOT(colorNode(QWidget*)));
+
+
+    //Connect add label button
+    connect(addLabel, SIGNAL(clicked()), addLabelAction, SLOT(trigger()));
+    connect(labelName, SIGNAL(returnPressed()),addLabelAction,SLOT(trigger()));
+    connect(unlabelButton, SIGNAL(clicked()),unlabelAction,SLOT(trigger()));
+
+
+}
+
 
 void Window::clearColorButtons(){
 	while(!buttons.empty()){
@@ -290,7 +376,7 @@ void Window::deleteColorButton(QWidget* object){
 		    i++;
 		}
 
-		colorMainLayout->update();
+		colorLabelLayout->update();
 		setWindowModified(true);
 	}
 }
@@ -299,7 +385,8 @@ void Window::deleteColorButton(QWidget* object){
 void Window::addColorButton(QString text, QColor color){
     CE_ColorButton* colorButton = new CE_ColorButton(text, color);
     buttons.push_back(colorButton);
-    colorMainLayout->addWidget(colorButton);
+    colorLabelLayout->addWidget(colorButton);
+//    labelBar->setMinimumWidth(colorButton->minimumWidth());
 
     std::string shortcut = "Alt+" + util::toString(buttons.size());
     colorButton->getColorAction()->setShortcut(tr(shortcut.c_str()));
@@ -337,45 +424,7 @@ CE_ColorButton* Window::getColorButton(size_t i){
 	return buttons[i];
 }
 
-void Window::createLabelBar()
-{
-	//Create 'add label' button
-	addLabel = new QPushButton;
-	addLabel->setText(tr("add label"));
-	addLabel->setDisabled(true);
 
-	unlabelButton = new QPushButton;
-	unlabelButton->setText(tr("unlabel"));
-	unlabelButton->setDisabled(true);
-
-	//Create 'add label' text field
-	labelName = new QLineEdit;
-	labelName->setDisabled(true);
-
-	//Create color layout
-    colorMainLayout = new QVBoxLayout;
-    colorMainLayout->setAlignment(Qt::AlignTop);
-    colorMainLayout->addWidget(labelName);
-    colorMainLayout->addWidget(addLabel);
-    colorMainLayout->addWidget(unlabelButton);
-
-    //Create color groupbox (should this really be a groupbox?)
-    gridGroupBox = new QGroupBox(tr("Labels"));
-    gridGroupBox->setLayout(colorMainLayout);
-
-
-    //Create signal mappers
-    deleteSignalMapper = new QSignalMapper (this) ;
-    colorSignalMapper = new QSignalMapper (this) ;
-    connect (deleteSignalMapper, SIGNAL(mapped(QWidget*)), this, SLOT(deleteColorButton(QWidget*))) ;
-    connect (colorSignalMapper, SIGNAL(mapped(QWidget*)), this, SLOT(colorNode(QWidget*)));
-
-
-    //Connect add label button
-    connect(addLabel, SIGNAL(clicked()), addLabelAction, SLOT(trigger()));
-    connect(labelName, SIGNAL(returnPressed()),addLabelAction,SLOT(trigger()));
-    connect(unlabelButton, SIGNAL(clicked()),unlabelAction,SLOT(trigger()));
-}
 
 void Window::load(){
 	QString newFileName = QFileDialog::getOpenFileName(this,
@@ -399,6 +448,7 @@ void Window::load(){
 		clearNodeViews();
 		sidebar->scene()->addItem(cppn->getFinalNodeView());
 		setNodeviewPositions();
+		setWindowTitle(newFileName.split('/').back());
 
 	} catch(std::exception& e){
 		QString message(("Error reading file: " + newFileName.toStdString() + "\n" + std::string( e.what() )).c_str());
@@ -522,9 +572,11 @@ void Window::closeEvent(QCloseEvent * event){
 
 
 void Window::captureScreen(){
+	captureDirectory = QFileDialog::getExistingDirectory(this, tr("Chose save directory"), "", QFileDialog::ShowDirsOnly);
+	if(captureDirectory == "") return;
+
 	nodeViewsToBeCaptured.clear();
 	capture=true;
-	captureDirectory = QFileDialog::getExistingDirectory(this, tr("Chose save directory"));
 //	captureDirectory = QFileDialog::getSaveFileName(this, tr("Chose save directory"), "");
 
 
@@ -575,7 +627,8 @@ void Window::startScan(){
 void Window::captureFrame(){
 	//		QPixmap test = QPixmap::grabWindow(this->winId(), 0, 0, 1024, 768);
 	QPixmap test = QPixmap::grabWidget(this, 0, 0, this->width(), this->height());
-	QString name = captureDirectory + "/fullApplication/frame" + util::toQString(slider->value()) + ".jpg";
+	QString name = captureDirectory + "/fullApplication/frame%1.jpg";
+	name = name.arg(util::toQString(slider->value()), 4, '0');
 	test.save(name);
 
 #ifdef USE_FFMPEG
@@ -588,7 +641,9 @@ void Window::captureFrame(){
 
 	for(int i=0; i<nodeViewsToBeCaptured.size(); i++){
 		QImage nodeViewImage = nodeViewsToBeCaptured[i]->getImage()->copy(0,0,256,256);
-		QString name = captureDirectory + "/node" + util::toQString(i+1) + "/frame"+ util::toQString(slider->value()) + ".jpg";
+		QString name = captureDirectory + "/node%1/frame%2.jpg";
+		name = name.arg(util::toQString(i+1)).arg(util::toQString(slider->value()), 4, '0');
+//		 name = captureDirectory + "/node" + util::toQString(i+1) + "/frame"+ QString::arg(util::toQString(slider->value()) + ".jpg";
 		nodeViewImage.save(name);
 
 #ifdef USE_FFMPEG
@@ -754,5 +809,18 @@ void Window::setValueF(double weight){
 			cppn->setWeight(selectedEdge, weight);
 	}
 
+}
+
+void Window::setLabelOny(){
+	labelMode = onlyLabels;
+	graphWidget->update();
+}
+void Window::setSignOny(){
+	labelMode = onlyConnectionSign;
+	graphWidget->update();
+}
+void Window::setBoth(){
+	labelMode = both;
+	graphWidget->update();
 }
 

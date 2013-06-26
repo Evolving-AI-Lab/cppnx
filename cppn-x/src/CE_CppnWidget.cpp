@@ -438,35 +438,35 @@ void GraphWidget::scanWeight(){
 }
 
 
-void GraphWidget::selectEdge(){
-	killTimer(timerId);
-	timerId=0;
-
-	if(scene()->selectedItems().count() == 0){
-		selectedEdge = NULL;
-		selectedNode = NULL;
-		par_window->showScrubberBar(false);
-//		par_window->showColorBar(false);
-		return;
-	}
-
-	selectedEdge = qgraphicsitem_cast<Edge*> ( scene()->selectedItems().front());
-	if(selectedEdge){
-		emit sliderValueChangedF(selectedEdge->getWeight());
-		selectedNode = NULL;
-		par_window->showScrubberBar(true);
-//		par_window->showColorBar(false);
-
-	} else {
-		selectedNode = qgraphicsitem_cast<Node*> ( scene()->selectedItems().front());
-		selectedEdge = NULL;
-//		par_window->showColorBar(true);
-		par_window->showScrubberBar(false);
-
-	}
-
-
-}
+//void GraphWidget::selectEdge(){
+//	killTimer(timerId);
+//	timerId=0;
+//
+//	if(scene()->selectedItems().count() == 0){
+//		selectedEdge = NULL;
+//		selectedNode = NULL;
+//		par_window->showScrubberBar(false);
+////		par_window->showColorBar(false);
+//		return;
+//	}
+//
+//	selectedEdge = qgraphicsitem_cast<Edge*> ( scene()->selectedItems().front());
+//	if(selectedEdge){
+//		emit sliderValueChangedF(selectedEdge->getWeight());
+//		selectedNode = NULL;
+//		par_window->showScrubberBar(true);
+////		par_window->showColorBar(false);
+//
+//	} else {
+//		selectedNode = qgraphicsitem_cast<Node*> ( scene()->selectedItems().front());
+//		selectedEdge = NULL;
+////		par_window->showColorBar(true);
+//		par_window->showScrubberBar(false);
+//
+//	}
+//
+//
+//}
 
 void GraphWidget::colorNode(QWidget* object){
 	CE_ColorButton* colorButton = qobject_cast<CE_ColorButton*>(object);

@@ -144,9 +144,9 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 	// Draw the line itself
 
 
-
 	QColor connectionColor;
 	QColor labelColor = color;
+
 
 	if(_flash == -1){
 		if(currentWeight >= 0){
@@ -180,10 +180,19 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
 	}
 
-	pen.setColor(labelColor);
-	pen.setWidthF(6.0);
-	painter->setPen(pen);
-	painter->drawLine(this->line());
+	if(color != Qt::white && graphWidget->getWindow()->labelMode == Window::onlyLabels){
+		connectionColor = labelColor;
+	} else if(graphWidget->getWindow()->labelMode == Window::both){
+		pen.setColor(labelColor);
+		pen.setWidthF(6.0);
+		painter->setPen(pen);
+		painter->drawLine(this->line());
+	}
+
+//	pen.setColor(labelColor);
+//	pen.setWidthF(6.0);
+//	painter->setPen(pen);
+//	painter->drawLine(this->line());
 
 //	pen.setColor(Qt::black);
 //	pen.setWidthF(abs(currentWeight)+1);

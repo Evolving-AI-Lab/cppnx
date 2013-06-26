@@ -40,19 +40,35 @@ Version: 0.4
 - Fixed a bug where nodes could suddenly change position when selecting and deselecting nodes and connections.
 - Fixed a known memory leak when opening files.
 
+Version: 0.4.1
+- Fixed a bug where hitting 'film' and then 'cancel' would start a scan anyway.
+- Fixed a bug where having more labels than fit on the screen would cause the application to grow beond the size of the screen.
+- Fixed a bug where filenames produced by film would not be sortable by ffmpeg external application.
+- Fixed a bug were the 'film' option has a different name in the drop-down menu.
+- Title bar now show the name of the file.
+- Labeled nodes no longer show whether a connection is positive or negative, but show the label color instead. This option can be changed in the new view menu.
+- There is no longer an x in the node names.
 
 Known issues:
-- None
+- none
 
 Wish-list:
+- Skip frames to increase scanning speed.
+- When a label gets deleted, unlabel all objects with that label.
+- Highlight the label of an object when it gets selected.
+- Save/Load both original and current weights.
+- Add notes to objects.
+- an undo button would be great (for example, I accidentally deleted a label and had to revert to an older saved file, losing some work)
+- ability to rename labels 
+- ability to change label colors after the fact
+- Create a custom film.
 - Create a picture for an arbitrary node.
 - Scan interaction effects.
 - Support for knockout experiments.
-- Save/Load both original and current weights.
-- Less pixelated pictures.
-- Improve connection visualization with curved or 90 degree bend lines.
-- Automatic network scan where it zooms in on the output node, automatically selects a connection and scans over its weight, ask the user to give the connection a label, and then selects the next connection. At the end of this process you should have a fully annotated network.
 - Add or remove nodes and connections.
 - Copy nodes according to "node duplication".
 - Automatically calculate and display various statistics such as modularity, hierarchy, red-blue modularity (and maybe split the network into even more parts).
-- Select different node placements (my circle style, graphviz style, layered style)
+- Improve connection visualization with curved or 90 degree bend lines.
+- Add other node placements.
+- Less pixelated pictures.
+- Automatic network scan where it zooms in on the output node, automatically selects a connection and scans over its weight, ask the user to give the connection a label, and then selects the next connection. At the end of this process you should have a fully annotated network.

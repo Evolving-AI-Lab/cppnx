@@ -13,6 +13,7 @@
 #include "CE_ColorButton.h"
 #include "CE_NodeView.h"
 #include "CE_Node.h"
+#include "CE_VerticalScrollArea.h"
 
 #include <QtGui>
 #include <iostream>
@@ -67,6 +68,10 @@ public slots:
     void updateSidebarSelection();
     void updateMainSelection();
 
+    void setLabelOny();
+    void setSignOny();
+    void setBoth();
+
 
 public:
     Window();
@@ -76,8 +81,6 @@ public:
     CE_ColorButton* getColorButton(size_t i);
     void clearColorButtons();
 
-    void showScrubberBar(bool visible);
-    void showColorBar(bool visible);
     void closeEvent(QCloseEvent * event);
 
     void setCppn(Cppn* _cppn){
@@ -87,23 +90,32 @@ public:
     void clearNodeViews();
     void actualSave(const QString& fileName);
 
+    enum labelModes {onlyLabels, onlyConnectionSign, both};
+    int labelMode;
+
 signals:
     void sliderValueChanged(int newValue);
     void sliderValueChangedF(double newValue);
+
+
 
 protected:
     void timerEvent(QTimerEvent *event);
 
 private:
+    //Constructor functions
+    void createMenu();
+    void createWeightBar();
+    void createLabelBar();
+    void createNodeViewBar();
+
     void resetWeights(QList<QGraphicsItem*> items, bool batch);
     void setNodeviewPosition(NodeView* node, size_t index);
     void setNodeviewPositions();
     void setSidebarSceneRect();
     void addNodeView(Node* node);
     void deleteNodeView(NodeView* nodeToDelete);
-    void createMenu();
-    void createWeightBar();
-    void createLabelBar();
+
     void captureFrame();
     void stopCapture();
     void nodeViewSelected(bool selected);
@@ -116,12 +128,14 @@ private:
     QGroupBox *horizontalGroupBox;
     QGroupBox *gridGroupBox;
     QGraphicsView* sidebar;
+    VerticalScrollArea* labelBar;
 
 
     QMenu *fileMenu;
     QMenu* editMenu;
     QMenu* posMenu;
     QMenu* labelMenu;
+    QMenu* viewMenu;
     QAction *exitAction;
     QAction *loadAction;
     QAction *saveAction;
@@ -137,6 +151,10 @@ private:
     QAction *unlabelAction;
     QAction *screenCaptureAction;
 
+    QAction *labelOnlyAction;
+    QAction *signOnlyAction;
+    QAction *labelAndSignAction;
+
     QString currentFileName;
 
 //    std::vector<QLabel*> labels;
@@ -146,6 +164,8 @@ private:
 //    QGridLayout *colorLayout;
     QHBoxLayout *mainLayout;
     QVBoxLayout* colorMainLayout;
+    QVBoxLayout* colorLabelLayout;
+    QWidget* colorLabelWidget;
 //    QVBoxLayout* colorRightLayout;
 //    FlowLayout* colorLeftLayout;
 
