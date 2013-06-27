@@ -51,6 +51,7 @@ Version: 0.4.1
 
 Version: 0.4.2
 - When a label gets deleted, unlabel all objects with that label.
+- Save/Load both original and current weights.
 
 Known issues:
 - none
@@ -58,7 +59,6 @@ Known issues:
 Wish-list:
 - Skip frames to increase scanning speed.
 - Highlight the label of an object when it gets selected.
-- Save/Load both original and current weights.
 - Add notes to objects.
 - an undo button would be great (for example, I accidentally deleted a label and had to revert to an older saved file, losing some work)
 - ability to rename labels 
