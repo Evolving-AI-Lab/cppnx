@@ -10,14 +10,14 @@
 
 #include "CE_Cppn.h"
 #include "CE_Defines.h"
-#include "CE_ColorButton.h"
+#include "CE_LabelWidget.h"
 #include <iostream>
 #include <iomanip>
 
 class Cppn;
 class Node;
 class Edge;
-class CE_ColorButton;
+class LabelWidget;
 
 class CppnWriter {
 public:
@@ -83,7 +83,7 @@ private:
 	void openClose(std::string template_str, ParamType param);
 	void writeNode(Node* node);
 	void writeEdge(Edge* node);
-	void writeColorButton(CE_ColorButton* colorButton);
+	void writeColorButton(LabelWidget* colorButton);
 
 	std::ofstream output;
 //	 QDataStream output;

@@ -1,5 +1,5 @@
 This is the cppn-x implementation of the Evolving Artificial Intelligence Laboratory of the University of Wyoming.
-Current version: 0.2 (beta)
+Current version: 0.4.2 (beta)
 
 Version: 0.1
 - First version to uploaded to the git repository.
@@ -49,12 +49,14 @@ Version: 0.4.1
 - Labeled nodes no longer show whether a connection is positive or negative, but show the label color instead. This option can be changed in the new view menu.
 - There is no longer an x in the node names.
 
+Version: 0.4.2
+- When a label gets deleted, unlabel all objects with that label.
+
 Known issues:
 - none
 
 Wish-list:
 - Skip frames to increase scanning speed.
-- When a label gets deleted, unlabel all objects with that label.
 - Highlight the label of an object when it gets selected.
 - Save/Load both original and current weights.
 - Add notes to objects.

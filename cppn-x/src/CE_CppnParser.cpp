@@ -185,7 +185,7 @@ void CppnParser::parseHeader(bool store){
 		data_version = m[1];
 		if(store) cppn->setNewFile(false);
 	} else {
-		data_version = "raw";
+		data_version = "0.0";
 		if(store) cppn->setNewFile(true);
 	}
 
@@ -198,33 +198,58 @@ void CppnParser::parseHeader(bool store){
 }
 
 void CppnParser::parseColorButton(bool store){
+//	std::cout << "Parsing label" << std::endl;
 	std::string text_str;
 	int r;
 	int g;
 	int b;
 	QColor color_q(0, 0, 0);
+	std::string color_str = "";
+	LabelWidget* labelWidget;
+	id_t id;
+
 
 	parseLine(open(ce_xml::color_button));
+
+	if (data_version >= "1.1"){
+		parseLine(read(ce_xml::color_label));
+		id = util::toInt(m[1]);
+	} else {
+		id = oldLabelMap.size()+1;
+	}
+
 	parseLine(openClose(ce_xml::text));
-//	text_str = m[1].str();
+	//	text_str = m[1].str();
 	text_str = m[1];
 
 	parseLine(read(ce_xml::color));
-//	r = boost::lexical_cast<int>(m[1].str());
-//	g = boost::lexical_cast<int>(m[2].str());
-//	b = boost::lexical_cast<int>(m[3].str());
 	r = util::toInt(m[1]);
 	g = util::toInt(m[2]);
 	b = util::toInt(m[3]);
 	color_q = QColor (r, g, b);
+	color_str = m[1] + m[2] + m[3];
 
 	parseLine(close(ce_xml::color_button));
 
-	if(store) cppn->addColorButton(text_str, color_q);
+	if(store){
+		labelWidget = new LabelWidget(text_str.c_str(), color_q, false);
+		labelWidget->setId(id);
+
+		if (data_version >= "1.1"){
+			labelMap[id] = labelWidget;
+		} else {
+//			std::cout << "Parsed address: " << (void*) labelWidget << std::endl;
+			oldLabelMap[color_str] = labelWidget;
+		}
+		cppn->addLabelWidget(labelWidget);
+
+	}
+
 }
 
 
 void CppnParser::parseNode(bool store){
+//	std::cout << "Parsing node" << std::endl;
 	std::string type;
 	std::string label="";
 	std::string branch;
@@ -234,6 +259,14 @@ void CppnParser::parseNode(bool store){
 	std::string activation_function;
 	QColor color_q(255, 255, 255);
 	QPointF position_q(0, 0);
+
+	//Version 1.1
+	LabelWidget* labelWidget = 0;
+	id_t labelId =0;
+	std::string text = "";
+	std::string color_str = "";
+
+
 	int r;
 	int g;
 	int b;
@@ -278,32 +311,53 @@ void CppnParser::parseNode(bool store){
 //	activation_function = m[1].str();
 	activation_function = m[1];
 
-	if(data_version == "1.0"){
+
+	if(data_version >= "1.1"){
+		parseLine(read(ce_xml::color_label));
+		labelId = util::toInt(m[1]);
+	} else if(data_version >= "1.0"){
 		parseLine(read(ce_xml::color));
-//		r = boost::lexical_cast<int>(m[1].str());
-//		g = boost::lexical_cast<int>(m[2].str());
-//		b = boost::lexical_cast<int>(m[3].str());
 		r = util::toInt(m[1]);
 		g = util::toInt(m[2]);
 		b = util::toInt(m[3]);
 		color_q = QColor (r, g, b);
+		color_str = m[1] + m[2] + m[3];
+	}
 
+	if(data_version >= "1.0"){
 		parseLine(read(ce_xml::position));
-//		x = boost::lexical_cast<double>(m[1].str());
-//		y = boost::lexical_cast<double>(m[2].str());
 		x = util::toDouble(m[1]);
 		y = util::toDouble(m[2]);
 		position_q = QPointF (x, y);
+	}
 
+	if(data_version >= "1.1"){
+		parseLine(openClose(ce_xml::text));
+		text = m[1];
 	}
 
 	parseLine(close(ce_xml::node));
 
 //	std::cout << "Parsed line: " << lineNumber << " label: " << label <<std::endl;
-	if(store) cppn->addNode(branch, id, type, activation_function, label, affinity, bias, position_q, color_q);
+	if(store){
+		Node* node;
+		if (data_version >= "1.1"){
+			labelWidget = labelMap[labelId];
+			node = new Node(widget, branch, id, type, activation_function, label, affinity, bias, cppn->width, cppn->height, labelWidget, text);
+		} else if (data_version >= "1.0"){
+			labelWidget = oldLabelMap[color_str];
+//			std::cout << "Retrieved address: " << (void*) labelWidget << std::endl;
+			node = new Node(widget, branch, id, type, activation_function, label, affinity, bias, cppn->width, cppn->height, labelWidget);
+		} else {
+			node = new Node(widget, branch, id, type, activation_function, label, affinity, bias, cppn->width, cppn->height);
+		}
+		node->setPos(position_q);
+		cppn->addNode(node);
+	}
 }
 
 void CppnParser::parseEdge(bool store){
+//	std::cout << "Parsing edge" << std::endl;
 	std::string branch;
 	std::string id;
 	std::string source_branch;
@@ -315,6 +369,13 @@ void CppnParser::parseEdge(bool store){
 	int b;
 	double weight_f=0;
 	QColor color_q(255, 255, 255);
+
+	//Version 1.1
+	LabelWidget* labelWidget = 0;
+	double original_weight_f=0;
+	id_t labelId =0;
+	std::string text = "";
+	std::string color_str = "";
 
 	//Parse first line
 	parseLine(open(ce_xml::link));
@@ -341,21 +402,40 @@ void CppnParser::parseEdge(bool store){
 //	weight_f = boost::lexical_cast<double>(m[1].str());
 	weight_f = util::toDouble(m[1]);
 
-	if(data_version == "1.0"){
+	if(data_version >= "1.1"){
+		parseLine(openClose(ce_xml::original_weight));
+		original_weight_f = util::toDouble(m[1]);
+
+		parseLine(read(ce_xml::color_label));
+		labelId = util::toInt(m[1]);
+
+		parseLine(openClose(ce_xml::text));
+		text = m[1];
+	}else if(data_version >= "1.0"){
 		parseLine(read(ce_xml::color));
-//		r = boost::lexical_cast<int>(m[1].str());
-//		g = boost::lexical_cast<int>(m[2].str());
-//		b = boost::lexical_cast<int>(m[3].str());
 		r = util::toInt(m[1]);
 		g = util::toInt(m[2]);
 		b = util::toInt(m[3]);
 		color_q = QColor (r, g, b);
+		color_str = m[1] + m[2] + m[3];
 	}
 
 	parseLine(close(ce_xml::link));
 
 //	std::cout << "Parsed line: " << lineNumber <<std::endl;
-	if(store) cppn->addConnection(branch, id, source_branch, source_id, target_branch, target_id, weight_f, color_q);
+	if(store){
+		Edge* edge;
+		if (data_version >= "1.1"){
+			labelWidget = labelMap[labelId];
+			edge = new Edge(widget, branch, id, cppn->getNode(source_branch+"_"+source_id), cppn->getNode(target_branch+"_"+target_id), weight_f, original_weight_f, labelWidget, text);
+		} else if (data_version >= "1.0"){
+			labelWidget = oldLabelMap[color_str];
+			edge = new Edge(widget, branch, id, cppn->getNode(source_branch+"_"+source_id), cppn->getNode(target_branch+"_"+target_id), weight_f, weight_f, labelWidget);
+		} else {
+			edge = new Edge(widget, branch, id, cppn->getNode(source_branch+"_"+source_id), cppn->getNode(target_branch+"_"+target_id), weight_f, weight_f);
+		}
+		cppn->addConnection(edge);
+	}
 }
 
 
@@ -385,14 +465,13 @@ void CppnParser::parseGenome(bool store){
 
 	//Set identifier
 	parseLine(read(ce_xml::identifier));
-//	if(store) cppn->setIdentifier(m[1].str(), m[2].str());
 	if(store) cppn->setIdentifier(m[1], m[2]);
 
 	//Set parents
 	parseEach(ce_xml::parent_count, parseParent(store));
 
 	//Parse buttons
-	if(data_version == "1.0"){
+	if(data_version >= "1.0"){
 		parseEach(ce_xml::buttons_count, parseColorButton(store));
 	}
 

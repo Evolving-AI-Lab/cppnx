@@ -45,7 +45,7 @@ HEADERS += zlib/crc32.h \
            zlib/zlib.h \
            zlib/zutil.h \
            cppn-x/include/CE_ActivationFunctions.h \
-           cppn-x/include/CE_ColorButton.h \
+           cppn-x/include/CE_LabelWidget.h \
            cppn-x/include/CE_Cppn.h \
            cppn-x/include/CE_CppnParser.h \
            cppn-x/include/CE_CppnWidget.h \
@@ -116,7 +116,8 @@ SOURCES += zlib/adler32.c \
            zlib/uncompr.c \
            zlib/zutil.c \
            cppn-x/src/CE_ActivationFunctions.cpp \
-           cppn-x/src/CE_ColorButton.cpp \
+           cppn-x/src/CE_LabelWidget.cpp \
+           cppn-x/src/CE_LabelableObject.cpp \
            cppn-x/src/CE_Cppn.cpp \
            cppn-x/src/CE_CppnParser.cpp \
            cppn-x/src/CE_CppnWidget.cpp \

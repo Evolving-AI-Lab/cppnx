@@ -95,6 +95,12 @@ GraphWidget::GraphWidget(Window *window, QWidget *parent)
 //! [1]
 
 
+void GraphWidget::updateAll(){
+	foreach(QGraphicsItem* item, scene()->items()){
+		item->update();
+	}
+}
+
 bool GraphWidget::load(std::string filename)
 {
 	par_window->clearColorButtons();
@@ -107,16 +113,16 @@ bool GraphWidget::load(std::string filename)
 	y_sorted.clear();
 	scene()->clear();
 	for(size_t i=0; i< cppn->getNrOfNodes();i++){
-		//			std::cout << "Node: " << i << " " << cppn->getNode(i) << std::endl;
+//		std::cout << "Node: " << i << " " << cppn->getNode(i) << std::endl;
 		scene()->addItem(cppn->getNode(i));
 	}
 	for(size_t i=0; i< cppn->getNrOfEdges();i++){
-		//			std::cout << "Edge: " << i << " " << cppn->getEdge(i) << std::endl;
+//		std::cout << "Edge: " << i << " " << cppn->getEdge(i) << std::endl;
 		scene()->addItem(cppn->getEdge(i));
 	}
 
 
-	//		std::cout << "Update nodes: " << std::endl;
+//	std::cout << "Update nodes: " << std::endl;
 	cppn->updateNodes();
 
 	if(cppn->getNewFile()) cppn->positionNodes();
@@ -467,23 +473,6 @@ void GraphWidget::scanWeight(){
 //
 //
 //}
-
-void GraphWidget::colorNode(QWidget* object){
-	CE_ColorButton* colorButton = qobject_cast<CE_ColorButton*>(object);
-	if(colorButton) colorNode(colorButton->getColor());
-}
-
-void GraphWidget::colorNode(QColor color){
-	if(selectedNode){
-		selectedNode->setColor(color);
-		selectedNode->update();
-		par_window->setWindowModified(true);
-	} else if(selectedEdge){
-		selectedEdge->setColor(color);
-		selectedEdge->update();
-		par_window->setWindowModified(true);
-	}
-}
 
 Window* GraphWidget::getWindow(){
 	return par_window;

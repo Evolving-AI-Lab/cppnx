@@ -12,7 +12,7 @@
 #include "CE_Node.h"
 #include "CE_CppnWidget.h"
 #include "CE_ActivationFunctions.h"
-#include "CE_ColorButton.h"
+#include "CE_LabelWidget.h"
 #include "CE_FinalNodeView.h"
 //#include "NEAT_Defines.h"
 //#include "NEAT_STL.h"
@@ -56,8 +56,10 @@ public:
 //		delete finalNodeView;
 	}
 
-	void addNode(std::string branch, std::string id, std::string type, std::string activationFunction, std::string label, std::string affinity, std::string bias, QPointF position, QColor color);
-	void addConnection(std::string branch, std::string id, std::string source_branch, std::string source_id, std::string target_branch, std::string target_id, double weight, QColor color_q);
+//	void addNode(std::string branch, std::string id, std::string type, std::string activationFunction, std::string xml_label, std::string affinity, std::string bias, QPointF position, LabelWidget* label);
+	void addNode(Node* node);
+//	void addConnection(std::string branch, std::string id, std::string source_branch, std::string source_id, std::string target_branch, std::string target_id, double weight, LabelWidget* label);
+	void addConnection(Edge* edge);
 	void setWeight(Edge* edge, double weight, bool update = true);
 	void updateNodes();
 
@@ -74,6 +76,7 @@ public:
 	size_t getNrOfEdges(){ return numberOfEdges;};
 
 	Node* getNode(size_t i){return nodes[i];};
+	Node* getNode(std::string name){return nodeMap[name];};
 	Edge* getEdge(size_t i){return edges[i];};
 
 	std::string getHeaderLine(size_t i){
@@ -143,13 +146,19 @@ public:
 
 	//Color button getters and setters
 	size_t getNrOfColorButtons();
-	CE_ColorButton* getColorButton(size_t i);
+	LabelWidget* getColorButton(size_t i);
 	void addColorButton(std::string text, QColor color);
+
+	void addLabelWidget(LabelWidget* labelWidget);
+
 
 
 	FinalNodeView* getFinalNodeView(){
 		return finalNodeView;
 	}
+
+    static const int width = 256;
+    static const int height = 256;
 
 private:
 	void updateFromLink(Edge* edge);
@@ -195,8 +204,7 @@ private:
 
 //    static const int width = 100;
 //    static const int height = 100;
-    static const int width = 256;
-    static const int height = 256;
+
 
     std::vector<std::string> headerLines;
     std::vector<std::string> footerLines;

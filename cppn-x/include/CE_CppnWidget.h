@@ -49,7 +49,7 @@
 #include "CE_CppnParser.h"
 #include "CE_Cppn.h"
 #include "CE_CppnWriter.h"
-#include "CE_ColorButton.h"
+#include "CE_LabelWidget.h"
 #include "CE_Window.h"
 
 
@@ -82,7 +82,7 @@ public:
 
     int getGeneration(int min, int max);
     void warning(std::string message);
-    void colorNode(QColor color);
+    void updateAll();
 
 public slots:
 //    void shuffle();
@@ -94,7 +94,6 @@ public slots:
     void resetWeight();
     void resetAllWeights();
     void scanWeight();
-    void colorNode(QWidget* object);
     void positionNodesLayers();
     void positionNodesCircle();
 

@@ -49,9 +49,33 @@
 #include "CE_FinalNodeView.h"
 
 //! [0]
-Node::Node(GraphWidget *graphWidget, std::string branch, std::string id, std::string type, std::string activationFunction_str, std::string label, std::string affinity, std::string bias, int width, int height, QColor color)
-    : graph(graphWidget), branch(branch), id(id), nodetype(type),activationFunction_str(activationFunction_str), label(label), affinity(affinity), bias(bias), color(color), nodeView(0), finalNodeView(0)
+Node::Node(
+		GraphWidget *graphWidget,
+		std::string branch,
+		std::string id,
+		std::string type,
+		std::string activationFunction_str,
+		std::string xml_label,
+		std::string affinity,
+		std::string bias,
+		int width,
+		int height,
+		LabelWidget* label,
+		std::string note
+		)
+    : LabelableObject(label, note.c_str()),
+      graph(graphWidget),
+      branch(branch),
+      id(id),
+      nodetype(type),
+      activationFunction_str(activationFunction_str),
+      xml_label(xml_label),
+      affinity(affinity),
+      bias(bias),
+      nodeView(0),
+      finalNodeView(0)
 {
+
 
     setFlag(ItemIsMovable);
     setFlag(ItemIsSelectable);
@@ -141,32 +165,16 @@ QPainterPath Node::shape() const
 void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
 	Q_UNUSED(option);
-//    painter->setPen(Qt::NoPen);
-//    painter->setBrush(Qt::darkGray);
-//    painter->drawEllipse(-7, -7, 20, 20);
-//
-//    QRadialGradient gradient(-3, -3, 10);
-//    if (option->state & QStyle::State_Sunken) {
-//        gradient.setCenter(3, 3);
-//        gradient.setFocalPoint(3, 3);
-//        gradient.setColorAt(1, QColor(Qt::yellow).light(120));
-//        gradient.setColorAt(0, QColor(Qt::darkYellow).light(120));
-//    } else {
-        //gradient.setColorAt(0, Qt::yellow);
-        //gradient.setColorAt(1, Qt::darkYellow);
-//    }
-    //painter->setBrush(gradient);
 
-
-
-
-    //std::cout << pixels << std::endl;
-    //painter->drawEllipse(-10, -10, 20, 20);
-   // std::cout << "Painting" << std::endl;
-
-//	painter->setRenderHint(QPainter::Antialiasing);
+	QColor labelColor;
+//	std::cout << "Label address: " << (void*) label << std::endl;
+	if(label->isDeleted()){
+		labelColor= Qt::white;
+	} else {
+		labelColor = label->getColor();
+	}
     painter->drawImage(QRect(-half_width, -half_height, node_width, node_height), *pixels);
-    painter->fillRect(QRect(-half_width, half_height, node_width, footerBarSize), color);
+    painter->fillRect(QRect(-half_width, half_height, node_width, footerBarSize), labelColor);
 
     if (this->isSelected()){
     	painter->setPen(QPen(Qt::black, 2));
@@ -181,18 +189,18 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 
 
 
-    if(color.lightness() < 128){
+    if(labelColor.lightness() < 128){
     	painter->setPen(QPen(Qt::white, 0));
     } else {
     	painter->setPen(QPen(Qt::black, 0));
     }
 
     if(nodetype == XML_TYPE_INPUT){
-    	painter->drawText(-half_width,half_height+(footerBarSize-4), QString(label.c_str()));
+    	painter->drawText(-half_width,half_height+(footerBarSize-4), QString(xml_label.c_str()));
     } else{
     	painter->drawText(-half_width,half_height+(footerBarSize-4), QString(activationFunction_short.c_str()));
     	painter->setPen(QPen(Qt::black, 0));
-    	painter->drawText(-half_width,-half_height, QString(label.c_str()));
+    	painter->drawText(-half_width,-half_height, QString(xml_label.c_str()));
     }
 
 }
@@ -286,9 +294,9 @@ void Node::setPixel(size_t index, const double& value){
 //		int hue(std::min((value+1)/2, 1.0)*360);
 //		int hue(std::min(std::abs(value), 1.0)*360);
 		int hue(std::min(value+1, 2.0)*360);
-		if(label == "saturation") finalNodeView->setSaturation(index, sat);
-		if(label == "brightness" || label == "ink") finalNodeView->setValue(index, grey);
-		if(label == "hue") finalNodeView->setHue(index, hue);
+		if(xml_label == "saturation") finalNodeView->setSaturation(index, sat);
+		if(xml_label == "brightness" || xml_label == "ink") finalNodeView->setValue(index, grey);
+		if(xml_label == "hue") finalNodeView->setHue(index, hue);
 	}
 }
 

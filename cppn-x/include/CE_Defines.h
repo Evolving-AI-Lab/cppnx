@@ -67,5 +67,6 @@ enum inputs{
 };
 
 typedef double (*ActivationFunctionPt)(double);
+typedef unsigned int id_t;
 
 #endif /* VISUALIZE_DEFINES_H_ */

@@ -27,6 +27,8 @@ const std::string	position= ("position x y");
 const std::string	source= ("source branch id");
 const std::string	target= ("target branch id");
 const std::string	weight= ("weight");
+const std::string	original_weight= ("original-weight");
+
 const std::string	cppn_data= ("cppn-data version");
 const std::string	nodes_count= ("nodes count");
 const std::string	link_count= ("links count");
@@ -41,6 +43,7 @@ const std::string	genome= ("genome age");
 const std::string	genomePhen= ("genome age phenotype");
 const std::string	identifier= ("identifier branch id");
 const std::string	parent_count= ("parents count");
+const std::string	color_label= ("color-label id");
 
 
 

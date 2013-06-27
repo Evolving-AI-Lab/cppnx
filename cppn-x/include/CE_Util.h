@@ -16,8 +16,20 @@
 #include <ostream>
 #include <QString>
 
+#include "CE_Defines.h"
+
 
 namespace util{
+
+template <typename Type1, typename Type2, typename Type3>
+inline Type1 multiCast(QGraphicsItem *item){
+	Type1 convertedItem = qgraphicsitem_cast<Type1>(item);
+	if(convertedItem) return convertedItem;
+	convertedItem = qgraphicsitem_cast<Type2>(item);
+	if(convertedItem) return convertedItem;
+	convertedItem= qgraphicsitem_cast<Type3>(item);
+	return convertedItem;
+}
 
 template <typename Type1, typename Type2>
 inline Type1 multiCast(QGraphicsItem *item){

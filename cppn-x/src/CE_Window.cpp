@@ -364,39 +364,51 @@ void Window::clearColorButtons(){
 }
 
 void Window::deleteColorButton(QWidget* object){
-	CE_ColorButton* colorButton = qobject_cast<CE_ColorButton*>(object);
+	LabelWidget* colorButton = qobject_cast<LabelWidget*>(object);
 	if(colorButton){
 		buttons.removeAll(colorButton);
-		delete colorButton;
+		colorButton->setDeleted();
+		colorLabelLayout->removeWidget(colorButton);
+		colorButton->getColorAction()->setShortcut(tr(""));
+		colorButton->hide();
+		colorButton->unregisterObject();
 
-		int i=0;
-		foreach(CE_ColorButton* button, buttons){
+		id_t i=0;
+		foreach(LabelWidget* button, buttons){
 		    std::string shortcut = "Alt+" + util::toString(i+1);
 		    button->getColorAction()->setShortcut(tr(shortcut.c_str()));
+		    button->setId(i+1);
 		    i++;
 		}
 
 		colorLabelLayout->update();
+		graphWidget->updateAll();
 		setWindowModified(true);
 	}
 }
 
 
 void Window::addColorButton(QString text, QColor color){
-    CE_ColorButton* colorButton = new CE_ColorButton(text, color);
-    buttons.push_back(colorButton);
-    colorLabelLayout->addWidget(colorButton);
+    LabelWidget* colorButton = new LabelWidget(text, color, false);
+    addLabelWidget(colorButton);
+}
+
+void Window::addLabelWidget(LabelWidget* labelWidget){
+	labelWidget->registerObject();
+    buttons.push_back(labelWidget);
+    labelWidget->setId(buttons.size());
+    colorLabelLayout->addWidget(labelWidget);
 //    labelBar->setMinimumWidth(colorButton->minimumWidth());
 
     std::string shortcut = "Alt+" + util::toString(buttons.size());
-    colorButton->getColorAction()->setShortcut(tr(shortcut.c_str()));
-    labelMenu->addAction(colorButton->getColorAction());
+    labelWidget->getColorAction()->setShortcut(tr(shortcut.c_str()));
+    labelMenu->addAction(labelWidget->getColorAction());
 
     //Map actions
-    deleteSignalMapper -> setMapping (colorButton->getDeleteAction(), colorButton);
-    colorSignalMapper -> setMapping (colorButton->getColorAction(), colorButton);
-    connect(colorButton->getDeleteAction(), SIGNAL(triggered()), deleteSignalMapper, SLOT(map()));
-    connect(colorButton->getColorAction(), SIGNAL(triggered()), colorSignalMapper, SLOT(map()));
+    deleteSignalMapper -> setMapping (labelWidget->getDeleteAction(), labelWidget);
+    colorSignalMapper -> setMapping (labelWidget->getColorAction(), labelWidget);
+    connect(labelWidget->getDeleteAction(), SIGNAL(triggered()), deleteSignalMapper, SLOT(map()));
+    connect(labelWidget->getColorAction(), SIGNAL(triggered()), colorSignalMapper, SLOT(map()));
 }
 
 void Window::addColorButton(){
@@ -420,7 +432,7 @@ size_t Window::getNrOfColorButtons(){
 	return buttons.size();
 }
 
-CE_ColorButton* Window::getColorButton(size_t i){
+LabelWidget* Window::getColorButton(size_t i){
 	return buttons[i];
 }
 
@@ -753,27 +765,23 @@ void Window::updateMainSelection(){
 }
 
 void Window::unlabel(){
-	colorNode(Qt::white);
+	LabelWidget* label = new LabelWidget();
+	colorNode(label);
 }
 
 void Window::colorNode(QWidget* object){
-	CE_ColorButton* colorButton = qobject_cast<CE_ColorButton*>(object);
-	if(colorButton) colorNode(colorButton->getColor());
+	LabelWidget* colorButton = qobject_cast<LabelWidget*>(object);
+	if(colorButton) colorNode(colorButton);
 }
 
 
-void Window::colorNode(QColor color){
+void Window::colorNode(LabelWidget* label){
 	foreach(QGraphicsItem* item, graphWidget->scene()->selectedItems()){
-		Node* node = qgraphicsitem_cast<Node*>(item);
-		if(node){
-			node->setColor(color);
-		} else {
-			Edge* edge = qgraphicsitem_cast<Edge*>(item);
-			if(edge){
-				edge->setColor(color);
-			}
+		LabelableObject* object = util::multiCast<LabelableObject*, Edge*, Node*>(item);
+		if(object){
+			object->setLabel(label);
+			item->update();
 		}
-		item->update();
 	}
 	setWindowModified(true);
 }

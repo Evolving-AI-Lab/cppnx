@@ -53,8 +53,8 @@ const double Edge::m_click_easy_width = 10.0;
 //! [0]
 
 
-Edge::Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *sourceNode, Node *destNode, qreal weight, QColor color ,QGraphicsItem *parent, QGraphicsScene *scene)
-    : QGraphicsLineItem(0,0,2,2,parent,scene), branch(branch), id(id),  arrowSize(5), graphWidget(graphWidget), currentWeight(weight), originalWeight(weight), color(color), _flash(0)
+Edge::Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *sourceNode, Node *destNode, qreal weight, qreal original_weight, LabelWidget* label, std::string note, QGraphicsItem *parent, QGraphicsScene *scene)
+    : LabelableObject(label, note.c_str()), branch(branch), id(id),  arrowSize(5), graphWidget(graphWidget), currentWeight(weight), originalWeight(original_weight), _flash(0)
 {
 	this->setFlag(QGraphicsItem::ItemIsSelectable);
     source = sourceNode;
@@ -106,7 +106,7 @@ void Edge::adjust()
         sourcePoint = destPoint = newline.p1();
     }
 
-    setLine(QLineF(sourcePoint, destPoint));
+    _line = QLineF(sourcePoint, destPoint);
 }
 //! [2]
 
@@ -145,7 +145,12 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
 
 	QColor connectionColor;
-	QColor labelColor = color;
+	QColor labelColor;
+	if(!label->isDeleted()){
+		labelColor = label->getColor();
+	} else {
+		labelColor = Qt::white;
+	}
 
 
 	if(_flash == -1){
@@ -180,13 +185,13 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
 	}
 
-	if(color != Qt::white && graphWidget->getWindow()->labelMode == Window::onlyLabels){
+	if(!label->isDeleted() && graphWidget->getWindow()->labelMode == Window::onlyLabels){
 		connectionColor = labelColor;
 	} else if(graphWidget->getWindow()->labelMode == Window::both){
 		pen.setColor(labelColor);
 		pen.setWidthF(6.0);
 		painter->setPen(pen);
-		painter->drawLine(this->line());
+		painter->drawLine(line);
 	}
 
 //	pen.setColor(labelColor);
@@ -209,7 +214,7 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 	painter->setPen(pen);
 
 	//painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-	painter->drawLine(this->line());
+	painter->drawLine(_line);
 	//! [5]
 
 //! [6]
@@ -238,8 +243,8 @@ QPainterPath Edge::shape() const
   //http://www.qtcentre.org/threads/49201-Increase-margin-for-detecting-tooltip-events-of-QGraphicsLineItem
   QPainterPath path;
   QPainterPathStroker stroker;
-  path.moveTo(line().p1());
-  path.lineTo(line().p2());
+  path.moveTo(_line.p1());
+  path.lineTo(_line.p2());
   stroker.setWidth(m_click_easy_width);
   return stroker.createStroke(path);
 }

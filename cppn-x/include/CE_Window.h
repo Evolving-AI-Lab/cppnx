@@ -10,7 +10,7 @@
 
 #include <QDialog>
 #include "CE_CppnWidget.h"
-#include "CE_ColorButton.h"
+#include "CE_LabelWidget.h"
 #include "CE_NodeView.h"
 #include "CE_Node.h"
 #include "CE_VerticalScrollArea.h"
@@ -35,7 +35,7 @@ class QPushButton;
 class QTextEdit;
 QT_END_NAMESPACE
 
-class CE_ColorButton;
+class LabelWidget;
 class GraphWidget;
 class Node;
 class Edge;
@@ -77,8 +77,10 @@ public:
     Window();
     virtual ~Window();
     void addColorButton(QString text, QColor color);
+    void addLabelWidget(LabelWidget* labelWidget);
+
     size_t getNrOfColorButtons();
-    CE_ColorButton* getColorButton(size_t i);
+    LabelWidget* getColorButton(size_t i);
     void clearColorButtons();
 
     void closeEvent(QCloseEvent * event);
@@ -121,7 +123,7 @@ private:
     void nodeViewSelected(bool selected);
     void nodeSelected(bool selected);
     void edgeSelected(bool selected, Edge* edge);
-    void colorNode(QColor color);
+    void colorNode(LabelWidget* color);
 
     Cppn* cppn;
     QMenuBar *menuBar;
@@ -175,7 +177,7 @@ private:
 
     QSignalMapper* deleteSignalMapper;
     QSignalMapper* colorSignalMapper;
-    QList<CE_ColorButton*> buttons;
+    QList<LabelWidget*> buttons;
     QList<NodeView*> nodeViews;
 
     GraphWidget *graphWidget;

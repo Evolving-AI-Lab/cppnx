@@ -11,7 +11,7 @@
 #include "CE_Xml.h"
 #include "CE_Util.h"
 
-const std::string CppnWriter::version = "1.0";
+const std::string CppnWriter::version = "1.1";
 
 #define writeEach(template_str,count,writer) open(template_str, count); for(size_t i=0; i<count; i++){writer;} close(template_str);
 
@@ -96,11 +96,12 @@ void CppnWriter::write(Cppn* cppn){
 }
 
 void CppnWriter::writeNode(Node* node){
-	open(ce_xml::iocolornode, node->getAffinity(), node->getBias(), node->getLabel(), node->getType());
+	open(ce_xml::iocolornode, node->getAffinity(), node->getBias(), node->getXmlLabel(), node->getType());
 	write(ce_xml::marking, node->getBranch(), node->getId());
 	openClose(ce_xml::activation, node->getXmlActivationFunction());
-	write(ce_xml::color, node->getColor().red(), node->getColor().green(), node->getColor().blue());
+	write(ce_xml::color_label, node->getLabel()->getId());
 	write(ce_xml::position, node->pos().x(), node->pos().y());
+	openClose(ce_xml::text, node->getNote().toStdString());
 	close(ce_xml::colornode);
 }
 
@@ -109,13 +110,16 @@ void CppnWriter::writeEdge(Edge* edge){
 	write(ce_xml::marking, edge->getBranch(), edge->getId());
 	write(ce_xml::source,  edge->sourceNode()->getBranch(),  edge->sourceNode()->getId());
 	write(ce_xml::target, edge->destNode()->getBranch(), edge->destNode()->getId());
-	openClose(ce_xml::weight, util::toString(edge->getOriginalWeight()));
-	write(ce_xml::color, edge->getColor().red(), edge->getColor().green(), edge->getColor().blue());
+	openClose(ce_xml::weight, util::toString(edge->getWeight()));
+	openClose(ce_xml::original_weight, util::toString(edge->getOriginalWeight()));
+	write(ce_xml::color_label, edge->getLabel()->getId());
+	openClose(ce_xml::text, edge->getNote().toStdString());
 	close(ce_xml::link);
 }
 
-void CppnWriter::writeColorButton(CE_ColorButton* colorButton){
+void CppnWriter::writeColorButton(LabelWidget* colorButton){
 	open(ce_xml::color_button);
+	write(ce_xml::color_label, colorButton->getId());
 	openClose(ce_xml::text, colorButton->getText());
 	write(ce_xml::color, colorButton->getColor().red(), colorButton->getColor().green(), colorButton->getColor().blue());
 	close(ce_xml::color_button);

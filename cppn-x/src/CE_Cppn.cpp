@@ -14,45 +14,85 @@
 
 static const double Pi = 3.14159265358979323846264338327950288419717;
 
-void Cppn::addNode(std::string branch, std::string id, std::string type, std::string activationFunction, std::string label, std::string affinity, std::string bias, QPointF position, QColor color){
-	Node* QTnode = new Node(widget, branch, id, type, activationFunction, label, affinity, bias, width, height, color);
-	if(label == INPUT_X){
+//void Cppn::addNode(std::string branch, std::string id, std::string type, std::string activationFunction, std::string xml_label, std::string affinity, std::string bias, QPointF position, LabelWidget* label){
+//	Node* QTnode = new Node(widget, branch, id, type, activationFunction, xml_label, affinity, bias, width, height, label);
+//	if(xml_label == INPUT_X){
+//		nodes[input_x]=QTnode;
+//		QTnode->setIndex(input_x);
+//	} else if(xml_label == INPUT_Y){
+//		nodes[input_y]=QTnode;
+//		QTnode->setIndex(input_y);
+//	} else if(xml_label == INPUT_D){
+//		nodes[input_d]=QTnode;
+//		QTnode->setIndex(input_d);
+//	} else if(xml_label == INPUT_BIAS){
+//		nodes[input_b]=QTnode;
+//		QTnode->setIndex(input_b);
+//	} else if(xml_label == OUTPUT_INK){
+//		QTnode->setFinalNodeView(finalNodeView);
+//		nodes.push_back(QTnode);
+//	} else if(xml_label == OUTPUT_SATURATION){
+//		QTnode->setFinalNodeView(finalNodeView);
+//		nodes.push_back(QTnode);
+//	} else if(xml_label == OUTPUT_HUE){
+//		QTnode->setFinalNodeView(finalNodeView);
+//		nodes.push_back(QTnode);
+//	} else if(xml_label == OUTPUT_BRIGTHNESS){
+//		QTnode->setFinalNodeView(finalNodeView);
+//		nodes.push_back(QTnode);
+//	} else {
+//		nodes.push_back(QTnode);
+//	}
+//	QTnode->setPos(position);
+//	nodeMap[branch + "_" + id]=QTnode;
+//	numberOfNodes++;
+//	validPhenotype=false;
+//
+//}
+
+void Cppn::addNode(Node* QTnode){
+	if(QTnode->getXmlLabel() == INPUT_X){
 		nodes[input_x]=QTnode;
 		QTnode->setIndex(input_x);
-	} else if(label == INPUT_Y){
+	} else if(QTnode->getXmlLabel() == INPUT_Y){
 		nodes[input_y]=QTnode;
 		QTnode->setIndex(input_y);
-	} else if(label == INPUT_D){
+	} else if(QTnode->getXmlLabel() == INPUT_D){
 		nodes[input_d]=QTnode;
 		QTnode->setIndex(input_d);
-	} else if(label == INPUT_BIAS){
+	} else if(QTnode->getXmlLabel() == INPUT_BIAS){
 		nodes[input_b]=QTnode;
 		QTnode->setIndex(input_b);
-	} else if(label == OUTPUT_INK){
+	} else if(QTnode->getXmlLabel() == OUTPUT_INK){
 		QTnode->setFinalNodeView(finalNodeView);
 		nodes.push_back(QTnode);
-	} else if(label == OUTPUT_SATURATION){
+	} else if(QTnode->getXmlLabel() == OUTPUT_SATURATION){
 		QTnode->setFinalNodeView(finalNodeView);
 		nodes.push_back(QTnode);
-	} else if(label == OUTPUT_HUE){
+	} else if(QTnode->getXmlLabel() == OUTPUT_HUE){
 		QTnode->setFinalNodeView(finalNodeView);
 		nodes.push_back(QTnode);
-	} else if(label == OUTPUT_BRIGTHNESS){
+	} else if(QTnode->getXmlLabel() == OUTPUT_BRIGTHNESS){
 		QTnode->setFinalNodeView(finalNodeView);
 		nodes.push_back(QTnode);
 	} else {
 		nodes.push_back(QTnode);
 	}
-	QTnode->setPos(position);
-	nodeMap[branch + "_" + id]=QTnode;
+
+	nodeMap[QTnode->getBranch() + "_" + QTnode->getId()]=QTnode;
 	numberOfNodes++;
 	validPhenotype=false;
-
 }
 
 
-void Cppn::addConnection(std::string branch, std::string id, std::string source_branch, std::string source_id, std::string target_branch, std::string target_id, double weight, QColor color){
-	edges.push_back(new Edge(widget, branch, id, nodeMap[source_branch+"_"+source_id], nodeMap[target_branch+"_"+target_id], weight, color));
+//void Cppn::addConnection(std::string branch, std::string id, std::string source_branch, std::string source_id, std::string target_branch, std::string target_id, double weight, LabelWidget* label){
+//	edges.push_back(new Edge(widget, branch, id, nodeMap[source_branch+"_"+source_id], nodeMap[target_branch+"_"+target_id], weight, label));
+//	validPhenotype=false;
+//	numberOfEdges++;
+//}
+
+void Cppn::addConnection(Edge* edge){
+	edges.push_back(edge);
 	validPhenotype=false;
 	numberOfEdges++;
 }
@@ -459,10 +499,14 @@ size_t Cppn::getNrOfColorButtons(){
 	return widget->getWindow()->getNrOfColorButtons();
 }
 
-CE_ColorButton* Cppn::getColorButton(size_t i){
+LabelWidget* Cppn::getColorButton(size_t i){
 	return widget->getWindow()->getColorButton(i);
 }
 
 void Cppn::addColorButton(std::string text, QColor color){
 	widget->getWindow()->addColorButton(QString(text.c_str()), color);
+}
+
+void Cppn::addLabelWidget(LabelWidget* labelWidget){
+	widget->getWindow()->addLabelWidget(labelWidget);
 }

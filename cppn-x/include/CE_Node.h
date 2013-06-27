@@ -44,12 +44,14 @@
 #include "CE_Defines.h"
 #include "CE_Edge.h"
 #include "CE_CppnWidget.h"
+#include "CE_LabelableObject.h"
 
 
 #include <QGraphicsItem>
 #include <QList>
 #include <QPointer>
 
+class LabelWidget;
 class Edge;
 class GraphWidget;
 class NodeView;
@@ -62,11 +64,24 @@ QT_END_NAMESPACE
 
 
 //! [0]
-class Node : public QGraphicsItem
+class Node : public LabelableObject
 {
 
 public:
-    Node(GraphWidget *graphWidget, std::string branch = "", std::string id = "", std::string type = "", std::string activationFunction_str=XML_SIGMOID, std::string label = "", std::string affinity = "", std::string bias = "", int width = 256, int height = 256, QColor color = QColor(0,0,0));
+    Node(
+    		GraphWidget *graphWidget,
+    		std::string branch = "",
+    		std::string id = "",
+    		std::string type = "",
+    		std::string activationFunction_str=XML_SIGMOID,
+    		std::string label = "",
+    		std::string affinity = "",
+    		std::string bias = "",
+    		int width = 256,
+    		int height = 256,
+    		LabelWidget* label = new LabelWidget(),
+    		std::string note = ""
+    );
     ~Node();
 
     void addIncommingEdge(Edge *edge);
@@ -110,8 +125,8 @@ public:
     	return index;
     }
 
-    std::string getLabel(){
-    	return label;
+    std::string getXmlLabel(){
+    	return xml_label;
     }
 
     std::string getBranch(){
@@ -124,14 +139,6 @@ public:
 
     std::string getXmlActivationFunction(){
     	return activationFunction_str;
-    }
-
-    QColor getColor(){
-    	return color;
-    }
-
-    void setColor(QColor _color){
-    	color = _color;
     }
 
     void setNodeView(NodeView* _nodeView);
@@ -174,12 +181,11 @@ private:
     std::string nodetype;
     std::string activationFunction_short;
     std::string activationFunction_str;
-    std::string label;
+    std::string xml_label;
     std::string affinity;
     std::string bias;
 
     ActivationFunctionPt activationFunction;
-    QColor color;
 
     size_t index;
     NodeView* nodeView;

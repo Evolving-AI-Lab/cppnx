@@ -45,14 +45,29 @@
 #include <QGraphicsLineItem>
 #include "CE_Node.h"
 #include "CE_CppnWidget.h"
+#include "CE_LabelableObject.h"
+
+
 
 class Node;
 
 //! [0]
-class Edge : public QGraphicsLineItem
+class Edge : public LabelableObject
 {
 public:
-    Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *sourceNode, Node *destNode, qreal weight, QColor color, QGraphicsItem *parent = 0, QGraphicsScene *scene = 0);
+    Edge(
+    		GraphWidget *graphWidget,
+    		std::string branch,
+    		std::string id,
+    		Node *sourceNode,
+    		Node *destNode,
+    		qreal weight,
+    		qreal original_weight,
+    		LabelWidget* label = 0,
+    		std::string note = "",
+    		QGraphicsItem *parent = 0,
+    		QGraphicsScene *scene = 0
+    		);
 
     Node *sourceNode() const;
     Node *destNode() const;
@@ -94,14 +109,6 @@ public:
     	return id;
     }
 
-    QColor getColor(){
-    	return color;
-    }
-
-    void setColor(QColor _color){
-    	color = _color;
-    }
-
     void flash(bool flashOn){
 //    	std::cout << flashOn << " " << _flash <<std::endl;
     	if(flashOn && _flash != 0){
@@ -135,8 +142,8 @@ private:
     qreal originalWeight;
     size_t index;
 
-    QColor color;
     int _flash;
+    QLineF _line;
 };
 //! [0]
 

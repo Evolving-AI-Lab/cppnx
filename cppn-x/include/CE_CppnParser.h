@@ -19,6 +19,8 @@
 #include <map>
 #include "CE_Cppn.h"
 #include "CE_CppnWidget.h"
+#include "CE_LabelWidget.h"
+
 //#include <errno.h>
 //#include <boost/exception/all.hpp>
 
@@ -75,6 +77,9 @@ private:
 	size_t lineNumber;
 
 	int parseCounter;
+
+	std::map<std::string, LabelWidget*> oldLabelMap;
+	std::map<id_t, LabelWidget*> labelMap;
 };
 
 #endif /* CPPNPARSER_H_ */
