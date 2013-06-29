@@ -8,8 +8,7 @@
 #include <iostream>
 #include "CE_FinalNodeView.h"
 
-FinalNodeView::FinalNodeView(int width, int height):NodeView(width, height) {
-    setFlag(ItemIsSelectable);
+FinalNodeView::FinalNodeView(int width, int height):NodeView(0, width, height) {
 	hue = new int[width*height];
 	saturation = new unsigned char[width*height];
 	value = new unsigned char[width*height];

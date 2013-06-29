@@ -10,7 +10,10 @@
 #include <QSpacerItem>
 #include "CE_Util.h"
 
-
+#include "CE_CommandLabelObject.h"
+#include "CE_CommandSetWeight.h"
+#include "CE_CommandAddLabel.h"
+#include "CE_CommandNodeView.h"
 
 
 Window::Window()
@@ -20,6 +23,7 @@ Window::Window()
     scannedEdge = NULL;
     nodeIsSelected = false;
     labelMode = onlyLabels;
+    updateEdges =true;
 
 	currentFileName.clear();
 	cppn = 0;
@@ -168,6 +172,12 @@ void Window::createMenu()
     labelAndSignAction = new QAction(tr("Sign and label"), this);
     labelAndSignAction->setStatusTip(tr("Capture the current screen"));
 
+    undoAction = undoStack.createUndoAction(this, tr("Undo"));
+    undoAction->setShortcuts(QKeySequence::Undo);
+
+    redoAction = undoStack.createRedoAction(this, tr("Redo"));
+    redoAction->setShortcuts(QKeySequence::Redo);
+
     fileMenu->addAction(exitAction);
     fileMenu->addAction(loadAction);
     fileMenu->addAction(saveAction);
@@ -185,6 +195,8 @@ void Window::createMenu()
 
     //Create edit menu
     editMenu = new QMenu(tr("&Edit"), this);
+    editMenu->addAction(undoAction);
+    editMenu->addAction(redoAction);
     editMenu->addAction(resetAllAction);
     editMenu->addAction(resetAction);
     editMenu->addAction(scanAction);
@@ -357,61 +369,25 @@ void Window::createLabelBar()
 }
 
 
+
+
+
 void Window::clearColorButtons(){
-	while(!buttons.empty()){
-		deleteColorButton(buttons.front());
+	for(int i=0; i<colorLabelLayout->count(); i++){
+		if (LabelWidget *label = qobject_cast<LabelWidget*>(dynamic_cast <QWidgetItem*>(colorLabelLayout->itemAt(i))->widget())) {
+			removeLabelWidget(label);
+		}
 	}
 }
 
 void Window::deleteColorButton(QWidget* object){
-	LabelWidget* colorButton = qobject_cast<LabelWidget*>(object);
-	if(colorButton){
-		buttons.removeAll(colorButton);
-		colorButton->setDeleted();
-		colorLabelLayout->removeWidget(colorButton);
-		colorButton->getColorAction()->setShortcut(tr(""));
-		colorButton->hide();
-		colorButton->unregisterObject();
-
-		id_t i=0;
-		foreach(LabelWidget* button, buttons){
-		    std::string shortcut = "Alt+" + util::toString(i+1);
-		    button->getColorAction()->setShortcut(tr(shortcut.c_str()));
-		    button->setId(i+1);
-		    i++;
-		}
-
-		colorLabelLayout->update();
-		graphWidget->updateAll();
-		setWindowModified(true);
-	}
-}
-
-
-void Window::addColorButton(QString text, QColor color){
-    LabelWidget* colorButton = new LabelWidget(text, color, false);
-    addLabelWidget(colorButton);
-}
-
-void Window::addLabelWidget(LabelWidget* labelWidget){
-	labelWidget->registerObject();
-    buttons.push_back(labelWidget);
-    labelWidget->setId(buttons.size());
-    colorLabelLayout->addWidget(labelWidget);
-//    labelBar->setMinimumWidth(colorButton->minimumWidth());
-
-    std::string shortcut = "Alt+" + util::toString(buttons.size());
-    labelWidget->getColorAction()->setShortcut(tr(shortcut.c_str()));
-    labelMenu->addAction(labelWidget->getColorAction());
-
-    //Map actions
-    deleteSignalMapper -> setMapping (labelWidget->getDeleteAction(), labelWidget);
-    colorSignalMapper -> setMapping (labelWidget->getColorAction(), labelWidget);
-    connect(labelWidget->getDeleteAction(), SIGNAL(triggered()), deleteSignalMapper, SLOT(map()));
-    connect(labelWidget->getColorAction(), SIGNAL(triggered()), colorSignalMapper, SLOT(map()));
+	LabelWidget* labelWidget = qobject_cast<LabelWidget*>(object);
+	if(labelWidget) undoStack.push(new CommandAddLabel(this, labelWidget, false));
 }
 
 void Window::addColorButton(){
+//	std::cout << "addColorButton" <<std::endl;
+
 	//Get label text
     bool ok = true;
     QString labelText = labelName->displayText();
@@ -424,16 +400,58 @@ void Window::addColorButton(){
     if(!color.isValid()) return;
 
     //Create label
-    addColorButton(labelText, color);
+    undoStack.push(new CommandAddLabel(this, new LabelWidget(labelText, color, false), true));
     setWindowModified(true);
 }
 
+
+//void Window::addColorButton(QString text, QColor color){
+//    LabelWidget* colorButton = new LabelWidget(text, color, false);
+//    addLabelWidget(colorButton);
+//}
+
+void Window::addLabelWidget(LabelWidget* labelWidget){
+//	std::cout << "addLabelWidget" <<std::endl;
+	labelWidget->registerObject();
+    colorLabelLayout->addWidget(labelWidget);
+    labelWidget->setId(colorLabelLayout->count());
+    labelMenu->addAction(labelWidget->getColorAction());
+
+    //Map actions
+    deleteSignalMapper -> setMapping (labelWidget->getDeleteAction(), labelWidget);
+    colorSignalMapper -> setMapping (labelWidget->getColorAction(), labelWidget);
+    connect(labelWidget->getDeleteAction(), SIGNAL(triggered()), deleteSignalMapper, SLOT(map()));
+    connect(labelWidget->getColorAction(), SIGNAL(triggered()), colorSignalMapper, SLOT(map()));
+    graphWidget->updateAll();
+}
+
+void Window::removeLabelWidget(LabelWidget* labelWidget){
+	labelWidget->setDeleted();
+	colorLabelLayout->removeWidget(labelWidget);
+	labelMenu->removeAction(labelWidget->getColorAction());
+	labelWidget->unregisterObject();
+
+
+	id_t index=1;
+	for(int i=0; i<colorLabelLayout->count(); i++){
+		if (LabelWidget *label = qobject_cast<LabelWidget*>(dynamic_cast <QWidgetItem*>(colorLabelLayout->itemAt(i))->widget())) {
+			label->setId(index);
+			index++;
+		}
+	}
+
+	colorLabelLayout->update();
+	graphWidget->updateAll();
+}
+
+
+
 size_t Window::getNrOfColorButtons(){
-	return buttons.size();
+	return colorLabelLayout->count();
 }
 
 LabelWidget* Window::getColorButton(size_t i){
-	return buttons[i];
+	return qobject_cast<LabelWidget*>(dynamic_cast <QWidgetItem*>(colorLabelLayout->itemAt(i))->widget());
 }
 
 
@@ -461,6 +479,7 @@ void Window::load(){
 		sidebar->scene()->addItem(cppn->getFinalNodeView());
 		setNodeviewPositions();
 		setWindowTitle(newFileName.split('/').back());
+		undoStack.clear();
 
 	} catch(std::exception& e){
 		QString message(("Error reading file: " + newFileName.toStdString() + "\n" + std::string( e.what() )).c_str());
@@ -531,23 +550,24 @@ void Window::addNodeView(Node* node){
     NodeView* testNode = new NodeView(node);
     setNodeviewPosition(testNode, sidebar->scene()->items().size());
     sidebar->scene()->addItem(testNode);
-    setNodeviewPositions();
     setSidebarSceneRect();
     cppn->updateNode(node);
 }
 
 void Window::addNodeView(){
-	foreach(QGraphicsItem* item, graphWidget->scene()->selectedItems()){
-		Node* node = qgraphicsitem_cast<Node*> (item);
-		if(node) addNodeView(node);
-	}
+	undoStack.push(new CommandNodeView(sidebar, graphWidget->scene()->selectedItems(), true));
+//	foreach(QGraphicsItem* item, graphWidget->scene()->selectedItems()){
+//		Node* node = qgraphicsitem_cast<Node*> (item);
+//		if(node) addNodeView(node);
+//	}
 }
 
 void Window::deleteNodeView(){
-	foreach(QGraphicsItem* item, sidebar->scene()->selectedItems()){
-		NodeView* node = qgraphicsitem_cast<NodeView*> (item);
-		if(node) deleteNodeView(node);
-	}
+	undoStack.push(new CommandNodeView(sidebar, sidebar->scene()->selectedItems(), false));
+//	foreach(QGraphicsItem* item, sidebar->scene()->selectedItems()){
+//		NodeView* node = qgraphicsitem_cast<NodeView*> (item);
+//		if(node) deleteNodeView(node);
+//	}
 }
 
 void Window::closeEvent(QCloseEvent * event){
@@ -578,7 +598,6 @@ void Window::closeEvent(QCloseEvent * event){
 		       break;
 		 }
 	}
-
 }
 
 
@@ -739,7 +758,7 @@ void Window::edgeSelected(bool selected, Edge* edge){
 	unlabelButton->setEnabled(selected);
 	horizontalGroupBox->setEnabled(selected);
 	screenCaptureAction->setEnabled(selected);
-	if(selected) emit sliderValueChangedF(edge->getWeight());
+	if(selected) setSlider();
 }
 
 void Window::updateSidebarSelection(){
@@ -765,43 +784,39 @@ void Window::updateMainSelection(){
 }
 
 void Window::unlabel(){
-	LabelWidget* label = new LabelWidget();
-	colorNode(label);
+	undoStack.push(new CommandLabelObject(graphWidget->scene()->selectedItems(), new LabelWidget()));
+	setWindowModified(true);
 }
 
 void Window::colorNode(QWidget* object){
 	LabelWidget* colorButton = qobject_cast<LabelWidget*>(object);
-	if(colorButton) colorNode(colorButton);
+	if(colorButton){
+		undoStack.push(new CommandLabelObject(graphWidget->scene()->selectedItems(), colorButton));
+		setWindowModified(true);
+	}
 }
 
 
 void Window::colorNode(LabelWidget* label){
-	foreach(QGraphicsItem* item, graphWidget->scene()->selectedItems()){
-		LabelableObject* object = util::multiCast<LabelableObject*, Edge*, Node*>(item);
-		if(object){
-			object->setLabel(label);
-			item->update();
-		}
-	}
-	setWindowModified(true);
+	undoStack.push(new CommandLabelObject(graphWidget->scene()->selectedItems(), label));
 }
 
 void Window::resetWeight(){
-	resetWeights(graphWidget->scene()->selectedItems(), false);
+	stopScan();
+	undoStack.push(new CommandSetWeight(graphWidget->scene()->selectedItems()));
+	if(selectedEdge) sliderValueChangedF(selectedEdge->getWeight());
 }
 
 void Window::resetAllWeights(){
-	resetWeights(graphWidget->scene()->items(), true);
+	stopScan();
+	undoStack.push(new CommandSetWeight(graphWidget->scene()->items()));
+	setSlider();
 }
 
 void Window::resetWeights(QList<QGraphicsItem*> items, bool batch){
 	stopScan();
-	foreach(QGraphicsItem* item, items){
-		Edge* edge = qgraphicsitem_cast<Edge*>(item);
-		if(edge) cppn->setWeight(edge, edge->getOriginalWeight(), !batch);
-	}
-	if(batch) cppn->updateNodes();
-	if(selectedEdge) sliderValueChangedF(selectedEdge->getWeight());
+	undoStack.push(new CommandSetWeight(items));
+	setSlider();
 }
 
 void Window::setValue(int value){
@@ -814,7 +829,7 @@ void Window::setValueF(double weight){
 	emit sliderValueChanged(value);
 	if(selectedEdge){
 		if(selectedEdge->getWeight() != weight)
-			cppn->setWeight(selectedEdge, weight);
+			undoStack.push(new CommandSetWeight(selectedEdge, weight));
 	}
 
 }
@@ -830,5 +845,17 @@ void Window::setSignOny(){
 void Window::setBoth(){
 	labelMode = both;
 	graphWidget->update();
+}
+
+void Window::setSlider(){
+	if(selectedEdge){
+		int value = round(((selectedEdge->getWeight()+3)/6)*100);
+		slider->blockSignals(true);
+		slider->setValue(value);
+		slider->blockSignals(false);
+		spinBox->blockSignals(true);
+		spinBox->setValue(selectedEdge->getWeight());
+		spinBox->blockSignals(false);
+	}
 }
 

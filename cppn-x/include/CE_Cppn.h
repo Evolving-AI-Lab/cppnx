@@ -147,7 +147,7 @@ public:
 	//Color button getters and setters
 	size_t getNrOfColorButtons();
 	LabelWidget* getColorButton(size_t i);
-	void addColorButton(std::string text, QColor color);
+//	void addColorButton(std::string text, QColor color);
 
 	void addLabelWidget(LabelWidget* labelWidget);
 

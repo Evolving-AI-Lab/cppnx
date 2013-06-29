@@ -13,25 +13,24 @@
 NodeView::NodeView(Node* node, int width, int height): node(node) {
     setFlag(ItemIsSelectable);
     setCacheMode(DeviceCoordinateCache);
-    node->setNodeView(this);
+    if(node) node->setNodeView(this);
 
     QImage* pixels = new QImage(width, height, QImage::Format_RGB32);
     pixels->fill(0);
     setPixels(pixels);
 }
 
-NodeView::NodeView(int width, int height): node(0) {
-    setCacheMode(DeviceCoordinateCache);
-
-    QImage* pixels = new QImage(width, height, QImage::Format_RGB32);
-    pixels->fill(0);
-    setPixels(pixels);
-}
+//NodeView::NodeView(int width, int height): node(0) {
+//	setFlag(ItemIsSelectable);
+//    setCacheMode(DeviceCoordinateCache);
+//
+//    QImage* pixels = new QImage(width, height, QImage::Format_RGB32);
+//    pixels->fill(0);
+//    setPixels(pixels);
+//}
 
 NodeView::~NodeView() {
-	if(node) node->resetNodeView(false);
 	delete (pixels);
-
 }
 
 

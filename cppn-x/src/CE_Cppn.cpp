@@ -82,6 +82,7 @@ void Cppn::addNode(Node* QTnode){
 	nodeMap[QTnode->getBranch() + "_" + QTnode->getId()]=QTnode;
 	numberOfNodes++;
 	validPhenotype=false;
+	QTnode->setCppn(this);
 }
 
 
@@ -95,13 +96,11 @@ void Cppn::addConnection(Edge* edge){
 	edges.push_back(edge);
 	validPhenotype=false;
 	numberOfEdges++;
+	edge->setCppn(this);
 }
 
 void Cppn::setWeight(Edge* edge, double weight, bool update){
-	if(edge->getWeight() == weight) return;
 	if(!validPhenotype) buildPhenotype();
-	edge->setWeight(weight);
-	edge->update();
 	linkWeights[edge->getIndex()]=weight;
 	if(update) updateFromLink(edge);
 }
@@ -503,9 +502,9 @@ LabelWidget* Cppn::getColorButton(size_t i){
 	return widget->getWindow()->getColorButton(i);
 }
 
-void Cppn::addColorButton(std::string text, QColor color){
-	widget->getWindow()->addColorButton(QString(text.c_str()), color);
-}
+//void Cppn::addColorButton(std::string text, QColor color){
+//	widget->getWindow()->addColorButton(QString(text.c_str()), color);
+//}
 
 void Cppn::addLabelWidget(LabelWidget* labelWidget){
 	widget->getWindow()->addLabelWidget(labelWidget);

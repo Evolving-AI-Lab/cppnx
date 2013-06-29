@@ -16,7 +16,6 @@ LabelWidget::LabelWidget(QString text, QColor color, bool isDeleted, QWidget *pa
 	colorAction = new QAction(text, this);
 	deleteAction = new QAction(tr("Delete ") + text, this);
 
-
 	//Create label
 	label = new QLabel(text);
 

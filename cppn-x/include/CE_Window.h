@@ -76,8 +76,9 @@ public slots:
 public:
     Window();
     virtual ~Window();
-    void addColorButton(QString text, QColor color);
+//    void addColorButton(QString text, QColor color);
     void addLabelWidget(LabelWidget* labelWidget);
+    void removeLabelWidget(LabelWidget* labelWidget);
 
     size_t getNrOfColorButtons();
     LabelWidget* getColorButton(size_t i);
@@ -124,6 +125,7 @@ private:
     void nodeSelected(bool selected);
     void edgeSelected(bool selected, Edge* edge);
     void colorNode(LabelWidget* color);
+    void setSlider();
 
     Cppn* cppn;
     QMenuBar *menuBar;
@@ -152,6 +154,9 @@ private:
     QAction *addLabelAction;
     QAction *unlabelAction;
     QAction *screenCaptureAction;
+
+    QAction *undoAction;
+    QAction *redoAction;
 
     QAction *labelOnlyAction;
     QAction *signOnlyAction;
@@ -184,6 +189,8 @@ private:
     QSlider* slider;
     QDoubleSpinBox *spinBox;
 
+    bool updateEdges;
+
     static const int sidebarMargin = 20;
     static const int betweenNodeMargin = 20;
 
@@ -196,6 +203,8 @@ private:
     Edge* scannedEdge;
     QString captureDirectory;
     QList<NodeView*> nodeViewsToBeCaptured;
+
+    QUndoStack undoStack;
 
 #ifdef USE_FFMPEG
     QList<QVideoEncoder*> nodeViewEncoders;

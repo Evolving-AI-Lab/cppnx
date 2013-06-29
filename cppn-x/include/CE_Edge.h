@@ -46,6 +46,7 @@
 #include "CE_Node.h"
 #include "CE_CppnWidget.h"
 #include "CE_LabelableObject.h"
+#include "CE_Cppn.h"
 
 
 
@@ -81,9 +82,7 @@ public:
     	setWeight(originalWeight);
     }
 
-    void setWeight(qreal weight){
-    	currentWeight = weight;
-    }
+    void setWeight(qreal weight, bool update = false);
 
     qreal getOriginalWeight(){
     	return originalWeight;
@@ -107,6 +106,14 @@ public:
 
     std::string getId(){
     	return id;
+    }
+
+    void setCppn(Cppn* _cppn){
+    	cppn = _cppn;
+    }
+
+    Cppn* getCppn(){
+    	return cppn;
     }
 
     void flash(bool flashOn){
@@ -144,6 +151,8 @@ private:
 
     int _flash;
     QLineF _line;
+
+    Cppn* cppn;
 };
 //! [0]
 

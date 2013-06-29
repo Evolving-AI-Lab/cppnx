@@ -17,6 +17,8 @@
 
 #include "CE_LabelableObject.h"
 #include "CE_Defines.h"
+#include "CE_Util.h"
+
 
 class LabelableObject;
 class QLabel;
@@ -73,12 +75,22 @@ public:
 		return deleted;
 	}
 
-	void setDeleted(){
-		deleted = true;
+	void setDeleted(bool _deleted = true){
+		deleted = _deleted;
+		if(deleted){
+			hide();
+			colorAction->setShortcut(tr(""));
+		} else {
+			show();
+		}
 	}
 
 	void setId(id_t _id){
 		id = _id;
+		if(id>0){
+			QString shortcut = "Alt+" + util::toQString(id);
+			colorAction->setShortcut(shortcut);
+		}
 	}
 
 	id_t getId(){

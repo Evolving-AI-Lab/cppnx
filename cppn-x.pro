@@ -58,48 +58,6 @@ HEADERS += zlib/crc32.h \
            cppn-x/include/CE_Util.h \
            cppn-x/include/CE_Window.h \
            cppn-x/include/CE_Xml.h \
-           JGTL/include/JGTL_Bar.h \
-           JGTL/include/JGTL_CircularBuffer.h \
-           JGTL/include/JGTL_CircularBufferInterface.h \
-           JGTL/include/JGTL_CommandLineParser.h \
-           JGTL/include/JGTL_DataManager.h \
-           JGTL/include/JGTL_DataPool_delete.h \
-           JGTL/include/JGTL_DynamicCircularBuffer.h \
-           JGTL/include/JGTL_DynamicPoolMap.h \
-           JGTL/include/JGTL_DynamicPoolSet.h \
-           JGTL/include/JGTL_FloatingUnits.h \
-           JGTL/include/JGTL_HexTree.h \
-           JGTL/include/JGTL_Index2.h \
-           JGTL/include/JGTL_Index3.h \
-           JGTL/include/JGTL_IntegralUnits.h \
-           JGTL/include/JGTL_InterpolatedValue.h \
-           JGTL/include/JGTL_LocatedException.h \
-           JGTL/include/JGTL_MapInterface.h \
-           JGTL/include/JGTL_PolyVariant.h \
-           JGTL/include/JGTL_PoolMap_delete.h \
-           JGTL/include/JGTL_Quadratic.h \
-           JGTL/include/JGTL_QuadTree.h \
-           JGTL/include/JGTL_QuickProf.h \
-           JGTL/include/JGTL_Ray2.h \
-           JGTL/include/JGTL_Ray3.h \
-           JGTL/include/JGTL_Rectangle3.h \
-           JGTL/include/JGTL_Serialization.h \
-           JGTL/include/JGTL_SetInterface.h \
-           JGTL/include/JGTL_Singleton.h \
-           JGTL/include/JGTL_SortedList_delete.h \
-           JGTL/include/JGTL_StackCircularBuffer.h \
-           JGTL/include/JGTL_StackMap.h \
-           JGTL/include/JGTL_StackSet.h \
-           JGTL/include/JGTL_StringConverter.h \
-           JGTL/include/JGTL_TreeList.h \
-           JGTL/include/JGTL_UnorderedDynamicPoolMap.h \
-           JGTL/include/JGTL_UnorderedMapInterface.h \
-           JGTL/include/JGTL_Variant.h \
-           JGTL/include/JGTL_Vector2.h \
-           JGTL/include/JGTL_Vector3.h \
-           JGTL/include/JGTL_Vector4.h \
-           JGTL/include/JGTL_WrappedInterpolatedValue.h \
-           JGTL/include/JGTL_XorSpace.h \
            libzip-0.11.1/lib/zip.h \
            libzip-0.11.1/lib/zipconf.h \
            libzip-0.11.1/lib/zipint.h
@@ -129,6 +87,10 @@ SOURCES += zlib/adler32.c \
            cppn-x/src/CE_NodeView.cpp \
            cppn-x/src/CE_Window.cpp \
            cppn-x/src/CE_VerticalScrollArea.cpp \
+           cppn-x/src/CE_CommandLabelObject.cpp \
+           cppn-x/src/CE_CommandSetWeight.cpp \
+           cppn-x/src/CE_CommandAddLabel.cpp \
+           cppn-x/src/CE_CommandNodeView.cpp \
            libzip-0.11.1/lib/mkstemp.c \
            libzip-0.11.1/lib/zip_add.c \
            libzip-0.11.1/lib/zip_add_dir.c \

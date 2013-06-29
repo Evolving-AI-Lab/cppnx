@@ -110,7 +110,6 @@ Node::Node(
 //! [0]
 
 Node::~Node(){
-	resetNodeView();
 	delete (pixels);
 }
 
@@ -311,7 +310,12 @@ void Node::resetNodeView(bool toDelete){
 }
 
 void Node::setNodeView(NodeView* _nodeView){
-	resetNodeView();
+	resetNodeView(false);
 	nodeView = _nodeView;
+	nodeView->setNode(this);
 }
 
+
+void Node::redraw(){
+	cppn->updateNode(this);
+}

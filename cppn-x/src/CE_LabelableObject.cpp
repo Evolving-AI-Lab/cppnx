@@ -11,6 +11,7 @@
 LabelableObject::LabelableObject(LabelWidget* _label, QString note): note(note){
 	if(_label == 0){
 		label = new LabelWidget();
+		label->registerObject();
 	} else {
 		label = _label;
 		label->registerObject();

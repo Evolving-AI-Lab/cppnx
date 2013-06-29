@@ -51,6 +51,7 @@
 #include <QList>
 #include <QPointer>
 
+class Cppn;
 class LabelWidget;
 class Edge;
 class GraphWidget;
@@ -155,6 +156,12 @@ public:
     std::string getAffinity(){return affinity;};
     std::string getBias(){return bias;};
 
+    void setCppn(Cppn* _cppn){
+    	cppn = _cppn;
+    }
+
+    void redraw();
+
     size_t y_index;
     size_t x_index;
 
@@ -190,6 +197,7 @@ private:
     size_t index;
     NodeView* nodeView;
     FinalNodeView* finalNodeView;
+    Cppn* cppn;
 
 };
 //! [0]

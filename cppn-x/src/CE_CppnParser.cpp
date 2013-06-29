@@ -274,27 +274,16 @@ void CppnParser::parseNode(bool store){
 	double y;
 
 	if(tryParseLine(open(ce_xml::node))){
-//		type = m[1].str();
 		type = m[1];
 	} else if(tryParseLine(open(ce_xml::ionode))){
-//		label = m[1].str();
-//		type = m[2].str();
 		label = m[1];
 		type = m[2];
 	} else if(tryParseLine(open(ce_xml::colornode))){
-//		std::cout << "colornode" <<std::endl;
-//		affinity = m[1].str();
-//		bias = m[2].str();
-//		type = m[3].str();
 		affinity = m[1];
 		bias = m[2];
 		type = m[3];
 	} else{
 		parseLine(open(ce_xml::iocolornode));
-//		affinity = m[1].str();
-//		bias = m[2].str();
-//		label = m[3].str();
-//		type = m[4].str();
 		affinity = m[1];
 		bias = m[2];
 		label = m[3];
@@ -302,13 +291,10 @@ void CppnParser::parseNode(bool store){
 	}
 
 	parseLine(read(ce_xml::marking));
-//	branch = m[1].str();
-//	id = m[2].str();
 	branch = m[1];
 	id = m[2];
 
 	parseLine(openClose(ce_xml::activation));
-//	activation_function = m[1].str();
 	activation_function = m[1];
 
 

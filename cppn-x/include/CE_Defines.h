@@ -1,5 +1,5 @@
 /*
- * Visualize_defines.h
+ * CE_defines.h
  *
  *  Created on: May 23, 2013
  *      Author: joost
@@ -57,6 +57,8 @@
 #define NODEVIEW_TYPE 3
 #define FINALVIEW_TYPE 4
 
+#define SET_WEIGHT_ID 1
+#define RESET_WEIGHT_ID 2
 
 enum inputs{
 	input_x =0,

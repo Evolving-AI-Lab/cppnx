@@ -24,8 +24,8 @@ QT_END_NAMESPACE
 
 class NodeView : public QGraphicsItem {
 public:
-	NodeView(int width = 256, int height = 256);
-	NodeView(Node* node, int width = 256, int height = 256);
+//	NodeView(int width = 256, int height = 256);
+	NodeView(Node* node = 0, int width = 256, int height = 256);
 	virtual ~NodeView();
 
     enum { Type = UserType + NODEVIEW_TYPE };
@@ -50,6 +50,10 @@ public:
 
     Node* getNode(){
     	return node;
+    }
+
+    void setNode(Node* _node){
+    	node = _node;
     }
 
     QImage* getImage(){

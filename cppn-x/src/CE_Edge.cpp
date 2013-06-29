@@ -62,19 +62,28 @@ Edge::Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *s
     source->addOutgoingEdge(this);
     dest->addIncommingEdge(this);
     adjust();
+    cppn=0;
 }
 //! [0]
 
 //! [1]
-Node *Edge::sourceNode() const
+Node* Edge::sourceNode() const
 {
     return source;
 }
 
-Node *Edge::destNode() const
+Node* Edge::destNode() const
 {
     return dest;
 }
+
+void Edge::setWeight(qreal weight, bool update){
+	if(weight == currentWeight) return;
+	currentWeight = weight;
+	if(cppn) cppn->setWeight(this, weight, update);
+	if(update) this->update();
+}
+
 //! [1]
 
 //! [2]

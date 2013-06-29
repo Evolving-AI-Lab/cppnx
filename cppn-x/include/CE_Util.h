@@ -15,6 +15,7 @@
 #include <istream>
 #include <ostream>
 #include <QString>
+#include <QGraphicsItem>
 
 #include "CE_Defines.h"
 
