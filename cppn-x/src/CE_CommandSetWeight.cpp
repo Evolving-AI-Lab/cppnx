@@ -9,6 +9,7 @@
 #include <iostream>
 
 CommandSetWeight::CommandSetWeight(QList<QGraphicsItem*> items){
+	qSort(items);
 	foreach(QGraphicsItem* item, items){
 		Edge* edge = qgraphicsitem_cast<Edge*>(item);
 		if(edge){
@@ -40,7 +41,7 @@ void CommandSetWeight::undo(){
 	bool update = edgeTriples.count() <= 1;
 	foreach(triple_t triple, edgeTriples){
 		triple.first->setWeight(triple.second.first, update);
-		std::cout << "Undo: " << triple.second.first << std::endl;
+//		std::cout << "Undo: " << triple.second.first << std::endl;
 	}
 	if(!update) edgeTriples[0].first->getCppn()->updateNodes();
 }
@@ -49,7 +50,7 @@ void CommandSetWeight::redo(){
 	bool update = edgeTriples.count() <= 1;
 	foreach(triple_t triple, edgeTriples){
 		triple.first->setWeight(triple.second.second, update);
-		std::cout << "Redo: " << triple.second.second << std::endl;
+//		std::cout << "Redo: " << triple.second.second << std::endl;
 	}
 	if(!update) edgeTriples[0].first->getCppn()->updateNodes();
 }

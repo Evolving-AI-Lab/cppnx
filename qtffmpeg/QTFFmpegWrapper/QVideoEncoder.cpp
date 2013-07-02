@@ -277,9 +277,9 @@ bool QVideoEncoder::initCodec()
 //   ffmpeg::avcodec_init();
    ffmpeg::av_register_all();
 
-   printf("License: %s\n",ffmpeg::avformat_license());
-   printf("AVCodec version %d\n",ffmpeg::avformat_version());
-   printf("AVFormat configuration: %s\n",ffmpeg::avformat_configuration());
+//   printf("License: %s\n",ffmpeg::avformat_license());
+//   printf("AVCodec version %d\n",ffmpeg::avformat_version());
+//   printf("AVFormat configuration: %s\n",ffmpeg::avformat_configuration());
 
    return true;
 }
@@ -304,9 +304,9 @@ int QVideoEncoder::encodeImage_p(const QImage &img,bool custompts, unsigned pts)
 
 
 
-   std::cout << "<avcodec_encode_video start>" <<std::endl;
+//   std::cout << "<avcodec_encode_video start>" <<std::endl;
    int got_output = ffmpeg::avcodec_encode_video(pCodecCtx,outbuf,outbuf_size,ppicture);
-   std::cout << "<avcodec_encode_video end>" <<std::endl;
+//   std::cout << "<avcodec_encode_video end>" <<std::endl;
 
 //   int got_output;
 //   ffmpeg::avcodec_encode_video2(pCodecCtx, &pkt, ppicture, &got_output);
@@ -338,9 +338,9 @@ int QVideoEncoder::encodeImage_p(const QImage &img,bool custompts, unsigned pts)
       pkt.size= got_output;
 
 
-      std::cout << "<av_interleaved_write_frame start>" <<std::endl;
+//      std::cout << "<av_interleaved_write_frame start>" <<std::endl;
       int ret = av_interleaved_write_frame(pFormatCtx, &pkt);
-      std::cout << "<av_interleaved_write_frame end>" <<std::endl;
+//      std::cout << "<av_interleaved_write_frame end>" <<std::endl;
       //printf("Wrote %d\n",ret);
       if(ret<0)
          return -1;
@@ -441,8 +441,8 @@ void QVideoEncoder::freeFrame()
 
 bool QVideoEncoder::convertImage(const QImage &img)
 {
-	std::cout << "Size: " << img.width() << " " << img.height() << std::endl;
-	std::cout << "Expected: " << getWidth() << " " << getHeight() << std::endl;
+//	std::cout << "Size: " << img.width() << " " << img.height() << std::endl;
+//	std::cout << "Expected: " << getWidth() << " " << getHeight() << std::endl;
 	
    // Check if the image matches the size
    if(img.width()!=getWidth() || img.height()!=getHeight())
@@ -538,9 +538,9 @@ bool QVideoEncoder::convertImage(const QImage &img)
 
 bool QVideoEncoder::convertImage_sws(const QImage &img)
 {
-	std::cout << "Size: " << img.width() << " " << img.height() << std::endl;
-	std::cout << "Expected: " << getWidth() << " " << getHeight() << std::endl;
-	std::cout << "Format: " << img.format() << " Expected: " << QImage::Format_RGB32 << " or: " << QImage::Format_ARGB32 << std::endl;
+//	std::cout << "Size: " << img.width() << " " << img.height() << std::endl;
+//	std::cout << "Expected: " << getWidth() << " " << getHeight() << std::endl;
+//	std::cout << "Format: " << img.format() << " Expected: " << QImage::Format_RGB32 << " or: " << QImage::Format_ARGB32 << std::endl;
 	
    // Check if the image matches the size
    if(img.width()!=getWidth() || img.height()!=getHeight())

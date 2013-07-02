@@ -14,25 +14,27 @@
 #include <QPainter>
 #include <QAction>
 #include <QHBoxLayout>
+#include <QFrame>
 
-#include "CE_LabelableObject.h"
+
 #include "CE_Defines.h"
 #include "CE_Util.h"
+#include "CE_Window.h"
 
 
-class LabelableObject;
 class QLabel;
 class QPushButton;
 class QObject;
 class QHBoxLayout;
+class Window;
 
 
-class LabelWidget : public QWidget{
+class LabelWidget : public QFrame{
 	Q_OBJECT
 
 public:
 
-	LabelWidget(QString text = "", QColor color = Qt::white, bool isDeleted = true, QWidget *parent = 0);
+	LabelWidget(Window* window, QString text = "", QColor color = Qt::white, bool isDeleted = true, QWidget *parent = 0);
 	virtual ~LabelWidget();
 
 	QLabel* getLabel(){
@@ -49,13 +51,26 @@ public:
 		return color;
 	}
 
-	std::string getText();
+	void setColor(QColor _color);
+
+	QString getText() const;
+//	std::string getText() const;
+
+	void setText(const QString& name);
 
 	QAction* getColorAction(){
 		return colorAction;
 	}
 
 	QAction* getDeleteAction(){
+		return deleteAction;
+	}
+
+	QAction* getRenameAction(){
+		return deleteAction;
+	}
+
+	QAction* getChangeColorAction(){
 		return deleteAction;
 	}
 
@@ -97,7 +112,28 @@ public:
 		return id;
 	}
 
+	unsigned int registerdObjects;
+
+	void contextMenuEvent(QContextMenuEvent *event);
+
+	void setHighlightOn();
+	void setHighlightOff();
+
+	QString baseSs;
+	QString selectedSs;
+	QString highlightSs;
+	QString selectedHighlightSs;
+
+public slots:
+void changeLabelColor();
+void changeLabelName();
+
+protected:
+void focusInEvent(QFocusEvent* event );
+void focusOutEvent(QFocusEvent* event );
+
 private:
+	Window* window;
 	QLabel* label;
 	QPushButton* colorButton;
 	QPushButton* deleteButton;
@@ -105,10 +141,14 @@ private:
 	QColor color;
 	QAction* colorAction;
 	QAction* deleteAction;
+	QAction* changeColorAction;
+	QAction* renameAction;
 
-	unsigned int registerdObjects;
+
+
 	id_t id;
 	bool deleted;
+	bool highlight;
 };
 
 #endif /* CE_COLORBUTTON_H_ */

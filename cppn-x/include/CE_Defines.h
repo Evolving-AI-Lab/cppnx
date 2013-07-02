@@ -59,6 +59,7 @@
 
 #define SET_WEIGHT_ID 1
 #define RESET_WEIGHT_ID 2
+#define SET_POS_ID 3
 
 enum inputs{
 	input_x =0,

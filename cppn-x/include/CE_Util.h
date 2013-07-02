@@ -23,6 +23,18 @@
 namespace util{
 
 template <typename Type1, typename Type2, typename Type3>
+class Triple{
+public:
+	Triple(Type1 element1, Type2 element2, Type3 element3):
+		first(element1),second(element2),third(element3){
+	}
+
+	Type1 first;
+	Type2 second;
+	Type3 third;
+};
+
+template <typename Type1, typename Type2, typename Type3>
 inline Type1 multiCast(QGraphicsItem *item){
 	Type1 convertedItem = qgraphicsitem_cast<Type1>(item);
 	if(convertedItem) return convertedItem;

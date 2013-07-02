@@ -8,11 +8,11 @@
 #include "CE_CppnParser.h"
 #include "CE_Xml.h"
 #include "CE_Util.h"
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
 #include <limits>
 #include <zip.h>
+
+
 
 
 #define parseEach(template_str,parser) while(parseCount(template_str)){parser;} parseLine(close(template_str));
@@ -102,7 +102,7 @@ bool CppnParser::parseCount(std::string template_str){
 //}
 //
 bool CppnParser::tryParseLine(std::string regex){
-	if(!myfile->good()) throw JGTL::LocatedException("Unexpected end of file.");
+	if(!myfile->good()) throw CeParseException("Unexpected end of file.");
 	if(nextLine){
 		getline (*myfile,line);
 		lineNumber++;
@@ -162,7 +162,7 @@ bool CppnParser::parseLine(std::string line, std::string expected){
 
 
 void CppnParser::parseLine(std::string regex){
-	if(!myfile->good()) throw JGTL::LocatedException("Unexpected end of file.");
+	if(!myfile->good()) throw CeParseException("Unexpected end of file.");
 	if(nextLine){
 		getline (*myfile,line);
 		lineNumber++;
@@ -170,7 +170,7 @@ void CppnParser::parseLine(std::string regex){
 	if(parseLine(line, regex)){
 		nextLine=true;
 	} else {
-		throw JGTL::LocatedException("Parse error on line: " + util::toString(lineNumber) + ".\nRead: "+ line + "\nExpected: " + regex);
+		throw CeParseException("Parse error on line: " + util::toString(lineNumber) + ".\nRead: "+ line + "\nExpected: " + regex);
 	}
 }
 
@@ -232,7 +232,7 @@ void CppnParser::parseColorButton(bool store){
 	parseLine(close(ce_xml::color_button));
 
 	if(store){
-		labelWidget = new LabelWidget(text_str.c_str(), color_q, false);
+		labelWidget = new LabelWidget(widget->getWindow(), text_str.c_str(), color_q, false);
 		labelWidget->setId(id);
 
 		if (data_version >= "1.1"){

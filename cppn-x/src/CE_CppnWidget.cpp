@@ -44,6 +44,10 @@
 
 #include <cmath>
 #include "CE_Util.h"
+#include "CE_CommandSetPos.h"
+#include "CE_CppnParser.h"
+#include "CE_Cppn.h"
+#include "CE_CppnWriter.h"
 
 
 const double GraphWidget::left_border_min = -400.0;
@@ -103,7 +107,6 @@ void GraphWidget::updateAll(){
 
 bool GraphWidget::load(std::string filename)
 {
-	par_window->clearColorButtons();
 	CppnParser parser(filename, this);
 	cppn = parser.parse();
 	par_window->setCppn(cppn);
@@ -111,7 +114,7 @@ bool GraphWidget::load(std::string filename)
 
 	x_sorted.clear();
 	y_sorted.clear();
-	scene()->clear();
+
 	for(size_t i=0; i< cppn->getNrOfNodes();i++){
 //		std::cout << "Node: " << i << " " << cppn->getNode(i) << std::endl;
 		scene()->addItem(cppn->getNode(i));
@@ -480,14 +483,18 @@ Window* GraphWidget::getWindow(){
 
 void GraphWidget::positionNodesLayers(){
 	cppn->positionNodes();
+	par_window->undoStack.push(new CommandSetPos(scene()->items()));
 }
 
 
 void GraphWidget::positionNodesCircle(){
 	cppn->positionNodesCircle();
+	par_window->undoStack.push(new CommandSetPos(scene()->items()));
 }
 
 void GraphWidget::addNode(Node* node){
+//	std::cout << node->pos().x() << " " << node->pos().y() << std::endl;
+	node->setPrevPos(node->pos());
 
 	std::vector<Node*>::iterator it;
 	for(it=x_sorted.begin(); it != x_sorted.end(); it++){
@@ -513,7 +520,7 @@ int GraphWidget::getGeneration(int min, int max){
 
 	std::string text = "This files contains multiple generations from " + util::toString(min) + " to " + util::toString(max) + "\nPlease select a generation to display.";
 
-	if(!ok) throw JGTL::LocatedException("Parsing canceled.");
+	if(!ok) throw CeParseException("Parsing canceled.");
 	return QInputDialog::getInt(this, tr("Select Generation"), tr(text.c_str()), 0, min, max, 1, &ok);
 }
 

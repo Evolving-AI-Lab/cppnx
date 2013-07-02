@@ -12,10 +12,11 @@
 #include <QGraphicsItem>
 
 class LabelWidget;
+class Window;
 
 class LabelableObject : public QGraphicsItem {
 public:
-	LabelableObject(LabelWidget* label = 0, QString note = "");
+	LabelableObject(Window* window, LabelWidget* label = 0, QString note = "");
 
 	virtual ~LabelableObject();
 
@@ -31,6 +32,8 @@ public:
 	}
 
 protected:
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+
 	LabelWidget* label;
 	QString note;
 };

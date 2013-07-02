@@ -24,9 +24,7 @@ INCLUDEPATH += . \
                libzip-0.11.1/xcode \
                libzip-0.11.1/src
 
-#LIBS += -liconv 
 LIBS += -lm 
-#LIBS += -lbz2 
 #LIBS += -lz 
 
 # Requied for some C99 defines
@@ -91,6 +89,9 @@ SOURCES += zlib/adler32.c \
            cppn-x/src/CE_CommandSetWeight.cpp \
            cppn-x/src/CE_CommandAddLabel.cpp \
            cppn-x/src/CE_CommandNodeView.cpp \
+           cppn-x/src/CE_CommandSetPos.cpp \
+           cppn-x/src/CE_CommandChangeLabelColor.cpp \
+           cppn-x/src/CE_CommandChangeLabelName.cpp \
            libzip-0.11.1/lib/mkstemp.c \
            libzip-0.11.1/lib/zip_add.c \
            libzip-0.11.1/lib/zip_add_dir.c \

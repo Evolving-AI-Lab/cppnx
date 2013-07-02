@@ -120,7 +120,7 @@ void CppnWriter::writeEdge(Edge* edge){
 void CppnWriter::writeColorButton(LabelWidget* colorButton){
 	open(ce_xml::color_button);
 	write(ce_xml::color_label, colorButton->getId());
-	openClose(ce_xml::text, colorButton->getText());
+	openClose(ce_xml::text, colorButton->getText().toStdString());
 	write(ce_xml::color, colorButton->getColor().red(), colorButton->getColor().green(), colorButton->getColor().blue());
 	close(ce_xml::color_button);
 }

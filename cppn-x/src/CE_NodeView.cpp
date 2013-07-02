@@ -10,7 +10,7 @@
 #include <QPainter>
 #include <cmath>
 
-NodeView::NodeView(Node* node, int width, int height): node(node) {
+NodeView::NodeView(Node* node, int width, int height): node(node), position(0) {
     setFlag(ItemIsSelectable);
     setCacheMode(DeviceCoordinateCache);
     if(node) node->setNodeView(this);
@@ -146,4 +146,12 @@ void NodeView::setPixel(const size_t& index, const char& red, const char& grey){
 	pixels->bits()[index]=grey;
 	pixels->bits()[index+1]=grey;
 	pixels->bits()[index+2]=red;
+}
+
+void NodeView::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+//    QMenu menu(graph->getWindow());
+//    QAction* action = new QAction("Dummy action", graph->getWindow());
+//    menu.addAction(action);
+//    menu.exec(event->screenPos());
 }

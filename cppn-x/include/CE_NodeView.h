@@ -60,6 +60,14 @@ public:
     	return pixels;
     }
 
+    size_t getPosition(){
+    	return position;
+    }
+
+    void setPosition(size_t _position){
+    	position = _position;
+    }
+
 //    void setColor(QColor _color){
 //    	color = _color;
 //    }
@@ -71,11 +79,13 @@ public:
     static const int half_height = 128;
 
 protected:
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
     QImage* pixels;
     Node* node;
+    size_t position;
 };
 
 #endif /* CE_NODEVIEW_H_ */

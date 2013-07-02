@@ -16,16 +16,20 @@
 
 class CommandNodeView: public QUndoCommand {
 public:
+	typedef std::pair<Node*, NodeView*> nodeViewPair_t;
+	static bool nodeViewCompare(const nodeViewPair_t first, const nodeViewPair_t second);
+
 	CommandNodeView(QGraphicsView* sidebar, QList<QGraphicsItem*> items, bool add=true);
 	virtual ~CommandNodeView();
 
 	void undo();
 	void redo();
 
+
 private:
 	static const int betweenNodeMargin = 20;
 
-	typedef std::pair<Node*, NodeView*> nodeViewPair_t;
+
 	void addNodeViews();
 	void removeNodeViews();
 	void setNodeviewPositions();

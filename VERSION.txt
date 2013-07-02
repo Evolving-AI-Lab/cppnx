@@ -56,20 +56,23 @@ Version: 0.4.2
 Version: 0.4.3
 - Partially implemented undo functionality. Can undo changes in weight, adding and removing labels, applying labels and adding nodes to the sidebar. 
 
+Version: 0.5
+- Fully implemented undo functionality. Can undo changes in weight, position, adding and removing labels, applying labels and adding nodes to the sidebar. 
+- Skip frames to increase scanning speed.
+- Highlight the label of an object when it gets selected.
+- Ability to rename labels. 
+- Ability to change label colors after the fact.
+- Added instructions to install cppn-x with ffmpeg for direct recording. 
+
 Known issues:
 - none
 
 Wish-list:
-- Undo node positioning.
-- Skip frames to increase scanning speed.
-- Highlight the label of an object when it gets selected.
+- Support for knockout experiments.
 - Add notes to objects.
-- ability to rename labels 
-- ability to change label colors after the fact
 - Create a custom film.
 - Create a picture for an arbitrary node.
 - Scan interaction effects.
-- Support for knockout experiments.
 - Add or remove nodes and connections.
 - Copy nodes according to "node duplication".
 - Automatically calculate and display various statistics such as modularity, hierarchy, red-blue modularity (and maybe split the network into even more parts).

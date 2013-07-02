@@ -47,6 +47,8 @@
 
 #include "CE_Node.h"
 #include "CE_FinalNodeView.h"
+#include "CE_CommandSetPos.h"
+#include "CE_CppnParser.h"
 
 //! [0]
 Node::Node(
@@ -63,7 +65,7 @@ Node::Node(
 		LabelWidget* label,
 		std::string note
 		)
-    : LabelableObject(label, note.c_str()),
+    : LabelableObject(graphWidget->getWindow(), label, note.c_str()),
       graph(graphWidget),
       branch(branch),
       id(id),
@@ -99,7 +101,7 @@ Node::Node(
 		activationFunction = act_functions::cos;
 		activationFunction_short = "cos()";
 	} else {
-		throw JGTL::LocatedException("File contains unknown activation function: '" + activationFunction_str + "'");
+		throw CeParseException("File contains unknown activation function: '" + activationFunction_str + "'");
 	}
 
 
@@ -132,24 +134,13 @@ QList<Edge *> Node::outgoingEdges() const
     return outgoingEdgeList;
 }
 
-//! [1]
 
-//! [8]
 QRectF Node::boundingRect() const
 {
-#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
-    // Add some extra space around the circle for easier touching with finger
-    qreal adjust = 30;
-    return QRectF( -10 - adjust, -10 - adjust,
-                  20 + adjust * 2, 20 + adjust * 2);
-#else
     qreal adjust = 2;
     return QRectF( -half_width - adjust, (-half_height - adjust) - footerBarSize, node_width + 2*adjust, node_height + 2*adjust + footerBarSize*2);
-#endif
 }
-//! [8]
 
-//! [9]
 QPainterPath Node::shape() const
 {
     QPainterPath path;
@@ -158,9 +149,7 @@ QPainterPath Node::shape() const
 
     return path;
 }
-//! [9]
 
-//! [10]
 void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
 	Q_UNUSED(option);
@@ -227,11 +216,17 @@ QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
         break;
     };
 
-    return QGraphicsItem::itemChange(change, value);
+    return LabelableObject::itemChange(change, value);
 }
-//! [11]
 
-//! [12]
+void Node::setPrevPos(QPointF point){
+	previousPosition = point;
+}
+
+QPointF Node::getPrevPos(){
+	return previousPosition;
+}
+
 void Node::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     update();
@@ -242,16 +237,21 @@ void Node::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     update();
     QGraphicsItem::mouseReleaseEvent(event);
-    graph->itemMoved(this);
+    foreach(QGraphicsItem* item, graph->scene()->selectedItems()){
+    	Node* node = qgraphicsitem_cast<Node*>(item);
+    	if(node) graph->itemMoved(node);
+    }
+    if(pos() != previousPosition){
+    	std::cout << "Push" <<std::endl;
+    	graph->getWindow()->undoStack.push(new CommandSetPos(graph->scene()->selectedItems()));
+    }
 }
-//! [12]
 
-//! [13]
 void Node::setPixels(QImage* pixels_)
 {
     pixels = pixels_;
 }
-//! [13]
+
 
 
 void Node::setPixel(int x, int y, char r, char g, char b){
@@ -318,4 +318,12 @@ void Node::setNodeView(NodeView* _nodeView){
 
 void Node::redraw(){
 	cppn->updateNode(this);
+}
+
+void Node::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+//    QMenu menu(graph->getWindow());
+//    QAction* action = new QAction("Dummy action", graph->getWindow());
+//    menu.addAction(action);
+//    menu.exec(event->screenPos());
 }

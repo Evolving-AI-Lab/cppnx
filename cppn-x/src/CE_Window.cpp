@@ -6,14 +6,21 @@
  */
 
 
-#include "CE_Window.h"
+
 #include <QSpacerItem>
+
+#include "CE_Window.h"
 #include "CE_Util.h"
+#include "CE_LabelWidget.h"
+
+#include "CE_NodeView.h"
+#include "CE_Node.h"
 
 #include "CE_CommandLabelObject.h"
 #include "CE_CommandSetWeight.h"
 #include "CE_CommandAddLabel.h"
 #include "CE_CommandNodeView.h"
+
 
 
 Window::Window()
@@ -320,6 +327,8 @@ void Window::createLabelBar()
 
     colorLabelLayout = new QVBoxLayout();
     colorLabelLayout->setAlignment(Qt::AlignTop);
+//    colorLabelLayout->setMargin(0);
+    colorLabelLayout->setSpacing(1);
 //    colorMainLayout->setSizeConstraint(QVBoxLayout::SetMinimumSize);
 
 //    colorLabelWidget = new QWidget();
@@ -373,16 +382,25 @@ void Window::createLabelBar()
 
 
 void Window::clearColorButtons(){
+//	std::cout << "Nr of labelWidgets: " << colorLabelLayout->count() <<std::endl;
+	QList<LabelWidget*> toDelete;
 	for(int i=0; i<colorLabelLayout->count(); i++){
 		if (LabelWidget *label = qobject_cast<LabelWidget*>(dynamic_cast <QWidgetItem*>(colorLabelLayout->itemAt(i))->widget())) {
-			removeLabelWidget(label);
+			toDelete.append(label);
 		}
+	}
+
+	foreach(LabelWidget *label, toDelete){
+		removeLabelWidget(label);
 	}
 }
 
 void Window::deleteColorButton(QWidget* object){
 	LabelWidget* labelWidget = qobject_cast<LabelWidget*>(object);
-	if(labelWidget) undoStack.push(new CommandAddLabel(this, labelWidget, false));
+	if(labelWidget) {
+//		std::cout << "Delete button" <<std::endl;
+		undoStack.push(new CommandAddLabel(this, labelWidget, false));
+	}
 }
 
 void Window::addColorButton(){
@@ -400,7 +418,7 @@ void Window::addColorButton(){
     if(!color.isValid()) return;
 
     //Create label
-    undoStack.push(new CommandAddLabel(this, new LabelWidget(labelText, color, false), true));
+    undoStack.push(new CommandAddLabel(this, new LabelWidget(this, labelText, color, false), true));
     setWindowModified(true);
 }
 
@@ -410,14 +428,20 @@ void Window::addColorButton(){
 //    addLabelWidget(colorButton);
 //}
 
-void Window::addLabelWidget(LabelWidget* labelWidget){
+void Window::addLabelWidget(LabelWidget* labelWidget, size_t index){
 //	std::cout << "addLabelWidget" <<std::endl;
 	labelWidget->registerObject();
-    colorLabelLayout->addWidget(labelWidget);
-    labelWidget->setId(colorLabelLayout->count());
+	if(labelWidget->getId() == 0){
+		colorLabelLayout->addWidget(labelWidget);
+		labelWidget->setId(colorLabelLayout->count());
+	} else {
+		colorLabelLayout->insertWidget(labelWidget->getId()-1, labelWidget);
+	}
+
     labelMenu->addAction(labelWidget->getColorAction());
 
     //Map actions
+
     deleteSignalMapper -> setMapping (labelWidget->getDeleteAction(), labelWidget);
     colorSignalMapper -> setMapping (labelWidget->getColorAction(), labelWidget);
     connect(labelWidget->getDeleteAction(), SIGNAL(triggered()), deleteSignalMapper, SLOT(map()));
@@ -427,9 +451,14 @@ void Window::addLabelWidget(LabelWidget* labelWidget){
 
 void Window::removeLabelWidget(LabelWidget* labelWidget){
 	labelWidget->setDeleted();
+    disconnect(labelWidget->getDeleteAction(), SIGNAL(triggered()), deleteSignalMapper, SLOT(map()));
+    disconnect(labelWidget->getColorAction(), SIGNAL(triggered()), colorSignalMapper, SLOT(map()));
 	colorLabelLayout->removeWidget(labelWidget);
 	labelMenu->removeAction(labelWidget->getColorAction());
 	labelWidget->unregisterObject();
+
+
+//	std::cout << labelWidget->registerdObjects <<std::endl;
 
 
 	id_t index=1;
@@ -463,23 +492,30 @@ void Window::load(){
 	if(newFileName.isEmpty()) return;
 
 	try{
-		if (graphWidget->load(newFileName.toStdString())){
-			currentFileName = newFileName;
-			addLabel->setDisabled(false);
-			labelName->setDisabled(false);
-			resetAllAction->setDisabled(false);
-			saveAction->setDisabled(false);
-			saveAsAction->setDisabled(false);
-			circleAction->setDisabled(false);
-			layerAction->setDisabled(false);
-			addLabelAction->setDisabled(false);
-		}
+
+		graphWidget->scene()->clear();
+		undoStack.clear();
+		delete cppn;
+		clearColorButtons();
+
+
+		graphWidget->load(newFileName.toStdString());
+		currentFileName = newFileName;
+		addLabel->setDisabled(false);
+		labelName->setDisabled(false);
+		resetAllAction->setDisabled(false);
+		saveAction->setDisabled(false);
+		saveAsAction->setDisabled(false);
+		circleAction->setDisabled(false);
+		layerAction->setDisabled(false);
+		addLabelAction->setDisabled(false);
+
 
 		clearNodeViews();
 		sidebar->scene()->addItem(cppn->getFinalNodeView());
 		setNodeviewPositions();
 		setWindowTitle(newFileName.split('/').back());
-		undoStack.clear();
+
 
 	} catch(std::exception& e){
 		QString message(("Error reading file: " + newFileName.toStdString() + "\n" + std::string( e.what() )).c_str());
@@ -616,7 +652,7 @@ void Window::captureScreen(){
 
 #ifdef USE_FFMPEG
 	nodeViewEncoders.clear();
-	encoder.createFile(captureDirectory + "/fullApplication.mpg",this->width(),this->height(),18000,10);
+	encoder.createFile(captureDirectory + "/fullApplication.mpg",this->width(),this->height(),this->width()*this->height()*4,10);
 #endif USE_FFMPEG
 
 	QList<QGraphicsItem*> graphicsItemsToBeEncoded = sidebar->scene()->selectedItems();
@@ -635,7 +671,6 @@ void Window::captureScreen(){
 #endif USE_FFMPEG
 		}
 	}
-
 
 	startScan();
 	captureFrame();
@@ -725,7 +760,13 @@ void Window::timerEvent(QTimerEvent *event)
 	Q_UNUSED(event);
 
 //	while (slider->value() < 100){
-	slider->setValue(slider->value()+1);
+	int newSliderValue = slider->value();
+	if(capture){
+		newSliderValue++;
+	}else {
+		newSliderValue = std::min(newSliderValue+3, 100);
+	}
+	slider->setValue(newSliderValue);
 	if(capture) captureFrame();
 	if(slider->value() >= 100) stopScan();
 	if(scannedEdge && slider->value()%5 == 0) scannedEdge->flash(true);
@@ -784,7 +825,7 @@ void Window::updateMainSelection(){
 }
 
 void Window::unlabel(){
-	undoStack.push(new CommandLabelObject(graphWidget->scene()->selectedItems(), new LabelWidget()));
+	undoStack.push(new CommandLabelObject(graphWidget->scene()->selectedItems(), new LabelWidget(this)));
 	setWindowModified(true);
 }
 

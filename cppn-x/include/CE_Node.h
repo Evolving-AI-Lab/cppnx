@@ -41,15 +41,18 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include <QtGui>
+#include <QGraphicsItem>
+#include <QList>
+#include <QPointer>
+
 #include "CE_Defines.h"
 #include "CE_Edge.h"
 #include "CE_CppnWidget.h"
 #include "CE_LabelableObject.h"
 
 
-#include <QGraphicsItem>
-#include <QList>
-#include <QPointer>
+
 
 class Cppn;
 class LabelWidget;
@@ -75,12 +78,12 @@ public:
     		std::string id = "",
     		std::string type = "",
     		std::string activationFunction_str=XML_SIGMOID,
-    		std::string label = "",
+    		std::string xml_label = "",
     		std::string affinity = "",
     		std::string bias = "",
     		int width = 256,
     		int height = 256,
-    		LabelWidget* label = new LabelWidget(),
+    		LabelWidget* label = 0,
     		std::string note = ""
     );
     ~Node();
@@ -162,6 +165,11 @@ public:
 
     void redraw();
 
+    void setPrevPos(QPointF point);
+    QPointF getPrevPos();
+
+
+
     size_t y_index;
     size_t x_index;
 
@@ -172,6 +180,7 @@ public:
     static const int footerBarSize = 15;
 
 protected:
+	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -198,6 +207,8 @@ private:
     NodeView* nodeView;
     FinalNodeView* finalNodeView;
     Cppn* cppn;
+
+    QPointF previousPosition;
 
 };
 //! [0]

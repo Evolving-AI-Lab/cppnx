@@ -40,15 +40,10 @@
 
 #ifndef GRAPHWIDGET_H
 #define GRAPHWIDGET_H
-#include <JGTL_LocatedException.h>
+//#include <JGTL_LocatedException.h>
 #include <QtGui/QGraphicsView>
 #include <map>
-#include "CE_Edge.h"
-#include "CE_Node.h"
 #include "CE_Defines.h"
-#include "CE_CppnParser.h"
-#include "CE_Cppn.h"
-#include "CE_CppnWriter.h"
 #include "CE_LabelWidget.h"
 #include "CE_Window.h"
 
@@ -72,13 +67,13 @@ public:
     bool save(std::string filename);
 //    void edgeSelected(int id, Edge* selectedEdge);
     Window* getWindow();
-    Node* getSelectedNode(){
-    	return selectedNode;
-    }
-
-    Edge* getSelectedEdge(){
-    	return selectedEdge;
-    }
+//    Node* getSelectedNode(){
+//    	return selectedNode;
+//    }
+//
+//    Edge* getSelectedEdge(){
+//    	return selectedEdge;
+//    }
 
     int getGeneration(int min, int max);
     void warning(std::string message);

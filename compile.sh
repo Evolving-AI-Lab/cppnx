@@ -8,9 +8,25 @@ then
 	exit
 fi
 
+if [[ $2 = clean ]]
+then
+	echo "Running clean"
+	./clean.sh
+	exit
+fi
+
+rootDir=`pwd`
+
+if [[ $1 = ffmpeg ]]
+then
+	COMMAND="qmake -spec macx-g++ ${rootDir}/cppn-x-mpeg.pro"
+else
+	COMMAND="qmake -spec macx-g++ ${rootDir}/cppn-x.pro"
+fi
+
 # Add the current directory as the root. 
 # Note that this means the script will likely fail if not run from the root directory.
-rootDir=`pwd`
+
 
 # Set QT variables.
 # Leave blank for automatic detection (recommended)
@@ -26,16 +42,11 @@ rootDir=`pwd`
 # Note that the CMakeLists file does not allow 'in-source' builds so 'buildDir' can not be '.'
 buildDir="build"
 
-# The JGTL inlucde dir (JGTL is a header only library, so that is all what is important).
-# Only change if you want to use a different JGTL implementation.
-# Use the cmake arguments below for more control over library and inlcude-file locations
-#JGTL_include=${rootDir}/JGTL/include
-
 # Build cppn_examiner
 echo Building CPPN Examiner
 mkdir -p ${buildDir}
 cd ${buildDir}
-echo qmake -spec macx-g++ ${rootDir}/cppn-x.pro
-qmake -spec macx-g++ ${rootDir}/cppn-x.pro
+echo ${COMMAND}
+${COMMAND}
 make
 cd ${rootDir}

@@ -42,7 +42,7 @@
 #define EDGE_H
 
 #include <QGraphicsItem>
-#include <QGraphicsLineItem>
+
 #include "CE_Node.h"
 #include "CE_CppnWidget.h"
 #include "CE_LabelableObject.h"
@@ -128,6 +128,7 @@ public:
     }
 
 protected:
+	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     QPainterPath shape() const;

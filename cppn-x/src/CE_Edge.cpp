@@ -54,9 +54,10 @@ const double Edge::m_click_easy_width = 10.0;
 
 
 Edge::Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *sourceNode, Node *destNode, qreal weight, qreal original_weight, LabelWidget* label, std::string note, QGraphicsItem *parent, QGraphicsScene *scene)
-    : LabelableObject(label, note.c_str()), branch(branch), id(id),  arrowSize(5), graphWidget(graphWidget), currentWeight(weight), originalWeight(original_weight), _flash(0)
+    : LabelableObject(graphWidget->getWindow(), label, note.c_str()), branch(branch), id(id),  arrowSize(5), graphWidget(graphWidget), currentWeight(weight), originalWeight(original_weight), _flash(0)
 {
 	this->setFlag(QGraphicsItem::ItemIsSelectable);
+	this->setCacheMode(NoCache);
     source = sourceNode;
     dest = destNode;
     source->addOutgoingEdge(this);
@@ -138,6 +139,7 @@ QRectF Edge::boundingRect() const
 //! [4]
 void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
+	bool drawBackground= false;
 	if (!source || !dest)
 		return;
 
@@ -153,97 +155,101 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 	// Draw the line itself
 
 
+	//Set connection color
 	QColor connectionColor;
-	QColor labelColor;
-	if(!label->isDeleted()){
-		labelColor = label->getColor();
+	if(currentWeight == 0){
+		connectionColor = QColor(150,150,150);
+	} else if(currentWeight > 0){
+		connectionColor = QColor(0,150,0);
 	} else {
-		labelColor = Qt::white;
+		connectionColor = QColor(150,0,0);
 	}
 
+	//Set basic colors
+	QColor lineColor;
+	QColor backgroundColor;
 
+	switch(graphWidget->getWindow()->labelMode){
+		case Window::onlyLabels:
+			if(!label->isDeleted()){
+				lineColor = label->getColor();
+			} else {
+				lineColor = connectionColor;
+			}
+			backgroundColor = QColor(150,150,150);
+		break;
+		case(Window::onlyConnectionSign):
+			lineColor = connectionColor;
+			backgroundColor = QColor(150,150,150);
+		break;
+		case(Window::both):
+			lineColor = connectionColor;
+			if(!label->isDeleted()){
+				backgroundColor = label->getColor();
+				drawBackground = true;
+			} else {
+				backgroundColor = QColor(150,150,150);
+			}
+		break;
+
+	}
+
+	//Modify colors
 	if(_flash == -1){
-		if(currentWeight >= 0){
-			connectionColor = QColor(0,255,0);
-		} else {
-			connectionColor = QColor(255,0,0);
+		if(lineColor.value() < 10){
+			lineColor.setHsv(lineColor.saturation(), lineColor.saturation(), lineColor.value()+40);
 		}
-		labelColor = labelColor.lighter();
-
+		lineColor = lineColor.lighter();
+		backgroundColor = backgroundColor.lighter();
+		drawBackground = true;
 	} else if(_flash == 1){
-		if(currentWeight >= 0){
-			connectionColor = QColor(0,255,0);
-		} else {
-			connectionColor = QColor(255,0,0);
-		}
-		labelColor = labelColor.darker();
-
+		lineColor = lineColor.darker();
+		backgroundColor = backgroundColor.darker();
+		drawBackground = true;
 	} else if (this->isSelected()){
-		if(currentWeight >= 0){
-			connectionColor = QColor(0,255,0);
-		} else {
-			connectionColor = QColor(255,0,0);
+		if(lineColor.value() < 10){
+			lineColor.setHsv(lineColor.saturation(), lineColor.saturation(), lineColor.value()+40);
 		}
-		labelColor = labelColor.lighter();
-	}else{
-		if(currentWeight >= 0){
-			connectionColor = QColor(0,150,0);
-		} else {
-			connectionColor = QColor(150,0,0);
-		}
-
+		lineColor = lineColor.lighter();
+		backgroundColor = backgroundColor.lighter();
+		drawBackground = true;
 	}
 
-	if(!label->isDeleted() && graphWidget->getWindow()->labelMode == Window::onlyLabels){
-		connectionColor = labelColor;
-	} else if(graphWidget->getWindow()->labelMode == Window::both){
-		pen.setColor(labelColor);
+	//Draw lines
+	if(drawBackground){
+		pen.setColor(backgroundColor);
 		pen.setWidthF(6.0);
 		painter->setPen(pen);
-		painter->drawLine(line);
+		painter->drawLine(_line);
 	}
 
-//	pen.setColor(labelColor);
-//	pen.setWidthF(6.0);
-//	painter->setPen(pen);
-//	painter->drawLine(this->line());
-
-//	pen.setColor(Qt::black);
-//	pen.setWidthF(abs(currentWeight)+1);
-//	painter->setPen(pen);
-//	painter->drawLine(this->line());
-
-
-	pen.setColor(connectionColor);
-	pen.setWidthF(abs(currentWeight));
-	brush.setColor(connectionColor);
+	pen.setColor(lineColor);
+	pen.setWidthF(abs(currentWeight)+2.0);
+	brush.setColor(lineColor);
 	brush.setStyle(Qt::SolidPattern);
-	brush.setColor(connectionColor);
 	painter->setBrush(brush);
 	painter->setPen(pen);
-
-	//painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 	painter->drawLine(_line);
 	//! [5]
 
 //! [6]
     // Draw the arrows
-    double angle = ::acos(line.dx() / line.length());
-    if (line.dy() >= 0)
-        angle = TwoPi - angle;
-
-//    QPointF sourceArrowP1 = sourcePoint + QPointF(sin(angle + Pi / 3) * arrowSize,
-//                                                  cos(angle + Pi / 3) * arrowSize);
-//    QPointF sourceArrowP2 = sourcePoint + QPointF(sin(angle + Pi - Pi / 3) * arrowSize,
-//                                                  cos(angle + Pi - Pi / 3) * arrowSize);
-    QPointF destArrowP1 = destPoint + QPointF(sin(angle - Pi / 3) * arrowSize,
-                                              cos(angle - Pi / 3) * arrowSize);
-    QPointF destArrowP2 = destPoint + QPointF(sin(angle - Pi + Pi / 3) * arrowSize,
-                                              cos(angle - Pi + Pi / 3) * arrowSize);
-
-    painter->setBrush(Qt::black);
-//    painter->drawPolygon(QPolygonF() << line.p1() << sourceArrowP1 << sourceArrowP2);
-    painter->drawPolygon(QPolygonF() << line.p2() << destArrowP1 << destArrowP2);
+//    double angle = ::acos(line.dx() / line.length());
+//    if (line.dy() >= 0)
+//        angle = TwoPi - angle;
+//
+////    QPointF sourceArrowP1 = sourcePoint + QPointF(sin(angle + Pi / 3) * arrowSize,
+////                                                  cos(angle + Pi / 3) * arrowSize);
+////    QPointF sourceArrowP2 = sourcePoint + QPointF(sin(angle + Pi - Pi / 3) * arrowSize,
+////                                                  cos(angle + Pi - Pi / 3) * arrowSize);
+//    QPointF destArrowP1 = destPoint + QPointF(sin(angle - Pi / 3) * arrowSize,
+//                                              cos(angle - Pi / 3) * arrowSize);
+//    QPointF destArrowP2 = destPoint + QPointF(sin(angle - Pi + Pi / 3) * arrowSize,
+//                                              cos(angle - Pi + Pi / 3) * arrowSize);
+//
+//    painter->setBrush(Qt::black);
+////    painter->drawPolygon(QPolygonF() << line.p1() << sourceArrowP1 << sourceArrowP2);
+//    painter->drawPolygon(QPolygonF() << line.p2() << destArrowP1 << destArrowP2);
 }
 
 QPainterPath Edge::shape() const
@@ -256,5 +262,13 @@ QPainterPath Edge::shape() const
   path.lineTo(_line.p2());
   stroker.setWidth(m_click_easy_width);
   return stroker.createStroke(path);
+}
+
+void Edge::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+//    QMenu menu(graphWidget->getWindow());
+//    QAction* action = new QAction("Dummy action", graphWidget->getWindow());
+//    menu.addAction(action);
+//    menu.exec(event->screenPos());
 }
 //! [6]

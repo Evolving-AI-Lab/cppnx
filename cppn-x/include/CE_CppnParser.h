@@ -15,11 +15,36 @@
 //#include <boost/lexical_cast.hpp>
 //#include <boost/shared_ptr.hpp>
 #include <fstream>
-#include <JGTL_LocatedException.h>
+//#include <JGTL_LocatedException.h>
 #include <map>
+#include <stdio.h>
+#include <string>
+#include <sstream>
+
 #include "CE_Cppn.h"
 #include "CE_CppnWidget.h"
 #include "CE_LabelWidget.h"
+
+class CeParseException : public std::exception
+{
+	std::string text;
+//	char text[4096];
+
+public:
+
+	CeParseException(const std::string &_reason){
+		text = _reason;
+//		sprintf(text,"%s",_reason.c_str());
+	}
+
+	~CeParseException() throw (){
+
+	}
+
+	virtual const char* what() const throw(){
+		return text.c_str();
+	}
+};
 
 //#include <errno.h>
 //#include <boost/exception/all.hpp>

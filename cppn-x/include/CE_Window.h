@@ -9,11 +9,9 @@
 #define WINDOW_H_
 
 #include <QDialog>
-#include "CE_CppnWidget.h"
-#include "CE_LabelWidget.h"
-#include "CE_NodeView.h"
-#include "CE_Node.h"
+
 #include "CE_VerticalScrollArea.h"
+#include "CE_CppnWidget.h"
 
 #include <QtGui>
 #include <iostream>
@@ -40,6 +38,7 @@ class GraphWidget;
 class Node;
 class Edge;
 class NodeView;
+class Cppn;
 
 //! [0]
 class Window : public QWidget
@@ -73,11 +72,13 @@ public slots:
     void setBoth();
 
 
+
+
 public:
     Window();
     virtual ~Window();
 //    void addColorButton(QString text, QColor color);
-    void addLabelWidget(LabelWidget* labelWidget);
+    void addLabelWidget(LabelWidget* labelWidget, size_t index = 0);
     void removeLabelWidget(LabelWidget* labelWidget);
 
     size_t getNrOfColorButtons();
@@ -93,8 +94,14 @@ public:
     void clearNodeViews();
     void actualSave(const QString& fileName);
 
+    GraphWidget* getGraphWidget(){
+    	return graphWidget;
+    }
+
+
     enum labelModes {onlyLabels, onlyConnectionSign, both};
     int labelMode;
+    QUndoStack undoStack;
 
 signals:
     void sliderValueChanged(int newValue);
@@ -204,7 +211,7 @@ private:
     QString captureDirectory;
     QList<NodeView*> nodeViewsToBeCaptured;
 
-    QUndoStack undoStack;
+
 
 #ifdef USE_FFMPEG
     QList<QVideoEncoder*> nodeViewEncoders;
