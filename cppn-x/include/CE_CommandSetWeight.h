@@ -12,6 +12,7 @@
 
 #include "CE_Defines.h"
 #include "CE_Edge.h"
+//#include "CX_CXUndoCommand.h"
 
 class CommandSetWeight: public QUndoCommand {
 public:

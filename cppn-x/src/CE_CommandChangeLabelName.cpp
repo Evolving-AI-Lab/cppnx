@@ -6,13 +6,13 @@
  */
 
 #include "CE_CommandChangeLabelName.h"
-#include "CE_LabelWidget.h"
+#include "CE_Label.h"
 #include <QInputDialog>
 
-CommandChangeLabelName::CommandChangeLabelName(LabelWidget* labelWidget): labelWidget(labelWidget) {
+CommandChangeLabelName::CommandChangeLabelName(Label* labelWidget): labelWidget(labelWidget) {
 	ok = false;
 	oldName = labelWidget->getText();
-	newName = QInputDialog::getText(labelWidget, QString("Label name"), QString("Label name:"), QLineEdit::Normal, oldName, &ok);
+	newName = QInputDialog::getText(0, QString("Label name"), QString("Label name:"), QLineEdit::Normal, oldName, &ok);
 	labelWidget->registerObject();
 }
 
@@ -22,8 +22,10 @@ CommandChangeLabelName::~CommandChangeLabelName() {
 
 void CommandChangeLabelName::undo(){
 	labelWidget->setText(oldName);
+//	labelWidget->update();
 }
 
 void CommandChangeLabelName::redo(){
 	labelWidget->setText(newName);
+//	labelWidget->update();
 }

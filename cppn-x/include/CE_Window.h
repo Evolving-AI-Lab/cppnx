@@ -8,14 +8,21 @@
 #ifndef WINDOW_H_
 #define WINDOW_H_
 
+//Qt includes
 #include <QDialog>
-
-#include "CE_VerticalScrollArea.h"
-#include "CE_CppnWidget.h"
-
 #include <QtGui>
+
+//Std includes
 #include <iostream>
 
+//Local includes
+#include "CE_LabelWidget.h"
+#include "CE_NodeViewWidget.h"
+#include "CE_CppnWidget.h"
+#include "CX_WeightWidget.h"
+#include "CX_FileInformation.h"
+#include "CE_CppnWriter.h"
+#include "CE_CppnParser.h"
 #ifdef USE_FFMPEG
 #include "QVideoEncoder.h"
 #endif //USE_FFMPEG
@@ -23,202 +30,85 @@
 
 QT_BEGIN_NAMESPACE
 class QAction;
-class QDialogButtonBox;
-class QGroupBox;
-class QLabel;
-class QLineEdit;
 class QMenu;
 class QMenuBar;
-class QPushButton;
-class QTextEdit;
 QT_END_NAMESPACE
 
-class LabelWidget;
-class GraphWidget;
-class Node;
-class Edge;
-class NodeView;
-class Cppn;
-
-//! [0]
 class Window : public QWidget
 {
     Q_OBJECT
-
 public slots:
+	//Save load actions
     void load();
     void save();
     void saveAs();
-    void addColorButton();
-    void deleteColorButton(QWidget* object);
-    void addNodeView();
-    void deleteNodeView();
-    void unlabel();
-    void captureScreen();
+
+    //Capture and scan actions
     void startScan();
     void stopScan();
-    void colorNode(QWidget* object);
+    void startFilm();
+    void stopFilm();
+    void captureFrame();
 
-    void resetWeight();
-    void resetAllWeights();
-    void setValue(int value);
-    void setValueF(double value);
+    //Update actions
+    void updateEdge(Edge* edge);
 
-    void updateSidebarSelection();
-    void updateMainSelection();
+    //Execute command action
+    void executeCommand(QUndoCommand* command);
 
-    void setLabelOny();
-    void setSignOny();
-    void setBoth();
-
-
-
+    //Custom modified slot to circumvent a QT bug (https://bugreports.qt-project.org/browse/QTBUG-20150)
+    void onSceneModified();
+    void onCleanState(bool state);
 
 public:
     Window();
     virtual ~Window();
-//    void addColorButton(QString text, QColor color);
-    void addLabelWidget(LabelWidget* labelWidget, size_t index = 0);
-    void removeLabelWidget(LabelWidget* labelWidget);
-
-    size_t getNrOfColorButtons();
-    LabelWidget* getColorButton(size_t i);
-    void clearColorButtons();
-
-    void closeEvent(QCloseEvent * event);
-
-    void setCppn(Cppn* _cppn){
-    	cppn = _cppn;
-    }
-
-    void clearNodeViews();
-    void actualSave(const QString& fileName);
-
-    GraphWidget* getGraphWidget(){
-    	return graphWidget;
-    }
-
-
-    enum labelModes {onlyLabels, onlyConnectionSign, both};
-    int labelMode;
-    QUndoStack undoStack;
-
-signals:
-    void sliderValueChanged(int newValue);
-    void sliderValueChangedF(double newValue);
-
-
 
 protected:
-    void timerEvent(QTimerEvent *event);
+    void closeEvent(QCloseEvent * event);
 
 private:
-    //Constructor functions
-    void createMenu();
-    void createWeightBar();
-    void createLabelBar();
-    void createNodeViewBar();
+    void fileLoaded(bool selected);
+    void actualSave(const QString& fileName);
 
-    void resetWeights(QList<QGraphicsItem*> items, bool batch);
-    void setNodeviewPosition(NodeView* node, size_t index);
-    void setNodeviewPositions();
-    void setSidebarSceneRect();
-    void addNodeView(Node* node);
-    void deleteNodeView(NodeView* nodeToDelete);
+    //The undo stack
+    QUndoStack undoStack;
 
-    void captureFrame();
-    void stopCapture();
-    void nodeViewSelected(bool selected);
-    void nodeSelected(bool selected);
-    void edgeSelected(bool selected, Edge* edge);
-    void colorNode(LabelWidget* color);
-    void setSlider();
-
-    Cppn* cppn;
+    //Menu objects
     QMenuBar *menuBar;
-    QGroupBox *horizontalGroupBox;
-    QGroupBox *gridGroupBox;
-    QGraphicsView* sidebar;
-    VerticalScrollArea* labelBar;
-
-
     QMenu *fileMenu;
     QMenu* editMenu;
     QMenu* posMenu;
-    QMenu* labelMenu;
     QMenu* viewMenu;
+
+    //Child widgets
+    NodeViewWidget* nodeviewWidget;
+    LabelWidget* labelWidget;
+    CppnWidget *cppnWidget;
+    WeightWidget* weightWidget;
+    FileInformation* fileInformation;
+
+    //Actions
     QAction *exitAction;
     QAction *loadAction;
     QAction *saveAction;
     QAction *saveAsAction;
-    QAction* resetAction;
-    QAction* resetAllAction;
-    QAction* circleAction;
-    QAction* layerAction;
-    QAction* scanAction;
-    QAction* addViewNodeAction;
-    QAction* deleteViewNodeAction;
-    QAction *addLabelAction;
-    QAction *unlabelAction;
-    QAction *screenCaptureAction;
-
     QAction *undoAction;
     QAction *redoAction;
 
-    QAction *labelOnlyAction;
-    QAction *signOnlyAction;
-    QAction *labelAndSignAction;
-
-    QString currentFileName;
-
-//    std::vector<QLabel*> labels;
-//    std::vector<QPushButton*> colorButtons;
-//    std::vector<QPushButton*> deleteButtons;
-//    QGridLayout *colorLayout;
-//    QGridLayout *colorLayout;
+    //Layout objects
     QHBoxLayout *mainLayout;
-    QVBoxLayout* colorMainLayout;
-    QVBoxLayout* colorLabelLayout;
-    QWidget* colorLabelWidget;
-//    QVBoxLayout* colorRightLayout;
-//    FlowLayout* colorLeftLayout;
+    QVBoxLayout* leftLayout;
 
-    QPushButton* addLabel;
-    QPushButton* unlabelButton;
-    QLineEdit *labelName;
-
-    QSignalMapper* deleteSignalMapper;
-    QSignalMapper* colorSignalMapper;
-    QList<LabelWidget*> buttons;
-    QList<NodeView*> nodeViews;
-
-    GraphWidget *graphWidget;
-    QSlider* slider;
-    QDoubleSpinBox *spinBox;
-
-    bool updateEdges;
-
-    static const int sidebarMargin = 20;
-    static const int betweenNodeMargin = 20;
-
-    bool edgeIsSelected;
-    Edge* selectedEdge;
-    bool nodeIsSelected;
-
-    int timerId;
-    bool capture;
-    Edge* scannedEdge;
+    //Capture variables
     QString captureDirectory;
     QList<NodeView*> nodeViewsToBeCaptured;
-
-
+    size_t frame;
 
 #ifdef USE_FFMPEG
     QList<QVideoEncoder*> nodeViewEncoders;
     QVideoEncoder encoder;
 #endif //USE_FFMPEG
 };
-//! [0]
-
 
 #endif /* WINDOW_H_ */

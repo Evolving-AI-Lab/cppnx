@@ -8,22 +8,23 @@
 #ifndef CE_COMMANDLABELOBJECT_H_
 #define CE_COMMANDLABELOBJECT_H_
 
-#include <qundostack.h>
+#include <QUndoCommand>
 #include "CE_LabelableObject.h"
 #include "CE_Util.h"
+//#include "CX_CXUndoCommand.h"
 
 class CommandLabelObject: public QUndoCommand {
 public:
-	CommandLabelObject(QList<QGraphicsItem*> objects, LabelWidget* label);
+	CommandLabelObject(QList<QGraphicsItem*> objects, Label* label);
 	virtual ~CommandLabelObject();
 
 	void undo();
 	void redo();
 
 private:
-	typedef std::pair<LabelableObject*, LabelWidget*> objectLabelPair_t;
+	typedef std::pair<LabelableObject*, Label*> objectLabelPair_t;
 	QList<objectLabelPair_t> objectLabelPairs;
-	LabelWidget* label;
+	Label* label;
 
 };
 

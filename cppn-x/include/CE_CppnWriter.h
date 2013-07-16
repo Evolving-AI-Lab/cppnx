@@ -10,14 +10,16 @@
 
 #include "CE_Cppn.h"
 #include "CE_Defines.h"
-#include "CE_LabelWidget.h"
+#include "CE_Label.h"
+#include "CX_FileInformation.h"
+
 #include <iostream>
 #include <iomanip>
 
 class Cppn;
 class Node;
 class Edge;
-class LabelWidget;
+class Label;
 
 class CppnWriter {
 public:
@@ -29,7 +31,7 @@ public:
 		output.open(filename.c_str());
 	}
 
-	void write(Cppn* cppn);
+	void write(Cppn* cppn, QList<Label*> labels, FileInformation* fileInformation);
 
 private:
 
@@ -81,9 +83,10 @@ private:
 //	void openClose(std::string template_str, std::string param);
 	template <typename ParamType>
 	void openClose(std::string template_str, ParamType param);
+//	void writeCppn(Cppn* cppn);
 	void writeNode(Node* node);
 	void writeEdge(Edge* node);
-	void writeColorButton(LabelWidget* colorButton);
+	void writeColorButton(Label* colorButton);
 
 	std::ofstream output;
 //	 QDataStream output;

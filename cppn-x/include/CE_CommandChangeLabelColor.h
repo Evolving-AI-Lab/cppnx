@@ -8,14 +8,15 @@
 #ifndef CE_COMMANDCHANGELABELCOLOR_H_
 #define CE_COMMANDCHANGELABELCOLOR_H_
 
-#include <qundostack.h>
+#include <QUndoCommand>
 #include <QColor>
+//#include "CX_CXUndoCommand.h"
 
-class LabelWidget;
+class Label;
 
 class CommandChangeLabelColor: public QUndoCommand {
 public:
-	CommandChangeLabelColor(LabelWidget* labelWidget);
+	CommandChangeLabelColor(Label* labelWidget);
 	virtual ~CommandChangeLabelColor();
 
 	void undo();
@@ -28,7 +29,7 @@ public:
 private:
 	QColor color;
 	QColor previousColor;
-	LabelWidget* labelWidget;
+	Label* labelWidget;
 	bool ok;
 };
 

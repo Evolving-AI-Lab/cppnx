@@ -44,9 +44,9 @@
 #include <QGraphicsItem>
 
 #include "CE_Node.h"
-#include "CE_CppnWidget.h"
+//#include "CE_CppnWidget.h"
 #include "CE_LabelableObject.h"
-#include "CE_Cppn.h"
+//#include "CE_Cppn.h"
 
 
 
@@ -55,17 +55,24 @@ class Node;
 //! [0]
 class Edge : public LabelableObject
 {
+	Q_OBJECT
 public:
+    enum LabelMode {onlyLabels, onlyConnectionSign, both};
+
     Edge(
-    		GraphWidget *graphWidget,
+//    		CppnWidget *graphWidget,
     		std::string branch,
     		std::string id,
     		Node *sourceNode,
     		Node *destNode,
     		qreal weight,
     		qreal original_weight,
-    		LabelWidget* label = 0,
+    		Label* label = 0,
     		std::string note = "",
+    		LabelMode* labelMode = 0,
+    		double bookendStart = -3.0,
+    		double bookendEnd = 3.0,
+    		double stepSize = 0.1,
     		QGraphicsItem *parent = 0,
     		QGraphicsScene *scene = 0
     		);
@@ -108,13 +115,6 @@ public:
     	return id;
     }
 
-    void setCppn(Cppn* _cppn){
-    	cppn = _cppn;
-    }
-
-    Cppn* getCppn(){
-    	return cppn;
-    }
 
     void flash(bool flashOn){
 //    	std::cout << flashOn << " " << _flash <<std::endl;
@@ -127,14 +127,56 @@ public:
     	}
     }
 
+    void updateAll(){
+    	emit requestUpdateAll();
+    }
+
+    void setLabelMode(LabelMode* _labelMode){
+    	labelMode = _labelMode;
+    }
+
+    void setBookendStart(double bookend){
+    	bookendStart = bookend;
+    	emit bookendsChanged(this);
+    }
+
+    void setBookendEnd(double bookend){
+    	bookendEnd = bookend;
+    	emit bookendsChanged(this);
+    }
+
+    void setBookends(double _bookendStart, double _bookendEnd){
+    	bookendStart = _bookendStart;
+    	bookendEnd = _bookendEnd;
+    	emit bookendsChanged(this);
+    }
+
+    double getBookendStart(){
+    	return bookendStart;
+    }
+
+    double getBookendEnd(){
+    	return bookendEnd;
+    }
+
+    double getStepsize(){
+    	return stepSize;
+    }
+
+signals:
+	void weightChanged(Edge*, double, bool);
+	void requestUpdateAll();
+	void bookendsChanged(Edge*);
+
+
 protected:
-	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
+//	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     QPainterPath shape() const;
     
 private:
-
+    LabelMode* labelMode;
     std::string branch;
     std::string id;
     static const double m_click_easy_width;
@@ -145,7 +187,7 @@ private:
     qreal arrowSize;
  //   QString edge_id;
 
-    GraphWidget *graphWidget;
+//    CppnWidget *graphWidget;
     qreal currentWeight;
     qreal originalWeight;
     size_t index;
@@ -153,7 +195,11 @@ private:
     int _flash;
     QLineF _line;
 
-    Cppn* cppn;
+    double bookendStart;
+    double bookendEnd;
+    double stepSize;
+
+//    Cppn* cppn;
 };
 //! [0]
 

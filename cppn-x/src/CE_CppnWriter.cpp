@@ -79,15 +79,15 @@ void CppnWriter::openClose(std::string template_str, ParamType param){
 }
 
 
-void CppnWriter::write(Cppn* cppn){
+void CppnWriter::write(Cppn* cppn, QList<Label*> labels, FileInformation* fileInformation){
 	output << ce_xml::getFirstLine() << "\n";
 	write(ce_xml::cppn_data, version);
-	open(ce_xml::data, cppn->getDataVersion());
-	open(ce_xml::genomePhen, cppn->getAge(), cppn->getPhenotype());
-	write(ce_xml::identifier, cppn->getBranch(), cppn->getId());
+	open(ce_xml::data, fileInformation->dataVersion);
+	open(ce_xml::genomePhen, fileInformation->age, fileInformation->phenotype);
+	write(ce_xml::identifier, fileInformation->branch, fileInformation->id);
 
-	writeEach(ce_xml::parent_count, cppn->getNrOfParents(), write(ce_xml::identifier, cppn->getParentBranch(i), cppn->getParentId(i)));
-	writeEach(ce_xml::buttons_count, cppn->getNrOfColorButtons(), writeColorButton(cppn->getColorButton(i)););
+	writeEach(ce_xml::parent_count, fileInformation->parent_branches.size(), write(ce_xml::identifier, fileInformation->parent_branches[i], fileInformation->parent_ids[i]));
+	writeEach(ce_xml::buttons_count, labels.count(), writeColorButton(labels.at(i)););
 	writeEach(ce_xml::nodes_count, cppn->getNrOfNodes(), writeNode(cppn->getNode(i)););
 	writeEach(ce_xml::link_count, cppn->getNrOfEdges(), writeEdge(cppn->getEdge(i)););
 
@@ -95,11 +95,27 @@ void CppnWriter::write(Cppn* cppn){
 	close(ce_xml::data);
 }
 
+//void CppnWriter::writeCppn(Cppn* cppn){
+//	output << ce_xml::getFirstLine() << "\n";
+//	write(ce_xml::cppn_data, version);
+//	open(ce_xml::data, cppn->getDataVersion());
+//	open(ce_xml::genomePhen, cppn->getAge(), cppn->getPhenotype());
+//	write(ce_xml::identifier, cppn->getBranch(), cppn->getId());
+//
+//	writeEach(ce_xml::parent_count, cppn->getNrOfParents(), write(ce_xml::identifier, cppn->getParentBranch(i), cppn->getParentId(i)));
+//	writeEach(ce_xml::buttons_count, cppn->getNrOfColorButtons(), writeColorButton(cppn->getColorButton(i)););
+//	writeEach(ce_xml::nodes_count, cppn->getNrOfNodes(), writeNode(cppn->getNode(i)););
+//	writeEach(ce_xml::link_count, cppn->getNrOfEdges(), writeEdge(cppn->getEdge(i)););
+//
+//	close(ce_xml::genomePhen);
+//	close(ce_xml::data);
+//}
+
 void CppnWriter::writeNode(Node* node){
 	open(ce_xml::iocolornode, node->getAffinity(), node->getBias(), node->getXmlLabel(), node->getType());
 	write(ce_xml::marking, node->getBranch(), node->getId());
 	openClose(ce_xml::activation, node->getXmlActivationFunction());
-	write(ce_xml::color_label, node->getLabel()->getId());
+	write(ce_xml::color_label, node->getLabel()->getIndex());
 	write(ce_xml::position, node->pos().x(), node->pos().y());
 	openClose(ce_xml::text, node->getNote().toStdString());
 	close(ce_xml::colornode);
@@ -112,14 +128,14 @@ void CppnWriter::writeEdge(Edge* edge){
 	write(ce_xml::target, edge->destNode()->getBranch(), edge->destNode()->getId());
 	openClose(ce_xml::weight, util::toString(edge->getWeight()));
 	openClose(ce_xml::original_weight, util::toString(edge->getOriginalWeight()));
-	write(ce_xml::color_label, edge->getLabel()->getId());
+	write(ce_xml::color_label, edge->getLabel()->getIndex());
 	openClose(ce_xml::text, edge->getNote().toStdString());
 	close(ce_xml::link);
 }
 
-void CppnWriter::writeColorButton(LabelWidget* colorButton){
+void CppnWriter::writeColorButton(Label* colorButton){
 	open(ce_xml::color_button);
-	write(ce_xml::color_label, colorButton->getId());
+	write(ce_xml::color_label, colorButton->getIndex());
 	openClose(ce_xml::text, colorButton->getText().toStdString());
 	write(ce_xml::color, colorButton->getColor().red(), colorButton->getColor().green(), colorButton->getColor().blue());
 	close(ce_xml::color_button);

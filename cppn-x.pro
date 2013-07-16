@@ -43,7 +43,7 @@ HEADERS += zlib/crc32.h \
            zlib/zlib.h \
            zlib/zutil.h \
            cppn-x/include/CE_ActivationFunctions.h \
-           cppn-x/include/CE_LabelWidget.h \
+           cppn-x/include/CE_Label.h \
            cppn-x/include/CE_Cppn.h \
            cppn-x/include/CE_CppnParser.h \
            cppn-x/include/CE_CppnWidget.h \
@@ -56,6 +56,17 @@ HEADERS += zlib/crc32.h \
            cppn-x/include/CE_Util.h \
            cppn-x/include/CE_Window.h \
            cppn-x/include/CE_Xml.h \
+           cppn-x/include/CE_NodeViewWidget.h \
+           cppn-x/include/CE_LabelWidget.h \
+           cppn-x/include/CX_WeightWidget.h \
+           cppn-x/include/CX_WeightSliderWidget.h \
+           cppn-x/include/CE_LabelableObject.h \
+           cppn-x/include/CX_SelectableObject.h \
+           cppn-x/include/CX_ContextMenuGraphicsView.h \
+           cppn-x/include/CX_DragAndDropObject.h \
+           cppn-x/include/CX_DragAndDropGraphicsView.h \
+           cppn-x/include/CX_ComDragAndDrop.h \
+           cppn-x/include/CX_ComSetBookends.h \
            libzip-0.11.1/lib/zip.h \
            libzip-0.11.1/lib/zipconf.h \
            libzip-0.11.1/lib/zipint.h
@@ -72,7 +83,7 @@ SOURCES += zlib/adler32.c \
            zlib/uncompr.c \
            zlib/zutil.c \
            cppn-x/src/CE_ActivationFunctions.cpp \
-           cppn-x/src/CE_LabelWidget.cpp \
+           cppn-x/src/CE_Label.cpp \
            cppn-x/src/CE_LabelableObject.cpp \
            cppn-x/src/CE_Cppn.cpp \
            cppn-x/src/CE_CppnParser.cpp \
@@ -92,6 +103,15 @@ SOURCES += zlib/adler32.c \
            cppn-x/src/CE_CommandSetPos.cpp \
            cppn-x/src/CE_CommandChangeLabelColor.cpp \
            cppn-x/src/CE_CommandChangeLabelName.cpp \
+           cppn-x/src/CE_NodeViewWidget.cpp \
+           cppn-x/src/CE_LabelWidget.cpp \
+           cppn-x/src/CX_WeightWidget.cpp \
+           cppn-x/src/CX_WeightSliderWidget.cpp \
+           cppn-x/src/CX_SelectableObject.cpp \
+           cppn-x/src/CX_DragAndDropObject.cpp \
+           cppn-x/src/CX_ContextMenuGraphicsView.cpp \
+           cppn-x/src/CX_ComDragAndDrop.cpp \
+           cppn-x/src/CX_ComSetBookends.cpp \
            libzip-0.11.1/lib/mkstemp.c \
            libzip-0.11.1/lib/zip_add.c \
            libzip-0.11.1/lib/zip_add_dir.c \

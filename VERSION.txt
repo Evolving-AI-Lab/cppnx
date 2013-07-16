@@ -42,7 +42,7 @@ Version: 0.4
 
 Version: 0.4.1
 - Fixed a bug where hitting 'film' and then 'cancel' would start a scan anyway.
-- Fixed a bug where having more labels than fit on the screen would cause the application to grow beond the size of the screen.
+- Fixed a bug where having more labels than fit on the screen would cause the application to grow beyond the size of the screen.
 - Fixed a bug where filenames produced by film would not be sortable by ffmpeg external application.
 - Fixed a bug were the 'film' option has a different name in the drop-down menu.
 - Title bar now show the name of the file.
@@ -64,13 +64,43 @@ Version: 0.5
 - Ability to change label colors after the fact.
 - Added instructions to install cppn-x with ffmpeg for direct recording. 
 
+Version: 0.5.1
+- Show a unique identifier per connection if it is clicked on. For example, down in the box you could say "Link from Nodes 2 to 56". That would eliminate the need to add a feature for notes right in the software (which will save a lot of time), because users can take notes in external files. Also when emailing back and forth Ken and I have been trying to say which link we're talking about and it is hard (he has made some screen shots with an arrow pointing at a link to overcome this).
+- Labels and nodes in the sidebar can now be moved to different positions using drag-and-drop.
+- Label, nodes, edges and the nodes in the sidebar now have consistent functionalities in that they can be selected and they now support context menus. They also have the same selection colors.
+- If you create a label while having items selected the new label will now be applied to the selected items.
+- Disabled the 'slightly improved positioning' of version 0.4 for faster loading times.
+- Nodes now have their id as a title and have there depth as an additional annotation.
+- Output-nodes have a slightly different border color to make them easier to spot when zoomed-out.
+- Fixed a bug where if a label got highlighted and then the object causing the highlight got a different label, the label would remain lit.
+- Fixed a bug where the canvas would not resize properly when moving a node from the edge of the canvas to beyond the second node.
+- Fixed a bug where the name of the file displayed would not change in the title of the screen.
+- Fixed a bug where the 'reset all' button would be grey-ed out when no edge was selected even though the 'reset all' functionality does not require an edge being selected.
+- Fixed a bug where long label names would increase the size of the labels window with no way of decreasing it.
+- Fixed a bug where the colors in colored genomes where not correctly displayed.
+
 Known issues:
-- none
+- Reseting all nodes while no nodes were modified causes an action to be added to the undo stack and causes the file to be marked as modified.
+- Nodes on the sidebar are not written to the file (the original nodes in the cppn are unaffected).
+- Undoing or redoing a 'reset all' rapidly selects all nodes that were changed.
+
+Priority:
+- Save bookends to the file.
+
+- Create a picture for an arbitrary node (as opposed to an entire folder with pictures). [Sure. You can just add a "snapshot" button"…if it is easy, let's have it create a snap of each node in the side bar, but always the output node…all images can go into one folder]
+
+- New Request: Add a folder when filming that is only images of the final output node (i.e. the film but without screenshots of the whole app), which will be used when we make figures for the paper and just show the effects possible on a phenotype. 
+
+- Automatically calculate and display various statistics such as modularity, hierarchy, red-blue modularity (and maybe split the network into even more parts). [This would be great. Note that red-blue modularity has two colors only for a network with two modules, so what you really mean is a view in which nodes are colored by membership in modules, which would be great." Showing the modularity and hierarchy numbers would be great too.]
+
+- ONP node placement
+
+- Add or remove nodes and connections. [You can eliminate connections by setting them to 0, and you will be able to eliminate nodes via the knockout feature above, no? If so, this is not a high priority]
 
 Wish-list:
-- Support for knockout experiments.
-- Add notes to objects.
 - Create a custom film.
+- Support for knockout experiments. [I think by this you mean clicking on a node and saying "deactivate" which grays it out an all incoming/outgoing connections and sets them to 0]
+- Add notes to objects.
 - Create a picture for an arbitrary node.
 - Scan interaction effects.
 - Add or remove nodes and connections.
@@ -80,3 +110,8 @@ Wish-list:
 - Add other node placements.
 - Less pixelated pictures.
 - Automatic network scan where it zooms in on the output node, automatically selects a connection and scans over its weight, ask the user to give the connection a label, and then selects the next connection. At the end of this process you should have a fully annotated network.
+- Load by number (if the root folder is known).
+
+
+Category assignment pending answers to my questions: 
+- Improve connection visualization with curved or 90 degree bend lines. [is this hard? it would be nice if connections never went under nodes. that's the main thing, so if this is not too hard let's do it]

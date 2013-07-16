@@ -8,12 +8,13 @@
 #ifndef CE_COMMANDSETPOS_H_
 #define CE_COMMANDSETPOS_H_
 
-#include <qundostack.h>
+#include <QUndoCommand>
 #include <QGraphicsItem>
 
 #include "CE_Util.h"
 #include "CE_Node.h"
 #include "CE_Defines.h"
+//#include "CX_CXUndoCommand.h"
 
 class CommandSetPos: public QUndoCommand {
 public:

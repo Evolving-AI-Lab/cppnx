@@ -9,13 +9,13 @@
 #include "CE_Edge.h"
 #include "CE_Node.h"
 
-CommandLabelObject::CommandLabelObject(QList<QGraphicsItem*> objects, LabelWidget* label): label(label) {
+CommandLabelObject::CommandLabelObject(QList<QGraphicsItem*> objects, Label* label): label(label) {
 	label->registerObject();
 	foreach(QGraphicsItem* item, objects){
 		LabelableObject* object = util::multiCast<LabelableObject*, Edge*, Node*>(item);
 		if(object){
 			object->getLabel()->registerObject();
-			objectLabelPairs.push_back(std::pair<LabelableObject*, LabelWidget*>(object, object->getLabel()) );
+			objectLabelPairs.push_back(std::pair<LabelableObject*, Label*>(object, object->getLabel()) );
 		}
 	}
 

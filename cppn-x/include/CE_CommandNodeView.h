@@ -8,23 +8,24 @@
 #ifndef CE_COMMANDNODEVIEW_H_
 #define CE_COMMANDNODEVIEW_H_
 
-#include <qundostack.h>
 #include <QGraphicsView>
 
-#include "CE_Node.h"
-#include "CE_NodeView.h"
+#include "CE_NodeViewWidget.h"
+//#include "CX_CXUndoCommand.h"
 
 class CommandNodeView: public QUndoCommand {
 public:
-	typedef std::pair<Node*, NodeView*> nodeViewPair_t;
-	static bool nodeViewCompare(const nodeViewPair_t first, const nodeViewPair_t second);
+//	typedef std::pair<Node*, NodeView*> nodeViewPair_t;
 
-	CommandNodeView(QGraphicsView* sidebar, QList<QGraphicsItem*> items, bool add=true);
+	CommandNodeView(NodeViewWidget* nodeViewWidget, QList<QGraphicsItem*> items, bool add=true);
 	virtual ~CommandNodeView();
 
 	void undo();
 	void redo();
 
+	bool isOk(){
+		return ok;
+	}
 
 private:
 	static const int betweenNodeMargin = 20;
@@ -32,11 +33,15 @@ private:
 
 	void addNodeViews();
 	void removeNodeViews();
-	void setNodeviewPositions();
+//	void setNodeviewPositions();
 
-	QGraphicsView* sidebar;
-	QList<nodeViewPair_t> nodeViewPairs;
+	NodeViewWidget* nodeViewWidget;
+//	QList<nodeViewPair_t> nodeViewPairs;
+	QList<NodeView*> nodeViewPairs;
+
+
 	bool add;
+	bool ok;
 };
 
 #endif /* CE_COMMANDNODEVIEW_H_ */

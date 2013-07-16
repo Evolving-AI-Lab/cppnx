@@ -1,154 +1,97 @@
 /*
  * CE_LabelWidget.h
  *
- *  Created on: Jun 3, 2013
+ *  Created on: Jul 2, 2013
  *      Author: joost
  */
 
-#ifndef CE_COLORBUTTON_H_
-#define CE_COLORBUTTON_H_
+#ifndef CE_LABELWIDGET_H_
+#define CE_LABELWIDGET_H_
 
 #include <QWidget>
-#include <QLabel>
-#include <QPushButton>
-#include <QPainter>
-#include <QAction>
-#include <QHBoxLayout>
-#include <QFrame>
+#include "CE_Label.h"
+#include "CE_CommandLabelObject.h"
+#include "CE_CommandAddLabel.h"
+#include "CX_DragAndDropGraphicsView.h"
 
-
-#include "CE_Defines.h"
-#include "CE_Util.h"
-#include "CE_Window.h"
-
-
-class QLabel;
+//class VerticalScrollArea;
+class QLineEdit;
+class QSignalMapper;
 class QPushButton;
-class QObject;
-class QHBoxLayout;
-class Window;
+class QVBoxLayout;
+class QAction;
+class QMenu;
 
-
-class LabelWidget : public QFrame{
+class LabelWidget: public  QWidget {
 	Q_OBJECT
 
-public:
+public slots:
+	void addLabel();
+	void requestRemoveLabel(Label* label);
+	void requestDelete();
+	void unlabel();
+	void labelableObjectSelected(bool selected);
+//	void indexChanged(uint index);
+//	void objectsMoved();
+	void rebuildMenu();
+	void labelSelected(bool labelSelected);
+	void updateSelection();
 
-	LabelWidget(Window* window, QString text = "", QColor color = Qt::white, bool isDeleted = true, QWidget *parent = 0);
+public:
+	LabelWidget();
 	virtual ~LabelWidget();
 
-	QLabel* getLabel(){
-		return label;
-	}
-	QPushButton* getColorButton(){
-		return colorButton;
-	}
-	QPushButton* getDeleteButton(){
-		return deleteButton;
-	}
+	void addLabel(Label* label);
+	void setLabels(QList<Label*> labels);
+	void removeLabel(Label* labelWidget);
+	void clear();
 
-	QColor getColor(){
-		return color;
-	}
+	int getNrOfLabels();
+	Label* getLabel(size_t i);
+	QList<Label*> getLabels();
 
-	void setColor(QColor _color);
 
-	QString getText() const;
-//	std::string getText() const;
-
-	void setText(const QString& name);
-
-	QAction* getColorAction(){
-		return colorAction;
+	QAction* getAddLabelAction(){
+		return addLabelAction;
 	}
 
-	QAction* getDeleteAction(){
-		return deleteAction;
+	QAction* getUnlabelAction(){
+		return unlabelAction;
 	}
 
-	QAction* getRenameAction(){
-		return deleteAction;
+	QMenu* getLabelMenu(){
+		return labelMenu;
 	}
 
-	QAction* getChangeColorAction(){
-		return deleteAction;
-	}
+signals:
+	void requestCommandExecution(QUndoCommand*);
+	void applyLabel(Label*);
+	void labelsChanged();
+	void sceneModified();
 
-	void registerObject(){
-		registerdObjects++;
-	}
-
-	void unregisterObject(){
-		registerdObjects--;
-
-		if(registerdObjects==0){
-			delete this;
-		}
-	}
-
-	bool isDeleted(){
-		return deleted;
-	}
-
-	void setDeleted(bool _deleted = true){
-		deleted = _deleted;
-		if(deleted){
-			hide();
-			colorAction->setShortcut(tr(""));
-		} else {
-			show();
-		}
-	}
-
-	void setId(id_t _id){
-		id = _id;
-		if(id>0){
-			QString shortcut = "Alt+" + util::toQString(id);
-			colorAction->setShortcut(shortcut);
-		}
-	}
-
-	id_t getId(){
-		return id;
-	}
-
-	unsigned int registerdObjects;
-
-	void contextMenuEvent(QContextMenuEvent *event);
-
-	void setHighlightOn();
-	void setHighlightOff();
-
-	QString baseSs;
-	QString selectedSs;
-	QString highlightSs;
-	QString selectedHighlightSs;
-
-public slots:
-void changeLabelColor();
-void changeLabelName();
-
-protected:
-void focusInEvent(QFocusEvent* event );
-void focusOutEvent(QFocusEvent* event );
 
 private:
-	Window* window;
-	QLabel* label;
-	QPushButton* colorButton;
-	QPushButton* deleteButton;
-	QHBoxLayout* colorButtonLayout;
-	QColor color;
-	QAction* colorAction;
-	QAction* deleteAction;
-	QAction* changeColorAction;
-	QAction* renameAction;
+//	void setIds();
 
+    QPushButton* addLabelButton;
+    QPushButton* unlabelButton;
+    QLineEdit *labelName;
 
+    QVBoxLayout* colorMainLayout;
+//    QVBoxLayout* colorLabelLayout;
+//    VerticalScrollArea* labelBar;
+    DragAndDropGraphicsView* dragAndDropLabelBar;
 
-	id_t id;
-	bool deleted;
-	bool highlight;
+//    QSignalMapper* deleteSignalMapper;
+//    QSignalMapper* colorSignalMapper;
+
+    QAction *addLabelAction;
+    QAction *unlabelAction;
+    QAction* deleteAction;
+
+    QMenu* labelMenu;
+
+    bool labelIsSelected;
 };
 
-#endif /* CE_COLORBUTTON_H_ */
+#endif /* CE_LABELWIDGET_H_ */

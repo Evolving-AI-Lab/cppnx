@@ -42,19 +42,42 @@
 #include <iostream>
 
 #include "CE_Edge.h"
+#include "CE_LabelWidget.h"
 
 
 #include <math.h>
 
-static const double Pi = 3.14159265358979323846264338327950288419717;
-static double TwoPi = 2.0 * Pi;
+//static const double Pi = 3.14159265358979323846264338327950288419717;
 const double Edge::m_click_easy_width = 10.0;
 
 //! [0]
 
 
-Edge::Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *sourceNode, Node *destNode, qreal weight, qreal original_weight, LabelWidget* label, std::string note, QGraphicsItem *parent, QGraphicsScene *scene)
-    : LabelableObject(graphWidget->getWindow(), label, note.c_str()), branch(branch), id(id),  arrowSize(5), graphWidget(graphWidget), currentWeight(weight), originalWeight(original_weight), _flash(0)
+Edge::Edge(std::string branch,
+		std::string id,
+		Node *sourceNode,
+		Node *destNode,
+		qreal weight,
+		qreal original_weight,
+		Label* label,
+		std::string note,
+		LabelMode* labelMode,
+		double bookendStart,
+		double bookendEnd,
+		double stepSize,
+		QGraphicsItem *parent,
+		QGraphicsScene *scene)
+    : LabelableObject(label, note.c_str()),
+      labelMode(labelMode),
+      branch(branch),
+      id(id),
+      arrowSize(5),
+      currentWeight(weight),
+      originalWeight(original_weight),
+      _flash(0),
+      bookendStart(bookendStart),
+      bookendEnd(bookendEnd),
+      stepSize(stepSize)
 {
 	this->setFlag(QGraphicsItem::ItemIsSelectable);
 	this->setCacheMode(NoCache);
@@ -63,7 +86,8 @@ Edge::Edge(GraphWidget *graphWidget, std::string branch, std::string id, Node *s
     source->addOutgoingEdge(this);
     dest->addIncommingEdge(this);
     adjust();
-    cppn=0;
+
+//    cppn=0;
 }
 //! [0]
 
@@ -81,7 +105,8 @@ Node* Edge::destNode() const
 void Edge::setWeight(qreal weight, bool update){
 	if(weight == currentWeight) return;
 	currentWeight = weight;
-	if(cppn) cppn->setWeight(this, weight, update);
+	emit weightChanged(this, currentWeight, update);
+//	if(cppn) cppn->setWeight(this, weight, update);
 	if(update) this->update();
 }
 
@@ -168,27 +193,37 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 	//Set basic colors
 	QColor lineColor;
 	QColor backgroundColor;
+	QColor highlightColor;
 
-	switch(graphWidget->getWindow()->labelMode){
-		case Window::onlyLabels:
+	if (partOfContextMenuEvent){
+		highlightColor = QColor(CONTEXT_EVENT_COLOR);
+	} else if (this->isSelected()){
+		highlightColor = QColor(SELECTED_COLOR);
+	}
+
+	switch(*labelMode){
+		case onlyLabels:
 			if(!label->isDeleted()){
 				lineColor = label->getColor();
 			} else {
 				lineColor = connectionColor;
 			}
-			backgroundColor = QColor(150,150,150);
+			backgroundColor = highlightColor;
 		break;
-		case(Window::onlyConnectionSign):
+		case(onlyConnectionSign):
 			lineColor = connectionColor;
-			backgroundColor = QColor(150,150,150);
+			backgroundColor = highlightColor;
 		break;
-		case(Window::both):
+		case(both):
 			lineColor = connectionColor;
 			if(!label->isDeleted()){
 				backgroundColor = label->getColor();
 				drawBackground = true;
+				if (this->isSelected() || partOfContextMenuEvent){
+					backgroundColor = backgroundColor.lighter();
+				}
 			} else {
-				backgroundColor = QColor(150,150,150);
+				backgroundColor = highlightColor;
 			}
 		break;
 
@@ -206,12 +241,11 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 		lineColor = lineColor.darker();
 		backgroundColor = backgroundColor.darker();
 		drawBackground = true;
-	} else if (this->isSelected()){
+	} else if (this->isSelected() || partOfContextMenuEvent){
 		if(lineColor.value() < 10){
 			lineColor.setHsv(lineColor.saturation(), lineColor.saturation(), lineColor.value()+40);
 		}
 		lineColor = lineColor.lighter();
-		backgroundColor = backgroundColor.lighter();
 		drawBackground = true;
 	}
 
@@ -264,11 +298,15 @@ QPainterPath Edge::shape() const
   return stroker.createStroke(path);
 }
 
-void Edge::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
-{
-//    QMenu menu(graphWidget->getWindow());
-//    QAction* action = new QAction("Dummy action", graphWidget->getWindow());
-//    menu.addAction(action);
-//    menu.exec(event->screenPos());
-}
+//void Edge::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+//{
+////	QMenu* menu = QMenu(this->actions());
+//
+//	setSelected(true);
+////	graphWidget->getWindow()->getLabelWidget()->getLabelMenu()->exec(event->screenPos());;
+////    QMenu menu(graphWidget->getWindow());
+////    QAction* action = new QAction("Dummy action", graphWidget->getWindow());
+////    menu.addAction(action);
+////    menu.exec(event->screenPos());
+//}
 //! [6]

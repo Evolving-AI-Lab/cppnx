@@ -8,13 +8,14 @@
 #ifndef CE_COMMANDCHANGELABELNAME_H_
 #define CE_COMMANDCHANGELABELNAME_H_
 
-#include <qundostack.h>
+#include <QUndoCommand>
+//#include "CX_CXUndoCommand.h"
 
-class LabelWidget;
+class Label;
 
 class CommandChangeLabelName: public QUndoCommand {
 public:
-	CommandChangeLabelName(LabelWidget* labelWidget);
+	CommandChangeLabelName(Label* labelWidget);
 	virtual ~CommandChangeLabelName();
 
 	void undo();
@@ -25,7 +26,7 @@ public:
 	}
 
 private:
-	LabelWidget* labelWidget;
+	Label* labelWidget;
 	bool ok;
 	QString newName;
 	QString oldName;

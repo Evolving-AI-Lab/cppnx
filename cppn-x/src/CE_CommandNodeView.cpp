@@ -6,25 +6,22 @@
  */
 
 #include "CE_CommandNodeView.h"
+
 #include <iostream>
 
-
-bool CommandNodeView::nodeViewCompare(const nodeViewPair_t first, const nodeViewPair_t second){
-	return first.second->getPosition() < second.second->getPosition();
-}
-
-CommandNodeView::CommandNodeView(QGraphicsView* sidebar, QList<QGraphicsItem*> items, bool add): sidebar(sidebar), add(add) {
+CommandNodeView::CommandNodeView(NodeViewWidget* nodeViewWidget, QList<QGraphicsItem*> items, bool add): nodeViewWidget(nodeViewWidget), add(add) {
 	if(add){
 //		std::cout << "add" <<std::endl;
 		size_t index_mod = 0;
 		foreach(QGraphicsItem* item, items){
 			Node* node = qgraphicsitem_cast<Node*> (item);
-			if(node){
-				NodeView* nodeView = new NodeView();
-				nodeView->setPosition(sidebar->scene()->items().count() + index_mod);
-				nodeViewPairs.append(nodeViewPair_t(node, nodeView));
-				index_mod++;
-			}
+//			if(node && !node->getNodeView()){
+			NodeView* nodeView = new NodeView(node);
+			Node::connect(node, SIGNAL(imageChanged()), nodeView, SLOT(update()));
+			nodeView->setIndex(nodeViewWidget->getNrOfItems() + index_mod);
+			nodeViewPairs.append(nodeView);
+			index_mod++;
+//			}
 		}
 		setText("add to sidebar");
 	} else {
@@ -32,22 +29,14 @@ CommandNodeView::CommandNodeView(QGraphicsView* sidebar, QList<QGraphicsItem*> i
 		foreach(QGraphicsItem* item, items){
 			NodeView* nodeView = qgraphicsitem_cast<NodeView*> (item);
 			if(nodeView){
-				nodeViewPairs.append(nodeViewPair_t(nodeView->getNode(), nodeView));
+				nodeViewPairs.append(nodeView);
 			}
 		}
 
-//		foreach(nodeViewPair_t pair, nodeViewPairs){
-//			std::cout << pair.second->getPosition() <<std::endl;
-//		}
-
-		qSort(nodeViewPairs.begin(), nodeViewPairs.end(), nodeViewCompare);
 		setText("remove from sidebar");
-
-//		foreach(nodeViewPair_t pair, nodeViewPairs){
-//			std::cout << pair.second->getPosition() <<std::endl;
-//		}
 	}
 
+	ok = (nodeViewPairs.count() > 0);
 }
 
 CommandNodeView::~CommandNodeView() {
@@ -70,84 +59,38 @@ void CommandNodeView::redo(){
 		removeNodeViews();
 	}
 }
-
-void CommandNodeView::setNodeviewPositions(){
-	foreach(QGraphicsItem* item, sidebar->scene()->items()){
-		NodeView* node = util::multiCast<NodeView*, FinalNodeView*> (item);
-		if(node){
-			node->setPos(NodeView::half_width, NodeView::half_height + node->getPosition()*(NodeView::node_height + betweenNodeMargin));
-		}
-	}
-	sidebar->scene()->setSceneRect(0, 0, NodeView::node_width, sidebar->scene()->items().size()*(NodeView::node_height + betweenNodeMargin));
-}
+//
+//void CommandNodeView::setNodeviewPositions(){
+//	foreach(QGraphicsItem* item, nodeViewWidget->scene()->items()){
+//		NodeView* node = util::multiCast<NodeView*, FinalNodeView*> (item);
+//		if(node){
+//			node->setPos(NodeView::half_width, NodeView::half_height + node->getPosition()*(NodeView::node_height + betweenNodeMargin));
+//		}
+//	}
+//	nodeViewWidget->scene()->setSceneRect(0, 0, NodeView::node_width, nodeViewWidget->scene()->items().size()*(NodeView::node_height + betweenNodeMargin));
+//}
 
 void CommandNodeView::addNodeViews(){
-//	std::cout << "addNodeViews" <<std::endl;
-	std::vector<size_t> index_mods(sidebar->scene()->items().count(), size_t(0));
-
-	size_t mod_index = 0;
-	int increment = 0;
-	foreach(nodeViewPair_t pair, nodeViewPairs){
-		while(mod_index < (pair.second->getPosition() - increment)  && mod_index < index_mods.size()){
-			index_mods[mod_index] = increment;
-			mod_index++;
-		}
-		increment++;
+	foreach(NodeView* nodeView, nodeViewPairs){
+		nodeViewWidget->insertNodeView(nodeView, nodeView->getIndex());
 	}
 
-	while(mod_index < index_mods.size() ){
-		index_mods[mod_index] = increment;
-		mod_index++;
-	}
+//	foreach(nodeViewPair_t pair, nodeViewPairs){
+//		pair.first->setNodeView(pair.second);
+//		nodeViewWidget->insertNodeView(pair.second, pair.second->getPosition());
+//		pair.first->redraw();
+//	}
 
-	foreach(QGraphicsItem* item, sidebar->scene()->items()){
-		NodeView* node = util::multiCast<NodeView*, FinalNodeView*> (item);
-		if(node){
-			node->setPosition(node->getPosition() + index_mods[node->getPosition()]);
-		}
-	}
-
-	foreach(nodeViewPair_t pair, nodeViewPairs){
-		pair.first->setNodeView(pair.second);
-		sidebar->scene()->addItem(pair.second);
-		pair.first->redraw();
-	}
-	setNodeviewPositions();
 }
 
 void CommandNodeView::removeNodeViews(){
-//	std::cout << "removeNodeViews" <<std::endl;
-
-	std::vector<size_t> index_mods(sidebar->scene()->items().count(), size_t(0));
-
-	size_t mod_index = 0;
-	int decrement = 0;
-	foreach(nodeViewPair_t pair, nodeViewPairs){
-		while(mod_index < (pair.second->getPosition()) ){
-			index_mods[mod_index] = decrement;
-			mod_index++;
-		}
-		index_mods[mod_index] = 0;
-		mod_index++;
-		decrement++;
+	foreach(NodeView* nodeView, nodeViewPairs){
+		nodeViewWidget->deleteNodeView(nodeView);
 	}
 
-	while(mod_index < index_mods.size() ){
-		index_mods[mod_index] = decrement;
-		mod_index++;
-	}
-
-	foreach(QGraphicsItem* item, sidebar->scene()->items()){
-		NodeView* node = util::multiCast<NodeView*, FinalNodeView*> (item);
-		if(node){
-			node->setPosition(node->getPosition() - index_mods[node->getPosition()]);
-		}
-	}
-
-	foreach(nodeViewPair_t pair, nodeViewPairs){
-//		std::cout << "remove one" <<std::endl;
-		sidebar->scene()->removeItem(pair.second);
-		pair.first->resetNodeView(false);
-	}
-	setNodeviewPositions();
+//	for(int i = nodeViewPairs.count()-1; i>=0; i--){
+//		nodeViewPair_t pair = nodeViewPairs[i];
+//		nodeViewWidget->deleteNodeView(pair.second);
+//		pair.first->resetNodeView(false);
+//	}
 }

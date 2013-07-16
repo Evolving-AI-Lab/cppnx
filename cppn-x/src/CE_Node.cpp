@@ -49,10 +49,11 @@
 #include "CE_FinalNodeView.h"
 #include "CE_CommandSetPos.h"
 #include "CE_CppnParser.h"
+#include "CE_LabelWidget.h"
 
 //! [0]
 Node::Node(
-		GraphWidget *graphWidget,
+//		CppnWidget *graphWidget,
 		std::string branch,
 		std::string id,
 		std::string type,
@@ -62,11 +63,11 @@ Node::Node(
 		std::string bias,
 		int width,
 		int height,
-		LabelWidget* label,
+		Label* label,
 		std::string note
 		)
-    : LabelableObject(graphWidget->getWindow(), label, note.c_str()),
-      graph(graphWidget),
+    : LabelableObject(label, note.c_str()),
+//      graph(graphWidget),
       branch(branch),
       id(id),
       nodetype(type),
@@ -74,8 +75,9 @@ Node::Node(
       xml_label(xml_label),
       affinity(affinity),
       bias(bias),
-      nodeView(0),
-      finalNodeView(0)
+//      nodeView(0),
+      finalNodeView(0),
+      depth(0)
 {
 
 
@@ -105,9 +107,9 @@ Node::Node(
 	}
 
 
-    QImage* pixels = new QImage(width, height, QImage::Format_RGB32);
+    pixels = new QImage(width, height, QImage::Format_RGB32);
     pixels->fill(0);
-    setPixels(pixels);
+//    setPixels(pixels);
 }
 //! [0]
 
@@ -137,7 +139,7 @@ QList<Edge *> Node::outgoingEdges() const
 
 QRectF Node::boundingRect() const
 {
-    qreal adjust = 2;
+    qreal adjust = 10;
     return QRectF( -half_width - adjust, (-half_height - adjust) - footerBarSize, node_width + 2*adjust, node_height + 2*adjust + footerBarSize*2);
 }
 
@@ -161,19 +163,41 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 	} else {
 		labelColor = label->getColor();
 	}
-    painter->drawImage(QRect(-half_width, -half_height, node_width, node_height), *pixels);
-    painter->fillRect(QRect(-half_width, half_height, node_width, footerBarSize), labelColor);
 
-    if (this->isSelected()){
-    	painter->setPen(QPen(Qt::black, 2));
-    	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height + footerBarSize));
-    }else{
-    	painter->setPen(QPen(Qt::black, 0));
-    	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height + footerBarSize));
+	QColor normalBorderColor;
+
+    if(nodetype == XML_TYPE_OUTPUT){
+    	normalBorderColor = QColor(Qt::darkYellow);
+    } else {
+    	normalBorderColor = QColor(Qt::black);
     }
 
-    painter->setPen(QPen(Qt::black, 0));
-    painter->drawRect(QRect(-half_width, half_height, node_width, footerBarSize));
+    painter->drawImage(QRect(-half_width, -half_height, node_width, node_height), *pixels);
+
+	QRect footer(-half_width, half_height, node_width, footerBarSize);
+	QRect header(-half_width, -half_height-headerBarSize, node_width, headerBarSize);
+	QRect border(-half_width, -half_height - headerBarSize, node_width, node_height + footerBarSize+headerBarSize);
+
+    painter->fillRect(footer, labelColor);
+    painter->fillRect(header, labelColor);
+
+    painter->setPen(QPen(normalBorderColor, 0));
+    painter->drawRect(footer);
+    painter->drawRect(header);
+
+    if (partOfContextMenuEvent){
+    	painter->setPen(QPen(CONTEXT_EVENT_COLOR, 2));
+    }else if (this->isSelected()){
+    	painter->setPen(QPen(SELECTED_COLOR, 2));
+    }else{
+    	painter->setPen(QPen(normalBorderColor, 0));
+
+    }
+
+    painter->drawRect(border);
+
+//    painter->setPen(QPen(Qt::black, 0));
+//    painter->drawRect(QRect(-half_width, half_height, node_width, footerBarSize));
 
 
 
@@ -183,20 +207,48 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     	painter->setPen(QPen(Qt::black, 0));
     }
 
-    if(nodetype == XML_TYPE_INPUT){
-    	painter->drawText(-half_width,half_height+(footerBarSize-4), QString(xml_label.c_str()));
-    } else{
-    	painter->drawText(-half_width,half_height+(footerBarSize-4), QString(activationFunction_short.c_str()));
-    	painter->setPen(QPen(Qt::black, 0));
-    	painter->drawText(-half_width,-half_height, QString(xml_label.c_str()));
-    }
+
+//    painter->drawText(-half_width,half_height+(footerBarSize-4), QString(util::toQString(branch + "_" + id)));
+//    painter->drawText(-half_width,-half_height, QString(util::toQString(branch + "_" + id)));
+
+    QRect rect;
+
+//    QRect activationFunction(footer);
+//    QRect depth(footer);
+//    QRect name(footer);
+//
+//    activationFunction.adjusted()
+
+
+
+
+
+
+//    painter->drawText (-half_width+2,half_height+9, node_width-4, 9, Qt::TextSingleLine | Qt::AlignLeft| Qt::NoClip, util::toQString(activationFunction_short), &rect);
+//    painter->drawText (-half_width+2,half_height+9, node_width-4, 9, Qt::TextSingleLine | Qt::AlignRight| Qt::NoClip, util::toQString(depth), &rect);
+
+//    std::cout << rect.width() << " " << rect.height()  << std::endl;
+
+//    painter->setPen(QPen(Qt::black, 0));
+    QFont font;
+    font.setPointSize(6);
+    font.setStyleHint(QFont::SansSerif);
+
+
+
+    painter->setFont(font);
+    painter->drawText (header, Qt::TextSingleLine | Qt::AlignCenter | Qt::NoClip, util::toQString(branch + "_" + id), &rect);
+    painter->drawText (footer.adjusted(2, 0, 0, 0) , Qt::TextSingleLine | Qt::AlignLeft| Qt::NoClip, QString("d:") + util::toQString(depth), &rect);
+    painter->drawText (footer.adjusted(0, 0, -2, 0), Qt::TextSingleLine | Qt::AlignRight| Qt::NoClip, util::toQString(activationFunction_short), &rect);
+    painter->drawText (footer.adjusted(18, 0, 0, 0), Qt::TextSingleLine | Qt::AlignLeft| Qt::NoClip, util::toQString(xml_label.substr(0,1)).toUpper() , &rect);
 
 }
 //! [10]
 
 void Node::updateAll(){
 	update();
-	if(nodeView) nodeView->update();
+	emit imageChanged();
+//	if(nodeView) nodeView->update();
 }
 
 
@@ -211,12 +263,18 @@ QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
         foreach (Edge *edge, outgoingEdgeList)
         	edge->adjust();
 //        graph->itemMoved(this);
+//        emit positionChanged(this);
         break;
     default:
         break;
     };
 
     return LabelableObject::itemChange(change, value);
+}
+
+void Node::updatePosition(){
+	previousPosition = pos();
+	emit positionChanged(this);
 }
 
 void Node::setPrevPos(QPointF point){
@@ -236,94 +294,74 @@ void Node::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void Node::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     update();
+    if(pos() != previousPosition) emit updatePositionsRequest();
+
     QGraphicsItem::mouseReleaseEvent(event);
-    foreach(QGraphicsItem* item, graph->scene()->selectedItems()){
-    	Node* node = qgraphicsitem_cast<Node*>(item);
-    	if(node) graph->itemMoved(node);
-    }
-    if(pos() != previousPosition){
-    	std::cout << "Push" <<std::endl;
-    	graph->getWindow()->undoStack.push(new CommandSetPos(graph->scene()->selectedItems()));
-    }
 }
 
-void Node::setPixels(QImage* pixels_)
-{
-    pixels = pixels_;
-}
-
-
-
-void Node::setPixel(int x, int y, char r, char g, char b){
-	pixels->setPixel(x, y, qRgb(r, g, b));
-}
-
-void Node::setPixel(size_t index, char r, char g, char b ){
-	index = index*4;
-	pixels->bits()[index]=r;
-	pixels->bits()[index+1]=g;
-	pixels->bits()[index+2]=b;
-}
-
-void Node::setPixel(size_t index, char grey){
-	index = index*4;
-	pixels->bits()[index]=grey;
-	pixels->bits()[index+1]=grey;
-	pixels->bits()[index+2]=grey;
-}
+//void Node::setPixels(QImage* pixels_)
+//{
+//    pixels = pixels_;
+//}
+//void Node::setPixel(int x, int y, char r, char g, char b){
+//	pixels->setPixel(x, y, qRgb(r, g, b));
+//}
+//
+//void Node::setPixel(size_t index, char r, char g, char b ){
+//	index = index*4;
+//	pixels->bits()[index]=r;
+//	pixels->bits()[index+1]=g;
+//	pixels->bits()[index+2]=b;
+//}
+//
+//void Node::setPixel(size_t index, char grey){
+//	index = index*4;
+//	pixels->bits()[index]=grey;
+//	pixels->bits()[index+1]=grey;
+//	pixels->bits()[index+2]=grey;
+//}
 
 void Node::setPixel(size_t index, const double& value){
 	size_t localindex = index*4;
 	//Grey does not use the min() function to prevent a bug on windows.
-	char grey = 255;
+	unsigned char grey = 255;
 	if(std::abs(value) < 1.0) grey = std::abs(value)*255;
-	char alt(std::min(std::max(value, 0.0), 1.0)*255);
+	unsigned char alt(std::min(std::max(value, 0.0), 1.0)*255);
 	pixels->bits()[localindex]=alt;
 	pixels->bits()[localindex+1]=alt;
 	pixels->bits()[localindex+2]=grey;
 
 
 
-	if(nodeView){
-		nodeView->setPixel(localindex, grey, alt);
-	}
-	if(finalNodeView){
-//		std::cout << "Hallo" <<std::endl;
-		char sat(std::min((value+1)/2, 1.0)*255);
-//		int hue(std::min((value+1)/2, 1.0)*360);
-//		int hue(std::min(std::abs(value), 1.0)*360);
-		int hue(std::min(value+1, 2.0)*360);
-		if(xml_label == "saturation") finalNodeView->setSaturation(index, sat);
-		if(xml_label == "brightness" || xml_label == "ink") finalNodeView->setValue(index, grey);
-		if(xml_label == "hue") finalNodeView->setHue(index, hue);
-	}
+//	if(nodeView){
+//		nodeView->setPixel(localindex, grey, alt);
+//	}
+//	if(finalNodeView){
+//		char sat(std::min(std::max(value, 0.0), 1.0)*255);
+//		int hue(std::min(value+1, 2.0)*360);
+//		if(xml_label == "saturation") finalNodeView->setSaturation(index, sat);
+//		if(xml_label == "brightness" || xml_label == "ink") finalNodeView->setValue(index, grey);
+//		if(xml_label == "hue") finalNodeView->setHue(index, hue);
+//	}
 }
 
-void Node::resetNodeView(bool toDelete){
-	if(nodeView){
-		if(toDelete){
-			nodeView->resetNode();
-			delete nodeView;
-		}
-		nodeView = 0;
-	}
-}
-
-void Node::setNodeView(NodeView* _nodeView){
-	resetNodeView(false);
-	nodeView = _nodeView;
-	nodeView->setNode(this);
-}
+//void Node::resetNodeView(bool toDelete){
+//	if(nodeView){
+//		if(toDelete){
+//			nodeView->resetNode();
+//			delete nodeView;
+//		}
+//		nodeView = 0;
+//	}
+//}
+//
+//void Node::setNodeView(NodeView* _nodeView){
+//	resetNodeView(false);
+//	nodeView = _nodeView;
+//	nodeView->setNode(this);
+//}
 
 
 void Node::redraw(){
-	cppn->updateNode(this);
-}
-
-void Node::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
-{
-//    QMenu menu(graph->getWindow());
-//    QAction* action = new QAction("Dummy action", graph->getWindow());
-//    menu.addAction(action);
-//    menu.exec(event->screenPos());
+	emit updateRequest(this);
 }

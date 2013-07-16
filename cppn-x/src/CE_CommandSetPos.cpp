@@ -32,14 +32,14 @@ CommandSetPos::~CommandSetPos() {
 void CommandSetPos::undo(){
 	foreach(triple_t triple, nodePosTriples){
 		triple.first->setPos(triple.second);
-		triple.first->setPrevPos(triple.second);
+		triple.first->updatePosition();
 	}
 }
 
 void CommandSetPos::redo(){
 	foreach(triple_t triple, nodePosTriples){
 		triple.first->setPos(triple.third);
-		triple.first->setPrevPos(triple.third);
+		triple.first->updatePosition();
 	}
 }
 

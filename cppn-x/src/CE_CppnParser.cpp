@@ -17,9 +17,11 @@
 
 #define parseEach(template_str,parser) while(parseCount(template_str)){parser;} parseLine(close(template_str));
 
-CppnParser::CppnParser(std::string fileName, GraphWidget* widget):cppn(0), widget(widget), data_version(""), line(""), nextLine(true), lineNumber(0), parseCounter(0){
-	cppn = new Cppn(widget);
+CppnParser::CppnParser(std::string fileName):data_version(""), line(""), nextLine(true), lineNumber(0), parseCounter(0){
+//	cppn = new Cppn();
+	fileInformation = new FileInformation();
 
+	std::cout << "Unzipping file" << std::endl;
 	unsigned found = fileName.find_last_of(".");
 	if(fileName.substr(found+1) == "zip"){
 		//Open the ZIP archive
@@ -183,17 +185,21 @@ void CppnParser::parseHeader(bool store){
 	if(tryParseLine(read(ce_xml::cppn_data))){
 //		data_version = m[1].str();
 		data_version = m[1];
-		if(store) cppn->setNewFile(false);
+		if(store) fileInformation->newFile = false;
+//		if(store) cppn->setNewFile(false);
 	} else {
 		data_version = "0.0";
-		if(store) cppn->setNewFile(true);
+		if(store) fileInformation->newFile = true;
+//		if(store) cppn->setNewFile(true);
 	}
 
 	if(tryParseLine(open(ce_xml::data))){
 //		if(store) cppn->setDataVersion(m[1].str());
-		if(store) cppn->setDataVersion(m[1]);
+		if(store) fileInformation->dataVersion = m[1];
+//		if(store) cppn->setDataVersion(m[1]);
 	} else {
-		if(store) cppn->setDataVersion("1.0");
+		if(store) fileInformation->dataVersion = "1.0";
+//		if(store) cppn->setDataVersion("1.0");
 	}
 }
 
@@ -205,7 +211,7 @@ void CppnParser::parseColorButton(bool store){
 	int b;
 	QColor color_q(0, 0, 0);
 	std::string color_str = "";
-	LabelWidget* labelWidget;
+	Label* labelWidget;
 	id_t id;
 
 
@@ -232,8 +238,8 @@ void CppnParser::parseColorButton(bool store){
 	parseLine(close(ce_xml::color_button));
 
 	if(store){
-		labelWidget = new LabelWidget(widget->getWindow(), text_str.c_str(), color_q, false);
-		labelWidget->setId(id);
+		labelWidget = new Label(text_str.c_str(), color_q, false);
+//		labelWidget->setId(id);
 
 		if (data_version >= "1.1"){
 			labelMap[id] = labelWidget;
@@ -241,7 +247,9 @@ void CppnParser::parseColorButton(bool store){
 //			std::cout << "Parsed address: " << (void*) labelWidget << std::endl;
 			oldLabelMap[color_str] = labelWidget;
 		}
-		cppn->addLabelWidget(labelWidget);
+		labels.append(labelWidget);
+
+//		cppn->addLabelWidget(labelWidget);
 
 	}
 
@@ -261,7 +269,7 @@ void CppnParser::parseNode(bool store){
 	QPointF position_q(0, 0);
 
 	//Version 1.1
-	LabelWidget* labelWidget = 0;
+	Label* labelWidget = 0;
 	id_t labelId =0;
 	std::string text = "";
 	std::string color_str = "";
@@ -329,16 +337,18 @@ void CppnParser::parseNode(bool store){
 		Node* node;
 		if (data_version >= "1.1"){
 			labelWidget = labelMap[labelId];
-			node = new Node(widget, branch, id, type, activation_function, label, affinity, bias, cppn->width, cppn->height, labelWidget, text);
+			node = new Node(branch, id, type, activation_function, label, affinity, bias, IMAGE_WIDTH, IMAGE_HEIGHT, labelWidget, text);
 		} else if (data_version >= "1.0"){
 			labelWidget = oldLabelMap[color_str];
 //			std::cout << "Retrieved address: " << (void*) labelWidget << std::endl;
-			node = new Node(widget, branch, id, type, activation_function, label, affinity, bias, cppn->width, cppn->height, labelWidget);
+			node = new Node(branch, id, type, activation_function, label, affinity, bias, IMAGE_WIDTH, IMAGE_HEIGHT, labelWidget);
 		} else {
-			node = new Node(widget, branch, id, type, activation_function, label, affinity, bias, cppn->width, cppn->height);
+			node = new Node(branch, id, type, activation_function, label, affinity, bias, IMAGE_WIDTH, IMAGE_HEIGHT);
 		}
 		node->setPos(position_q);
-		cppn->addNode(node);
+		nodes.append(node);
+		nodeMap[branch + "_" + id] = node;
+//		cppn->addNode(node);
 	}
 }
 
@@ -357,7 +367,7 @@ void CppnParser::parseEdge(bool store){
 	QColor color_q(255, 255, 255);
 
 	//Version 1.1
-	LabelWidget* labelWidget = 0;
+	Label* labelWidget = 0;
 	double original_weight_f=0;
 	id_t labelId =0;
 	std::string text = "";
@@ -413,14 +423,15 @@ void CppnParser::parseEdge(bool store){
 		Edge* edge;
 		if (data_version >= "1.1"){
 			labelWidget = labelMap[labelId];
-			edge = new Edge(widget, branch, id, cppn->getNode(source_branch+"_"+source_id), cppn->getNode(target_branch+"_"+target_id), weight_f, original_weight_f, labelWidget, text);
+			edge = new Edge(branch, id, nodeMap[source_branch+"_"+source_id], nodeMap[target_branch+"_"+target_id], weight_f, original_weight_f, labelWidget, text);
 		} else if (data_version >= "1.0"){
 			labelWidget = oldLabelMap[color_str];
-			edge = new Edge(widget, branch, id, cppn->getNode(source_branch+"_"+source_id), cppn->getNode(target_branch+"_"+target_id), weight_f, weight_f, labelWidget);
+			edge = new Edge(branch, id, nodeMap[source_branch+"_"+source_id], nodeMap[target_branch+"_"+target_id], weight_f, weight_f, labelWidget);
 		} else {
-			edge = new Edge(widget, branch, id, cppn->getNode(source_branch+"_"+source_id), cppn->getNode(target_branch+"_"+target_id), weight_f, weight_f);
+			edge = new Edge(branch, id, nodeMap[source_branch+"_"+source_id], nodeMap[target_branch+"_"+target_id], weight_f, weight_f);
 		}
-		cppn->addConnection(edge);
+		edges.append(edge);
+//		cppn->addConnection(edge);
 	}
 }
 
@@ -435,23 +446,26 @@ void CppnParser::parseEdge(bool store){
 void CppnParser::parseParent(bool store){
 	parseLine(read(ce_xml::identifier));
 //	if(store) cppn->addParent(m[1].str(), m[2].str());
-	if(store) cppn->addParent(m[1], m[2]);
+//	if(store) cppn->addParent(m[1], m[2]);
+	if(store) fileInformation->addParent(m[1], m[2]);
+
+
 }
 
 void CppnParser::parseGenome(bool store){
 	//Set genome
 	if(tryParseLine(open(ce_xml::genome))){
 //		if(store) cppn->setGenome(m[1].str());
-		if(store) cppn->setGenome(m[1]);
+		if(store) fileInformation->setGenome(m[1]);
 	} else {
 		parseLine(open(ce_xml::genomePhen));
 //		if(store) cppn->setGenome(m[1].str(), m[2].str());
-		if(store) cppn->setGenome(m[1], m[2]);
+		if(store) fileInformation->setGenome(m[1], m[2]);
 	}
 
 	//Set identifier
 	parseLine(read(ce_xml::identifier));
-	if(store) cppn->setIdentifier(m[1], m[2]);
+	if(store) fileInformation->setIdentifier(m[1], m[2]);
 
 	//Set parents
 	parseEach(ce_xml::parent_count, parseParent(store));
@@ -469,7 +483,9 @@ void CppnParser::parseGenome(bool store){
 }
 
 
-Cppn* CppnParser::parse(){
+void CppnParser::parse(){
+	std::cout << "Parsing file" << std::endl;
+
 	parseHeader(true);
 
 	if(tryParseLine(open(ce_xml::storage))){
@@ -488,15 +504,30 @@ Cppn* CppnParser::parse(){
 			parseLine(close(ce_xml::generation));
 		}
 
-		if(read_min != min) widget->warning("There exist generations smaller than the minimum generation in this file. File might be corrupted.");
-		if(read_max != max) widget->warning("There exist generations greater than the maximum generation in this file. File might be corrupted.");
+		if(read_min != min){
+			QMessageBox msgBox(QMessageBox::Warning, QMessageBox::tr("Warning"), QMessageBox::tr("There exist generations smaller than the minimum generation in this file. File might be corrupted."), QMessageBox::Ok, 0);
+			msgBox.exec();
+
+//			widget->warning("There exist generations smaller than the minimum generation in this file. File might be corrupted.");
+		}
+		if(read_max != max){
+			QMessageBox msgBox(QMessageBox::Warning, QMessageBox::tr("Warning"), QMessageBox::tr("There exist generations greater than the maximum generation in this file. File might be corrupted."), QMessageBox::Ok, 0);
+			msgBox.exec();
+//			widget->warning("There exist generations greater than the maximum generation in this file. File might be corrupted.");
+		}
 
 
 		myfile->seekg(beforeCount);
 		nextLine=true;
 
+		bool ok = true;
 
-		int generationNr = widget->getGeneration(min, max);
+		std::string text = "This files contains multiple generations from " + util::toString(min) + " to " + util::toString(max) + "\nPlease select a generation to display.";
+
+		int generationNr =  QInputDialog::getInt(0, QInputDialog::tr("Select Generation"), QInputDialog::tr(text.c_str()), 0, min, max, 1, &ok);
+		if(!ok) throw CeParseException("Parsing canceled.");
+
+//		int generationNr = widget->getGeneration(min, max);
 		while(tryParseLine(open(ce_xml::generation))){
 //			int nr = boost::lexical_cast<int>(m[1].str());
 //			int nr = boost::lexical_cast<int>(m[1]);
@@ -509,7 +540,7 @@ Cppn* CppnParser::parse(){
 
 	parseGenome(true);
 
-	return cppn;
+//	return cppn;
 }
 
 

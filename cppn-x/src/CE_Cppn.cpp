@@ -14,42 +14,6 @@
 
 static const double Pi = 3.14159265358979323846264338327950288419717;
 
-//void Cppn::addNode(std::string branch, std::string id, std::string type, std::string activationFunction, std::string xml_label, std::string affinity, std::string bias, QPointF position, LabelWidget* label){
-//	Node* QTnode = new Node(widget, branch, id, type, activationFunction, xml_label, affinity, bias, width, height, label);
-//	if(xml_label == INPUT_X){
-//		nodes[input_x]=QTnode;
-//		QTnode->setIndex(input_x);
-//	} else if(xml_label == INPUT_Y){
-//		nodes[input_y]=QTnode;
-//		QTnode->setIndex(input_y);
-//	} else if(xml_label == INPUT_D){
-//		nodes[input_d]=QTnode;
-//		QTnode->setIndex(input_d);
-//	} else if(xml_label == INPUT_BIAS){
-//		nodes[input_b]=QTnode;
-//		QTnode->setIndex(input_b);
-//	} else if(xml_label == OUTPUT_INK){
-//		QTnode->setFinalNodeView(finalNodeView);
-//		nodes.push_back(QTnode);
-//	} else if(xml_label == OUTPUT_SATURATION){
-//		QTnode->setFinalNodeView(finalNodeView);
-//		nodes.push_back(QTnode);
-//	} else if(xml_label == OUTPUT_HUE){
-//		QTnode->setFinalNodeView(finalNodeView);
-//		nodes.push_back(QTnode);
-//	} else if(xml_label == OUTPUT_BRIGTHNESS){
-//		QTnode->setFinalNodeView(finalNodeView);
-//		nodes.push_back(QTnode);
-//	} else {
-//		nodes.push_back(QTnode);
-//	}
-//	QTnode->setPos(position);
-//	nodeMap[branch + "_" + id]=QTnode;
-//	numberOfNodes++;
-//	validPhenotype=false;
-//
-//}
-
 void Cppn::addNode(Node* QTnode){
 	if(QTnode->getXmlLabel() == INPUT_X){
 		nodes[input_x]=QTnode;
@@ -64,16 +28,20 @@ void Cppn::addNode(Node* QTnode){
 		nodes[input_b]=QTnode;
 		QTnode->setIndex(input_b);
 	} else if(QTnode->getXmlLabel() == OUTPUT_INK){
-		QTnode->setFinalNodeView(finalNodeView);
+		finalNodeView->setValueImage(QTnode->getImage());
+//		QTnode->setFinalNodeView(finalNodeView);
 		nodes.push_back(QTnode);
 	} else if(QTnode->getXmlLabel() == OUTPUT_SATURATION){
-		QTnode->setFinalNodeView(finalNodeView);
+//		QTnode->setFinalNodeView(finalNodeView);
+		finalNodeView->setSaturationImage(QTnode->getImage());
 		nodes.push_back(QTnode);
 	} else if(QTnode->getXmlLabel() == OUTPUT_HUE){
-		QTnode->setFinalNodeView(finalNodeView);
+//		QTnode->setFinalNodeView(finalNodeView);
+		finalNodeView->setHueImage(QTnode->getImage());
 		nodes.push_back(QTnode);
 	} else if(QTnode->getXmlLabel() == OUTPUT_BRIGTHNESS){
-		QTnode->setFinalNodeView(finalNodeView);
+//		QTnode->setFinalNodeView(finalNodeView);
+		finalNodeView->setValueImage(QTnode->getImage());
 		nodes.push_back(QTnode);
 	} else {
 		nodes.push_back(QTnode);
@@ -82,24 +50,18 @@ void Cppn::addNode(Node* QTnode){
 	nodeMap[QTnode->getBranch() + "_" + QTnode->getId()]=QTnode;
 	numberOfNodes++;
 	validPhenotype=false;
-	QTnode->setCppn(this);
+//	QTnode->setCppn(this);
 }
-
-
-//void Cppn::addConnection(std::string branch, std::string id, std::string source_branch, std::string source_id, std::string target_branch, std::string target_id, double weight, LabelWidget* label){
-//	edges.push_back(new Edge(widget, branch, id, nodeMap[source_branch+"_"+source_id], nodeMap[target_branch+"_"+target_id], weight, label));
-//	validPhenotype=false;
-//	numberOfEdges++;
-//}
 
 void Cppn::addConnection(Edge* edge){
 	edges.push_back(edge);
 	validPhenotype=false;
 	numberOfEdges++;
-	edge->setCppn(this);
+//	edge->setCppn(this);
 }
 
 void Cppn::setWeight(Edge* edge, double weight, bool update){
+//	std::cout << "Set weight" <<std::endl;
 	if(!validPhenotype) buildPhenotype();
 	linkWeights[edge->getIndex()]=weight;
 	if(update) updateFromLink(edge);
@@ -152,11 +114,13 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 		//std::cout << nodes[i]->incomingEdges().size() << std::endl;
 	}
 
+	int depth = 0;
 	while(notPlaced.size()>0){
 		nextNotPlaced.clear();
 		for(size_t i=0; i<notPlaced.size(); i++){
 			if(incommingEdges[notPlaced[i]] <= 0){
 				layers.back().push_back(notPlaced[i]);
+				notPlaced[i]->setDepth(depth);
 			} else {
 				nextNotPlaced.push_back(notPlaced[i]);
 			}
@@ -170,6 +134,7 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 		}
 
 		layers.push_back(std::vector <Node*>());
+		depth++;
 		notPlaced = nextNotPlaced;
 	}
 
@@ -179,26 +144,7 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 
 void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastSource){
 	activationFunctions[index]=node->getActivationFunction();
-//	switch(node->getActivationFunction()){
-//	case ACTIVATION_FUNCTION_SIGMOID:
-//		activationFunctions[index]=act_functions::sigmoid;
-//		break;
-//	case ACTIVATION_FUNCTION_LINEAR:
-//		activationFunctions[index]=act_functions::identity;
-//		break;
-//	case ACTIVATION_FUNCTION_SIN:
-//		activationFunctions[index]=act_functions::sin;
-//		break;
-//	case ACTIVATION_FUNCTION_COS:
-//		activationFunctions[index]=act_functions::cos;
-//		break;
-//	case ACTIVATION_FUNCTION_GAUSSIAN:
-//		activationFunctions[index]=act_functions::gaussian;
-//		break;
-//	default:
-//		throw JGTL::LocatedException("Unknow activation function: '" + boost::lexical_cast<std::string>(node->getActivationFunction()) + "'");
-//		break;
-//	}
+
 	node->setIndex(index);
 	phenotypeNodes[index]=node;
 
@@ -403,17 +349,17 @@ void Cppn::positionNodes(){
 			positions[j] = QPointF(int(j)*xscale-(int(layerSize)-1)*(xscale/2), -(int(i)*yscale-(int(layers.size())-1)*(yscale/2)));
 		}
 		Node** currentLayer = layers[i].data();
-		std::sort (currentLayer, currentLayer+layerSize);
+//		std::sort (currentLayer, currentLayer+layerSize);
 		std::vector<Node*> shortestLayout = layers[i];
-		qreal shortestLength = getLength(shortestLayout, positions);
 
-		do {
-			qreal currentLength = getLength(layers[i], positions);
-		    if(currentLength<shortestLength || (currentLength==shortestLength && compareIds(layers[i], shortestLayout))){
-		    	shortestLength = currentLength;
-		    	shortestLayout = layers[i];
-		    }
-		} while ( std::next_permutation(currentLayer, currentLayer+layerSize) );
+//		qreal shortestLength = getLength(shortestLayout, positions);
+//		do {
+//			qreal currentLength = getLength(layers[i], positions);
+//		    if(currentLength<shortestLength || (currentLength==shortestLength && compareIds(layers[i], shortestLayout))){
+//		    	shortestLength = currentLength;
+//		    	shortestLayout = layers[i];
+//		    }
+//		} while ( std::next_permutation(currentLayer, currentLayer+layerSize) );
 
 		for(size_t j=0; j< layerSize; j++){
 			shortestLayout[j]->setPos(positions[j]);
@@ -494,18 +440,18 @@ void Cppn::updateNode(Node* node){
 }
 
 
-size_t Cppn::getNrOfColorButtons(){
-	return widget->getWindow()->getNrOfColorButtons();
-}
+//size_t Cppn::getNrOfColorButtons(){
+//	return widget->getWindow()->getNrOfColorButtons();
+//}
 
-LabelWidget* Cppn::getColorButton(size_t i){
-	return widget->getWindow()->getColorButton(i);
-}
+//Label* Cppn::getColorButton(size_t i){
+//	return widget->getWindow()->getColorButton(i);
+//}
 
 //void Cppn::addColorButton(std::string text, QColor color){
 //	widget->getWindow()->addColorButton(QString(text.c_str()), color);
 //}
 
-void Cppn::addLabelWidget(LabelWidget* labelWidget){
-	widget->getWindow()->addLabelWidget(labelWidget);
-}
+//void Cppn::addLabelWidget(Label* labelWidget){
+//	widget->getWindow()->addLabelWidget(labelWidget);
+//}

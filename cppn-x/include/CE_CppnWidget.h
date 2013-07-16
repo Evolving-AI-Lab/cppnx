@@ -42,114 +42,158 @@
 #define GRAPHWIDGET_H
 //#include <JGTL_LocatedException.h>
 #include <QtGui/QGraphicsView>
+#include <QActionGroup>
 #include <map>
 #include "CE_Defines.h"
-#include "CE_LabelWidget.h"
-#include "CE_Window.h"
+//#include "CE_Label.h"
+//#include "CE_Window.h"
 
-
+#include "CE_CommandSetPos.h"
+#include "CE_CommandLabelObject.h"
+#include "CE_CommandSetWeight.h"
+#include "CX_ContextMenuGraphicsView.h"
 
 class Node;
 class Edge;
 class Cppn;
-class Window;
+//class Window;
 
 //! [0]
-class GraphWidget : public QGraphicsView
+class CppnWidget : public ContextMenuGraphicsView
 {
     Q_OBJECT
 
 public:
-    GraphWidget(Window *window, QWidget *parent = 0);
+    CppnWidget(QWidget* widget = 0);
 
-    void itemMoved(Node * node);
-    bool load(std::string filename);
-    bool save(std::string filename);
-//    void edgeSelected(int id, Edge* selectedEdge);
-    Window* getWindow();
-//    Node* getSelectedNode(){
-//    	return selectedNode;
-//    }
-//
-//    Edge* getSelectedEdge(){
-//    	return selectedEdge;
-//    }
+    void setCppn(QList<Node*> nodes, QList<Edge*> edges);
+    Cppn* getCppn(){
+    	return cppn;
+    }
 
-    int getGeneration(int min, int max);
-    void warning(std::string message);
-    void updateAll();
+    QAction* getAddNodeviewAction(){
+    	return addNodeviewAction;
+    }
+
+    QAction* getLabelViewAction(){
+    	return labelOnlyAction;
+    }
+
+    QAction* getSignViewAction(){
+    	return signOnlyAction;
+    }
+
+    QAction* getLabelAndSignViewAction(){
+    	return labelAndSignAction;
+    }
+
+    QAction* getCircleAction(){
+    	return circleAction;
+    }
+
+    QAction* getLayerAction(){
+    	return layerAction;
+    }
+
+    QActionGroup* getViewGroup(){
+    	return viewGroup;
+    }
+
+    QMenu* getEdgeMenu(){
+    	return edgeMenu;
+    }
+
+    QMenu* getNodeMenu(){
+    	return nodeMenu;
+    }
 
 public slots:
-//    void shuffle();
+	// Zoom functions
     void zoomIn();
     void zoomOut();
-    void setValue(int value);
-    void setValueF(double value);
-//    void selectEdge();
+
+    //Weight functions
+    void setWeight(double value);
     void resetWeight();
     void resetAllWeights();
-    void scanWeight();
+    void weightUpdated(Edge* edge);
+    void onBookendStartChanged(double);
+    void onBookendEndChanged(double);
+
+    //Position functions
     void positionNodesLayers();
     void positionNodesCircle();
 
-
+    //Add node/edge functions
     void addNode(Node* node);
+    void addEdge(Edge* edge);
 
-//    int minimumHeight() const{
-//    	std::cout << "min heigth" << std::endl;
-//    	return 200;
-//    }
-//
-//    QSize minimumSize() const;
-//    QSize minimumSizeHint() const;
-//
-//    int heightForWidth(int w) const{
-//    	std::cout << "hfw Used" << std::endl;
-//    	return 0;
-//    }
+    //Apply label function
+    void applyLabel(Label* label);
+
+    //Add nodeview function
+    void addNodeView();
+
+    //Set view functions
+    void setLabelView();
+    void setSignView();
+    void setLabelAndSignView();
+
+    //Update functions
+    void updateSelection();
+    void updateAll();
+    void updatePreviousPositions();
+
+    void itemMoved(Node * node);
+//    void ContextMenuEvent(SelectableObject* object, bool begin);
 
 signals:
-void sliderValueChanged(int newValue);
-void sliderValueChangedF(double newValue);
+	void requestCommandExecution(QUndoCommand*);
+	void requestAddNodeview(QList<QGraphicsItem*>);
+	void edgeUpdated(Edge*);
+	void labelableObjectSelected(bool);
 
 protected:
-//    void keyPressEvent(QKeyEvent *event);
-    void timerEvent(QTimerEvent *event);
-    void wheelEvent(QWheelEvent *event);
-//    void drawBackground(QPainter *painter, const QRectF &rect);
-
+    void wheelEvent(QWheelEvent* event);
     void scaleView(qreal scaleFactor);
-//    void resizeEvent(QResizeEvent * event){
-//    	std::cout << "New size: " << size().height() << std::endl;
-//    }
-//    void updateNodes();
-//    void positionNodes();
-
-
+    void changeEvent(QEvent* event);
 
 private:
-    int timerId;
+    void setNodeSelected(bool selected);
+    void setEdgeSelected(bool selected);
+
     Cppn* cppn;
-    //shared_ptr<NEAT::FastNetwork<double> > cppn_phen;
-    //std::vector<Node*> nodes;
 
-    //static const int width = 100;
-    //static const int height = 100;
+    //Actions
+    QAction* addNodeviewAction;
+    QAction *labelOnlyAction;
+    QAction *signOnlyAction;
+    QAction *labelAndSignAction;
+    QAction* circleAction;
+    QAction* layerAction;
+    QActionGroup* viewGroup;
 
-    //int edgeId;
-    int sliderValue;
-    Edge* selectedEdge;
-    Node* selectedNode;
-    Window *par_window;
+    QMenu* edgeMenu;
+    QMenu* nodeMenu;
 
+    //Sorted vectors for modifying scene
     std::vector<Node*> x_sorted;
     std::vector<Node*> y_sorted;
 
+    //Misc
+    bool blockWeightUpdates;
+    Edge::LabelMode labelMode;
+	bool nodeSelected;
+	bool edgeSelected;
+	QList<QGraphicsItem*> previousSelection;
+
+    //Current borders
     double left_border;
     double right_border;
     double top_border;
     double bottom_border;
 
+    //Minimum borders
     static const double left_border_min;
     static const double right_border_min;
     static const double top_border_min;

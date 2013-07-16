@@ -23,7 +23,8 @@
 
 #include "CE_Cppn.h"
 #include "CE_CppnWidget.h"
-#include "CE_LabelWidget.h"
+#include "CE_Label.h"
+#include "CX_FileInformation.h"
 
 class CeParseException : public std::exception
 {
@@ -56,16 +57,36 @@ public:
 typedef std::map<std::string, std::string> io_map_t;
 //typedef std::map<std::string, std::string> io_map_t;
 
-class Cppn;
-class GraphWidget;
+//class Cppn;
+//class CppnWidget;
 
 class CppnParser
 {
 public:
-	CppnParser(std::string fileName, GraphWidget* widget);
+	CppnParser(std::string fileName);
 	virtual ~CppnParser();
 
-	Cppn* parse();
+	void parse();
+
+//	Cppn* getCppn(){
+//		return cppn;
+//	}
+
+	QList<Label*> getLabels(){
+		return labels;
+	}
+
+	QList<Node*> getNodes(){
+		return nodes;
+	}
+
+	QList<Edge*> getEdges(){
+		return edges;
+	}
+
+	FileInformation* getFileInformation(){
+		return fileInformation;
+	}
 
 private:
 	bool parseLine(std::string line, std::string expected);
@@ -91,8 +112,13 @@ private:
 
 
 	std::istream* myfile;
-	Cppn* cppn;
-	GraphWidget* widget;
+//	Cppn* cppn;
+	FileInformation* fileInformation;
+	QList<Label*> labels;
+	QList<Node*> nodes;
+	QList<Edge*> edges;
+
+//	CppnWidget* widget;
 //	boost::smatch m;
 	std::vector<std::string> m;
 
@@ -103,8 +129,10 @@ private:
 
 	int parseCounter;
 
-	std::map<std::string, LabelWidget*> oldLabelMap;
-	std::map<id_t, LabelWidget*> labelMap;
+	std::map<std::string, Label*> oldLabelMap;
+	std::map<id_t, Label*> labelMap;
+    std::map<std::string, Node*> nodeMap;
+
 };
 
 #endif /* CPPNPARSER_H_ */

@@ -48,16 +48,14 @@
 
 #include "CE_Defines.h"
 #include "CE_Edge.h"
-#include "CE_CppnWidget.h"
+//#include "CE_CppnWidget.h"
 #include "CE_LabelableObject.h"
 
 
 
 
-class Cppn;
-class LabelWidget;
+class Label;
 class Edge;
-class GraphWidget;
 class NodeView;
 class FinalNodeView;
 QT_BEGIN_NAMESPACE
@@ -70,10 +68,9 @@ QT_END_NAMESPACE
 //! [0]
 class Node : public LabelableObject
 {
-
+	Q_OBJECT
 public:
     Node(
-    		GraphWidget *graphWidget,
     		std::string branch = "",
     		std::string id = "",
     		std::string type = "",
@@ -83,7 +80,7 @@ public:
     		std::string bias = "",
     		int width = 256,
     		int height = 256,
-    		LabelWidget* label = 0,
+    		Label* label = 0,
     		std::string note = ""
     );
     ~Node();
@@ -145,11 +142,15 @@ public:
     	return activationFunction_str;
     }
 
-    void setNodeView(NodeView* _nodeView);
-    void resetNodeView(bool toDelete = true);
+//    void setNodeView(NodeView* _nodeView);
+//    void resetNodeView(bool toDelete = true);
 
-    NodeView* getNodeView(){
-    	return nodeView;
+//    NodeView* getNodeView(){
+//    	return nodeView;
+//    }
+
+    QImage* getImage(){
+    	return pixels;
     }
 
     void setFinalNodeView(FinalNodeView* _nodeView){
@@ -159,15 +160,27 @@ public:
     std::string getAffinity(){return affinity;};
     std::string getBias(){return bias;};
 
-    void setCppn(Cppn* _cppn){
-    	cppn = _cppn;
-    }
+//    void setCppn(Cppn* _cppn){
+//    	cppn = _cppn;
+//    }
 
     void redraw();
 
     void setPrevPos(QPointF point);
     QPointF getPrevPos();
+    void updatePosition();
 
+    void setDepth(int _depth){
+    	depth =_depth;
+    }
+
+    int getDepth(){
+    	return depth;
+    }
+
+    void finishImage(){
+    	update();
+    }
 
 
     size_t y_index;
@@ -177,10 +190,17 @@ public:
     static const int node_height = 40;
     static const int half_width = 20;
     static const int half_height = 20;
-    static const int footerBarSize = 15;
+    static const int footerBarSize = 10;
+    static const int headerBarSize = 10;
+
+signals:
+	void updatePositionsRequest();
+	void positionChanged(Node*);
+	void updateRequest(Node*);
+	void imageChanged();
 
 protected:
-	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
+//	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -189,7 +209,7 @@ protected:
 private:
     QList<Edge *> incomingEdgeList;
     QList<Edge *> outgoingEdgeList;
-    GraphWidget *graph;
+//    CppnWidget *graph;
     QImage* pixels;
 
     std::string branch;
@@ -204,11 +224,13 @@ private:
     ActivationFunctionPt activationFunction;
 
     size_t index;
-    NodeView* nodeView;
+//    NodeView* nodeView;
     FinalNodeView* finalNodeView;
-    Cppn* cppn;
+//    Cppn* cppn;
 
     QPointF previousPosition;
+
+    int depth;
 
 };
 //! [0]

@@ -8,9 +8,11 @@
 
 
 #include "CE_CommandChangeLabelColor.h"
-#include "CE_LabelWidget.h"
+#include "CE_Label.h"
 
-CommandChangeLabelColor::CommandChangeLabelColor(LabelWidget* labelWidget): labelWidget(labelWidget) {
+#include <QColorDialog>
+
+CommandChangeLabelColor::CommandChangeLabelColor(Label* labelWidget): labelWidget(labelWidget) {
 	previousColor = labelWidget->getColor();
 	color = QColorDialog::getColor(Qt::white);
     ok = color.isValid();

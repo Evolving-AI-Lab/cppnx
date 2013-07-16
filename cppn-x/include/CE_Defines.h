@@ -56,10 +56,26 @@
 #define EDGE_TYPE 2
 #define NODEVIEW_TYPE 3
 #define FINALVIEW_TYPE 4
+#define SELECTABLE_OBJECT_TYPE 5
+#define LABELABLE_OBJECT_TYPE 6
+#define LABEL_TYPE 7
 
 #define SET_WEIGHT_ID 1
 #define RESET_WEIGHT_ID 2
 #define SET_POS_ID 3
+#define SET_BOOKEND_ID 4
+
+#define IMAGE_WIDTH 256
+#define IMAGE_HEIGHT 256
+
+//#define SELECTED_COLOR Qt::blue
+//#define CONTEXT_EVENT_COLOR Qt::cyan
+
+#define SELECTED_COLOR QColor(150,200,255)
+#define CONTEXT_EVENT_COLOR QColor(226,226,255)
+
+//    static const int width = 256;
+//    static const int height = 256;
 
 enum inputs{
 	input_x =0,

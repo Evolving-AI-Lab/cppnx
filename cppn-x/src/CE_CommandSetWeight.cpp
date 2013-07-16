@@ -43,7 +43,7 @@ void CommandSetWeight::undo(){
 		triple.first->setWeight(triple.second.first, update);
 //		std::cout << "Undo: " << triple.second.first << std::endl;
 	}
-	if(!update) edgeTriples[0].first->getCppn()->updateNodes();
+	if(!update) edgeTriples[0].first->updateAll();
 }
 
 void CommandSetWeight::redo(){
@@ -52,7 +52,7 @@ void CommandSetWeight::redo(){
 		triple.first->setWeight(triple.second.second, update);
 //		std::cout << "Redo: " << triple.second.second << std::endl;
 	}
-	if(!update) edgeTriples[0].first->getCppn()->updateNodes();
+	if(!update) edgeTriples[0].first->updateAll();
 }
 
 bool CommandSetWeight::mergeWith(const QUndoCommand *other){
@@ -70,10 +70,10 @@ bool CommandSetWeight::mergeWith(const QUndoCommand *other){
     	qreal otherCurrentWeight = otherSetWeight->edgeTriples[i].second.second;
     	weightPair_t weightPair;
 
-    	if(thisPreviousWeight == otherCurrentWeight){
-    		weightPair = weightPair_t(otherPreviousWeight, thisCurrentWeight);
-    	} else if(otherPreviousWeight == thisCurrentWeight){
+    	if(otherPreviousWeight == thisCurrentWeight){
     		weightPair = weightPair_t(thisPreviousWeight, otherCurrentWeight);
+    	} else if(thisPreviousWeight == otherCurrentWeight){
+    		weightPair = weightPair_t(otherPreviousWeight, thisCurrentWeight);
     	} else{
     		return false;
     	}

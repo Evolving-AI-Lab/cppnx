@@ -8,20 +8,23 @@
 #ifndef CE_LABELABLEOBJECT_H_
 #define CE_LABELABLEOBJECT_H_
 
-#include "CE_LabelWidget.h"
-#include <QGraphicsItem>
+#include "CE_Label.h"
+#include "CX_SelectableObject.h"
 
-class LabelWidget;
-class Window;
+class Label;
 
-class LabelableObject : public QGraphicsItem {
+class LabelableObject : public SelectableObject {
+	Q_OBJECT
 public:
-	LabelableObject(Window* window, LabelWidget* label = 0, QString note = "");
+	LabelableObject(Label* label = 0, QString note = "");
 
 	virtual ~LabelableObject();
 
-	LabelWidget* getLabel();
-	void setLabel(LabelWidget* _label);
+    enum { Type = UserType + LABELABLE_OBJECT_TYPE };
+    int type() const { return Type; }
+
+	Label* getLabel();
+	void setLabel(Label* _label);
 
 	QString getNote(){
 		return note;
@@ -31,10 +34,11 @@ public:
 		note = _note;
 	}
 
+
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
-	LabelWidget* label;
+	Label* label;
 	QString note;
 };
 

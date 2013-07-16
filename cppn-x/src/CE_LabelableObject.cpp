@@ -7,11 +7,13 @@
 
 #include "CE_LabelableObject.h"
 #include "iostream"
+#include <QMenu>
+#include <QGraphicsSceneContextMenuEvent>
 //
 
-LabelableObject::LabelableObject(Window* window, LabelWidget* _label, QString note): note(note){
+LabelableObject::LabelableObject(Label* _label, QString note): note(note){
 	if(_label == 0){
-		label = new LabelWidget(window);
+		label = new Label();
 		label->registerObject();
 	} else {
 		label = _label;
@@ -24,14 +26,16 @@ LabelableObject::~LabelableObject() {
 	label->unregisterObject();
 }
 
-LabelWidget* LabelableObject::getLabel(){
+Label* LabelableObject::getLabel(){
 	return label;
 }
 
-void LabelableObject::setLabel(LabelWidget* _label){
+void LabelableObject::setLabel(Label* _label){
 	label->unregisterObject();
+	label->setHighlightOff();
 	label = _label;
 	label->registerObject();
+	label->setHighlightOn();
 }
 
 QVariant LabelableObject::itemChange(GraphicsItemChange change, const QVariant &value)
@@ -51,5 +55,5 @@ QVariant LabelableObject::itemChange(GraphicsItemChange change, const QVariant &
         break;
     };
 
-    return QGraphicsItem::itemChange(change, value);
+    return SelectableObject::itemChange(change, value);
 }
