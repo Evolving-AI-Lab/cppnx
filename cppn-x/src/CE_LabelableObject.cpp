@@ -21,6 +21,24 @@ LabelableObject::LabelableObject(Label* _label, QString note): note(note){
 	}
 }
 
+LabelableObject::LabelableObject(std::iostream &stream, std::map<std::string, Label*> labelMap){
+	std::string labelId;
+	std::string noteStr;
+
+	stream >> labelId;
+//	stream >> noteStr;
+	noteStr = util::readString(stream);
+
+//	std::cout << "Label: " << labelId <<std::endl;
+//	std::cout << "Note: " << noteStr <<std::endl;
+
+	note = QString(noteStr.c_str());
+	label = labelMap[labelId];
+//	std::cout << "Label-pt: " << label << std::endl;
+	if(!label) label = new Label();
+	label->registerObject();
+}
+
 //
 LabelableObject::~LabelableObject() {
 	label->unregisterObject();

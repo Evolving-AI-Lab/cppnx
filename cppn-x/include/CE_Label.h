@@ -41,10 +41,14 @@ class Label : public DragAndDropObject{
 public:
 
 	Label(QString text = "", QColor color = Qt::white, bool isDeleted = true);
+	Label(std::iostream &stream);
+
 	virtual ~Label();
 
+	void init();
+
     enum { Type = UserType + LABEL_TYPE };
-    int type() const { return Type; }
+    virtual int type() const { return Type; }
 
 //	QLabel* getLabel(){
 //		return label;
@@ -89,13 +93,18 @@ public:
 //	}
 
 	void registerObject(){
+//		std::cout << "Label: " << this << " Registerd: " << registerdObjects << std::endl;
 		registerdObjects++;
+//		std::cout << "Label: " << this << " Registerd: " << registerdObjects << std::endl;
 	}
 
 	void unregisterObject(){
+//		std::cout << "Label: " << this << " Registerd: " << registerdObjects << std::endl;
 		registerdObjects--;
+//		std::cout << "Label: " << this << " Unregisterd: " << registerdObjects << std::endl;
 
 		if(registerdObjects==0){
+//			std::cout << "Destroyed" <<std::endl;
 			delete this;
 		}
 	}

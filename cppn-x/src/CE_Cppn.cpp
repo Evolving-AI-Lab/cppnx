@@ -27,22 +27,22 @@ void Cppn::addNode(Node* QTnode){
 	} else if(QTnode->getXmlLabel() == INPUT_BIAS){
 		nodes[input_b]=QTnode;
 		QTnode->setIndex(input_b);
-	} else if(QTnode->getXmlLabel() == OUTPUT_INK){
-		finalNodeView->setValueImage(QTnode->getImage());
-//		QTnode->setFinalNodeView(finalNodeView);
-		nodes.push_back(QTnode);
-	} else if(QTnode->getXmlLabel() == OUTPUT_SATURATION){
-//		QTnode->setFinalNodeView(finalNodeView);
-		finalNodeView->setSaturationImage(QTnode->getImage());
-		nodes.push_back(QTnode);
-	} else if(QTnode->getXmlLabel() == OUTPUT_HUE){
-//		QTnode->setFinalNodeView(finalNodeView);
-		finalNodeView->setHueImage(QTnode->getImage());
-		nodes.push_back(QTnode);
-	} else if(QTnode->getXmlLabel() == OUTPUT_BRIGTHNESS){
-//		QTnode->setFinalNodeView(finalNodeView);
-		finalNodeView->setValueImage(QTnode->getImage());
-		nodes.push_back(QTnode);
+//	} else if(QTnode->getXmlLabel() == OUTPUT_INK){
+//		finalNodeView->setValueImage(QTnode->getImage());
+////		QTnode->setFinalNodeView(finalNodeView);
+//		nodes.push_back(QTnode);
+//	} else if(QTnode->getXmlLabel() == OUTPUT_SATURATION){
+////		QTnode->setFinalNodeView(finalNodeView);
+//		finalNodeView->setSaturationImage(QTnode->getImage());
+//		nodes.push_back(QTnode);
+//	} else if(QTnode->getXmlLabel() == OUTPUT_HUE){
+////		QTnode->setFinalNodeView(finalNodeView);
+//		finalNodeView->setHueImage(QTnode->getImage());
+//		nodes.push_back(QTnode);
+//	} else if(QTnode->getXmlLabel() == OUTPUT_BRIGTHNESS){
+////		QTnode->setFinalNodeView(finalNodeView);
+//		finalNodeView->setValueImage(QTnode->getImage());
+//		nodes.push_back(QTnode);
 	} else {
 		nodes.push_back(QTnode);
 	}
@@ -96,10 +96,10 @@ void Cppn::updateNodes(){
 		phenotypeNodes[currentNode]->updateAll();
 	}
 
-	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
-		finalNodeView->updateFinalView(xy_index);
-	}
-	finalNodeView->update();
+//	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+//		finalNodeView->updateFinalView(xy_index);
+//	}
+//	finalNodeView->update();
 }
 
 std::vector< std::vector <Node*> > Cppn::buildLayers(){
@@ -386,10 +386,10 @@ void Cppn::updateFromLink(Edge* edge){
 		phenotypeNodes[toUpdate[i]]->updateAll();
 	}
 
-	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
-		finalNodeView->updateFinalView(xy_index);
-	}
-	finalNodeView->update();
+//	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+//		finalNodeView->updateFinalView(xy_index);
+//	}
+//	finalNodeView->update();
 }
 
 

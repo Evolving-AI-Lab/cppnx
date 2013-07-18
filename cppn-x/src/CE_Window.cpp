@@ -173,8 +173,10 @@ void Window::load(){
 		labelWidget->setLabels(parser.getLabels());
 
 		std::cout << "Loading nodeviews" << std::endl;
-		nodeviewWidget->clearNodeViews();
-		nodeviewWidget->addNodeView(cppnWidget->getCppn()->getFinalNodeView());
+		nodeviewWidget->setNodeviews(parser.getNodeviews());
+//		nodeviewWidget->addNodeView(cppnWidget->getCppn()->getFinalNodeView());
+
+		std::cout << "Loading file-information" << std::endl;
 		fileInformation = parser.getFileInformation();
 
 		std::cout << "Positioning nodes" << std::endl;
@@ -345,7 +347,7 @@ void Window::actualSave(const QString& fileName){
 	if(fileName.isEmpty()) return;
 	try{
 		CppnWriter writer(fileName.toStdString());
-		writer.write(cppnWidget->getCppn(), labelWidget->getLabels(), fileInformation);
+		writer.write(cppnWidget->getCppn(), labelWidget->getLabels(), fileInformation, nodeviewWidget->getNodeviews());
 		fileInformation->newFile = false;
 		fileInformation->fileName = fileName;
 		setWindowModified(false);

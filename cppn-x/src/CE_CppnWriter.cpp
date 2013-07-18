@@ -11,7 +11,7 @@
 #include "CE_Xml.h"
 #include "CE_Util.h"
 
-const std::string CppnWriter::version = "1.1";
+const std::string CppnWriter::version = "1.2";
 
 #define writeEach(template_str,count,writer) open(template_str, count); for(size_t i=0; i<count; i++){writer;} close(template_str);
 
@@ -79,7 +79,7 @@ void CppnWriter::openClose(std::string template_str, ParamType param){
 }
 
 
-void CppnWriter::write(Cppn* cppn, QList<Label*> labels, FileInformation* fileInformation){
+void CppnWriter::write(Cppn* cppn, QList<Label*> labels, FileInformation* fileInformation, QList<NodeView*> nodeviews){
 	output << ce_xml::getFirstLine() << "\n";
 	write(ce_xml::cppn_data, version);
 	open(ce_xml::data, fileInformation->dataVersion);
@@ -90,6 +90,7 @@ void CppnWriter::write(Cppn* cppn, QList<Label*> labels, FileInformation* fileIn
 	writeEach(ce_xml::buttons_count, labels.count(), writeColorButton(labels.at(i)););
 	writeEach(ce_xml::nodes_count, cppn->getNrOfNodes(), writeNode(cppn->getNode(i)););
 	writeEach(ce_xml::link_count, cppn->getNrOfEdges(), writeEdge(cppn->getEdge(i)););
+	writeEach(ce_xml::nodeviews_count, nodeviews.count(), writeNodeview(nodeviews.at(i)););
 
 	close(ce_xml::genomePhen);
 	close(ce_xml::data);
@@ -130,6 +131,7 @@ void CppnWriter::writeEdge(Edge* edge){
 	openClose(ce_xml::original_weight, util::toString(edge->getOriginalWeight()));
 	write(ce_xml::color_label, edge->getLabel()->getIndex());
 	openClose(ce_xml::text, edge->getNote().toStdString());
+	write(ce_xml::bookends, edge->getBookendStart(), edge->getBookendEnd(), edge->getStepsize());
 	close(ce_xml::link);
 }
 
@@ -139,4 +141,10 @@ void CppnWriter::writeColorButton(Label* colorButton){
 	openClose(ce_xml::text, colorButton->getText().toStdString());
 	write(ce_xml::color, colorButton->getColor().red(), colorButton->getColor().green(), colorButton->getColor().blue());
 	close(ce_xml::color_button);
+}
+
+void CppnWriter::writeNodeview(NodeView* nodeview){
+	open(ce_xml::nodeview);
+	write(ce_xml::identifier, nodeview->getNodeBranch(), nodeview->getNodeId());
+	close(ce_xml::nodeview);
 }

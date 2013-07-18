@@ -115,6 +115,9 @@ LabelWidget::~LabelWidget() {
 void LabelWidget::clear(){
 	QList<Label*> toDelete;
 	for(int i=0; i<dragAndDropLabelBar->getNrOfItems(); i++){
+//		std::cout << "Nr of items: " << dragAndDropLabelBar->getNrOfItems() << " item: " << i <<std::endl;
+//		std::cout << "Item address: " << dragAndDropLabelBar->getItem(i) << std::endl;
+//		std::cout << "Item type: " << dragAndDropLabelBar->getItem(i)->type() << std::endl;
 		Label* label = qgraphicsitem_cast<Label*>(dragAndDropLabelBar->getItem(i));
 		if(label) toDelete.append(label);
 	}

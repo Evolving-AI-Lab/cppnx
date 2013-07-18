@@ -34,6 +34,26 @@ public:
 	Type3 third;
 };
 
+inline std::string readString(std::iostream &stream){
+	std::string temp;
+	std::string result;
+
+	stream >> temp;
+//	temp.substr(1);
+	result.append(temp);
+
+	while (temp.substr(temp.size()-1, 1) != "\""){
+//		std::cout << temp.substr(temp.size()-1, 1) << std::endl;
+		stream >> temp;
+		result.append(" ");
+		result.append(temp);
+	}
+
+	return result.substr(1, result.size()-2);
+
+}
+
+
 template <typename Type1, typename Type2, typename Type3>
 inline Type1 multiCast(QGraphicsItem *item){
 	Type1 convertedItem = qgraphicsitem_cast<Type1>(item);
@@ -60,7 +80,7 @@ inline QString toQString(Type value){
 template <typename Type>
 inline std::string toString(Type value){
 	std::ostringstream stream;
-	stream << std::setprecision(16) << value;
+	stream << std::setprecision(17) << value;
 	return stream.str();
 }
 

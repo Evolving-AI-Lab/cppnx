@@ -11,23 +11,40 @@
 #include <cmath>
 
 NodeView::NodeView(Node* node): node(node){
-    setFlag(ItemIsSelectable);
-    setCacheMode(DeviceCoordinateCache);
-//    setPixels(pixels);
-    if(node){
-    	pixels = node->getImage();
-//    	setDragImage(pixels);
-    	compatibillityId = 1;
-    }
+	init();
+}
 
-    setIconSize(QSize(node_width, node_height));
-    setIconTranslate(QPoint(half_width, half_height));
+NodeView::NodeView(std::iostream &stream, std::map<std::string, Node*> nodeMap){
+	std::string branch;
+	std::string id;
+
+	stream >> branch;
+	stream >> id;
+
+	node = nodeMap[branch + "_" + id];
+
+	init();
 }
 
 NodeView::~NodeView() {
 //	delete (pixels);
 }
 
+
+void NodeView::init(){
+    setFlag(ItemIsSelectable);
+    setCacheMode(DeviceCoordinateCache);
+//    setPixels(pixels);
+    if(node){
+    	pixels = node->getImage();
+//    	setDragImage(pixels);
+
+    }
+    compatibillityId = 1;
+
+    setIconSize(QSize(node_width, node_height));
+    setIconTranslate(QPoint(half_width, half_height));
+}
 
 QRectF NodeView::boundingRect() const
 {

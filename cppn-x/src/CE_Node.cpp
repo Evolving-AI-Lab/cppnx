@@ -74,12 +74,78 @@ Node::Node(
       activationFunction_str(activationFunction_str),
       xml_label(xml_label),
       affinity(affinity),
-      bias(bias),
+      bias(bias)
 //      nodeView(0),
-      finalNodeView(0),
-      depth(0)
+//      finalNodeView(0),
+//      depth(0)
 {
 
+	init();
+//    setFlag(ItemIsMovable);
+//    setFlag(ItemIsSelectable);
+//    setFlag(ItemSendsGeometryChanges);
+//    setCacheMode(DeviceCoordinateCache);
+//    setZValue(1);
+//
+//	if(activationFunction_str == XML_GAUSSIAN){
+//		activationFunction = act_functions::gaussian;
+//		activationFunction_short = "gau()";
+//	} else if(activationFunction_str == XML_LINEAR){
+//		activationFunction = act_functions::identity;
+//		activationFunction_short = "lin()";
+//	} else if(activationFunction_str == XML_SIN){
+//		activationFunction = act_functions::sin;
+//		activationFunction_short = "sin()";
+//	} else if(activationFunction_str == XML_SIGMOID){
+//		activationFunction = act_functions::sigmoid;
+//		activationFunction_short = "sig()";
+//	} else if(activationFunction_str == XML_COS){
+//		activationFunction = act_functions::cos;
+//		activationFunction_short = "cos()";
+//	} else {
+//		throw CeParseException("File contains unknown activation function: '" + activationFunction_str + "'");
+//	}
+//
+//
+//    pixels = new QImage(width, height, QImage::Format_RGB32);
+//    pixels->fill(0);
+//    setPixels(pixels);
+}
+
+Node::Node(std::iostream &stream, std::map<std::string, Label*> labelMap):LabelableObject(stream, labelMap){
+	double x, y;
+
+	stream >> affinity;
+//	std::cout << "Affinity: " << affinity << std::endl;
+	stream >> bias;
+//	std::cout << "bias: " << bias << std::endl;
+	xml_label = util::readString(stream);
+//	stream >> xml_label;
+//	std::cout << "xml_label: " << xml_label << std::endl;
+	stream >> nodetype;
+//	std::cout << "nodetype: " << nodetype << std::endl;
+	stream >> branch;
+//	std::cout << "branch: " << branch << std::endl;
+	stream >> id;
+//	std::cout << "id: " << id << std::endl;
+	stream >> activationFunction_str;
+//	std::cout << "activationFunction_str: " << activationFunction_str << std::endl;
+	stream >> x;
+//	std::cout << "x: " << x << std::endl;
+	stream >> y;
+//	std::cout << "y: " << y << std::endl;
+
+	setPos(x, y);
+	init();
+}
+
+Node::~Node(){
+	delete (pixels);
+}
+
+void Node::init(){
+	depth = 0;
+	index = 0;
 
     setFlag(ItemIsMovable);
     setFlag(ItemIsSelectable);
@@ -106,15 +172,8 @@ Node::Node(
 		throw CeParseException("File contains unknown activation function: '" + activationFunction_str + "'");
 	}
 
-
-    pixels = new QImage(width, height, QImage::Format_RGB32);
+    pixels = new QImage(256, 256, QImage::Format_RGB32);
     pixels->fill(0);
-//    setPixels(pixels);
-}
-//! [0]
-
-Node::~Node(){
-	delete (pixels);
 }
 
 void Node::addIncommingEdge(Edge *edge)

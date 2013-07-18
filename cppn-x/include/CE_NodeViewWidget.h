@@ -25,6 +25,23 @@ public:
 	void addNodeView(NodeView* node);
 	void insertNodeView(NodeView* nodeView, size_t index);
 
+	void setNodeviews(QList<NodeView*> nodeviews){
+		clearNodeViews();
+		foreach(NodeView* nodeview, nodeviews){
+			addNodeView(nodeview);
+		}
+	}
+
+	QList<NodeView*> getNodeviews(){
+		QList<NodeView*> result;
+		foreach(QGraphicsItem* item, objects){
+			NodeView* nodeview = util::multiCast<NodeView*, FinalNodeView*>(item);
+			if(nodeview) result.append(nodeview);
+		}
+
+		return result;
+	}
+
 	static const int sidebarMargin = 20;
     static const int betweenNodeMargin = 20;
 

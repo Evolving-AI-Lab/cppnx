@@ -83,7 +83,11 @@ public:
     		Label* label = 0,
     		std::string note = ""
     );
+
+    Node(std::iostream &stream, std::map<std::string, Label*> labelMap);
     ~Node();
+
+    void init();
 
     void addIncommingEdge(Edge *edge);
     void addOutgoingEdge(Edge *edge);
@@ -153,9 +157,9 @@ public:
     	return pixels;
     }
 
-    void setFinalNodeView(FinalNodeView* _nodeView){
-    	finalNodeView = _nodeView;
-    }
+//    void setFinalNodeView(FinalNodeView* _nodeView){
+//    	finalNodeView = _nodeView;
+//    }
 
     std::string getAffinity(){return affinity;};
     std::string getBias(){return bias;};
@@ -225,7 +229,7 @@ private:
 
     size_t index;
 //    NodeView* nodeView;
-    FinalNodeView* finalNodeView;
+//    FinalNodeView* finalNodeView;
 //    Cppn* cppn;
 
     QPointF previousPosition;

@@ -84,6 +84,10 @@ public:
 		return edges;
 	}
 
+	QList<NodeView*> getNodeviews(){
+		return nodeviews;
+	}
+
 	FileInformation* getFileInformation(){
 		return fileInformation;
 	}
@@ -95,31 +99,84 @@ private:
 	void parseWhiteSpace(std::string::iterator& it);
 
 
-//	void parseLine(boost::regex regex);
-//	bool tryParseLine(boost::regex regex);
-//	bool parseCount(boost::regex regex=count);
-	void parseLine(std::string regex);
-	bool tryParseLine(std::string regex);
-//	bool parseCount(std::string regex);
+
+//	void parseLine(std::string regex);
+	bool parseLine(std::string regex, bool stopOnFail = true);
+//	bool tryParseLine(std::string regex);
+	void parseLine(std::string regex, bool stopOnFail, std::vector<std::string> &tokens, size_t index, std::string defaultValue = "", std::string separetor = " ", std::string minVersion = "0.0", std::string maxVersion = "1.2");
+	void copyTo(std::vector<std::string> &tokens, size_t from, size_t to, std::string fromSeparetor = " ", std::string toSeparetor = " ", std::string minVersion = "0.0", std::string maxVersion = "1.2");
+
+
 	bool parseCount(std::string template_str);
-	void parseHeader(bool store);
+	void parseHeader(std::vector<std::string> &tokens);
 	void parseNode(bool store);
 	void parseEdge(bool store);
-//	void parseFooter(bool store);
-	void parseColorButton(bool store);
-	void parseGenome(bool store);
-	void parseParent(bool store);
 
+	void parseNodeView(bool store);
+	void parseColorButton(bool store);
+	void parseGenome(bool store, std::vector<std::string> &tokens);
+	void parseParent(bool store);
+	void toStream(std::vector<std::string> &tokens, std::iostream &stream);
+
+	void toStream(std::string tokens[], std::iostream &stream);
+
+	enum edge{
+		label = 0,
+		note,
+		marking,
+		source,
+		target,
+		weight,
+		originalWeight,
+		bookends,
+		edgeSize
+	};
+
+	enum node{
+		nodeLabel = 0,
+		nodeNote,
+		affinity,
+		bias,
+		special,
+		type,
+		nodeIdentifier,
+		activationFunction,
+		position,
+		nodeSize
+	};
+
+	enum label{
+		labelname= 0,
+		rgb,
+		labelid,
+		labelSize
+	};
+
+	enum fileInformation{
+		cppnxDataVersion= 0,
+		picBreederDataVersion,
+		genome,
+		genomeIdentifier,
+		fileInformationSize
+	};
+
+	enum nodeview{
+		nodeviewIdentifier = 0,
+		nodeviewSize
+	};
 
 	std::istream* myfile;
 //	Cppn* cppn;
 	FileInformation* fileInformation;
 	QList<Label*> labels;
 	QList<Node*> nodes;
+	QList<NodeView*> nodeviews;
 	QList<Edge*> edges;
 
-//	CppnWidget* widget;
-//	boost::smatch m;
+	Node* value;
+	Node* hue;
+	Node* saturation;
+
 	std::vector<std::string> m;
 
 	std::string data_version;
@@ -129,8 +186,8 @@ private:
 
 	int parseCounter;
 
-	std::map<std::string, Label*> oldLabelMap;
-	std::map<id_t, Label*> labelMap;
+//	std::map<std::string, Label*> oldLabelMap;
+	std::map<std::string, Label*> labelMap;
     std::map<std::string, Node*> nodeMap;
 
 };

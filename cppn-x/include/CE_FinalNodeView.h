@@ -44,6 +44,22 @@ public:
 		valueImage = image;
 	}
 
+	void setHueNode(Node* node){
+		hueImage = node->getImage();
+		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
+	}
+
+	void setSaturationNode(Node* node){
+		saturationImage = node->getImage();
+		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
+	}
+
+	void setValueNode(Node* node){
+		valueImage = node->getImage();
+		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
+	}
+
+
 //	char getHue(const size_t& index){
 //		return hue[index];
 //	}

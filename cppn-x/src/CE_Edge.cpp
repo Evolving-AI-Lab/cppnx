@@ -71,7 +71,7 @@ Edge::Edge(std::string branch,
       labelMode(labelMode),
       branch(branch),
       id(id),
-      arrowSize(5),
+//      arrowSize(5),
       currentWeight(weight),
       originalWeight(original_weight),
       _flash(0),
@@ -89,9 +89,48 @@ Edge::Edge(std::string branch,
 
 //    cppn=0;
 }
-//! [0]
 
-//! [1]
+Edge::Edge(std::iostream &stream, std::map<std::string, Node*> nodeMap, std::map<std::string, Label*> labelMap):LabelableObject(stream, labelMap)
+{
+	std::string sourceId;
+	std::string targetId;
+
+//	int test;
+//	stream >> test;
+//	std::cout << test << std::endl;
+
+	stream >> branch;
+//	std::cout << "Branch: "<< branch << std::endl;
+	stream >> id;
+//	std::cout << "Id: "<< id << std::endl;
+	stream >> sourceId;
+//	std::cout << "Source: "<< sourceId << std::endl;
+	stream >> targetId;
+//	std::cout << "Target: "<< targetId << std::endl;
+	stream >> currentWeight;
+//	std::cout << "Current weight: " << std::setprecision(17) << currentWeight << std::endl;
+	stream >> originalWeight;
+//	std::cout << "Original weight: " << originalWeight << std::endl;
+	stream >> bookendStart;
+//	std::cout << bookendStart << std::endl;
+	stream >> bookendEnd;
+//	std::cout << bookendEnd << std::endl;
+	stream >> stepSize;
+//	std::cout << stepSize << std::endl;
+
+	_flash = 0;
+	labelMode = 0;
+	source = nodeMap[sourceId];
+	dest = nodeMap[targetId];
+
+	this->setFlag(QGraphicsItem::ItemIsSelectable);
+	this->setCacheMode(NoCache);
+    source->addOutgoingEdge(this);
+    dest->addIncommingEdge(this);
+    adjust();
+}
+
+
 Node* Edge::sourceNode() const
 {
     return source;
@@ -152,12 +191,12 @@ QRectF Edge::boundingRect() const
         return QRectF();
 
     qreal penWidth = 1;
-    qreal extra = (penWidth + arrowSize) / 2.0;
+//    qreal extra = (penWidth + arrowSize) / 2.0;
 
     return QRectF(sourcePoint, QSizeF(destPoint.x() - sourcePoint.x(),
                                       destPoint.y() - sourcePoint.y()))
-        .normalized()
-        .adjusted(-extra, -extra, extra, extra);
+        .normalized();
+//        .adjusted(-extra, -extra, extra, extra);
 }
 //! [3]
 

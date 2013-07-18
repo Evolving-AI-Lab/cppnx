@@ -17,6 +17,7 @@ class LabelableObject : public SelectableObject {
 	Q_OBJECT
 public:
 	LabelableObject(Label* label = 0, QString note = "");
+	LabelableObject(std::iostream &stream, std::map<std::string, Label*> labelMap);
 
 	virtual ~LabelableObject();
 

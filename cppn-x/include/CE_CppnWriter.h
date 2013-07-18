@@ -20,6 +20,7 @@ class Cppn;
 class Node;
 class Edge;
 class Label;
+class NodeView;
 
 class CppnWriter {
 public:
@@ -31,7 +32,7 @@ public:
 		output.open(filename.c_str());
 	}
 
-	void write(Cppn* cppn, QList<Label*> labels, FileInformation* fileInformation);
+	void write(Cppn* cppn, QList<Label*> labels, FileInformation* fileInformation, QList<NodeView*> nodeviews);
 
 private:
 
@@ -87,6 +88,7 @@ private:
 	void writeNode(Node* node);
 	void writeEdge(Edge* node);
 	void writeColorButton(Label* colorButton);
+	void writeNodeview(NodeView* nodeview);
 
 	std::ofstream output;
 //	 QDataStream output;

@@ -15,6 +15,20 @@ public:
 	}
 //	virtual ~FileInformation();
 
+	void init(std::iostream &stream){
+		std::string cppnxDataVersion;
+		stream >> cppnxDataVersion;
+		stream >> dataVersion;
+		stream >> age;
+		stream >> phenotype;
+		stream >> branch;
+		stream >> id;
+
+		if(cppnxDataVersion == "0.0"){
+			newFile=true;
+		}
+	}
+
 	void addParent(std::string branch = "unknown", std::string id = "unknown"){
 		parent_branches.push_back(branch);
 		parent_ids.push_back(id);

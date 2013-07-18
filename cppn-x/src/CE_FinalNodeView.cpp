@@ -35,6 +35,7 @@ FinalNodeView::FinalNodeView():NodeView(0) {
 	hueImage=0;
 	saturationImage=0;
 	valueImage=0;
+	compatibillityId = 1;
 }
 
 FinalNodeView::~FinalNodeView() {

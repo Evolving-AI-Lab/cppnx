@@ -23,6 +23,7 @@ class NodeView : public DragAndDropObject {
 public:
 //	NodeView(Node* node = 0, int width = 256, int height = 256);
 	NodeView(Node* node = 0);
+	NodeView(std::iostream &stream, std::map<std::string, Node*> nodeMap);
 	virtual ~NodeView();
 
     enum { Type = UserType + NODEVIEW_TYPE };
@@ -48,6 +49,26 @@ public:
     	return pixels;
     }
 
+    Node* getNode(){
+    	return node;
+    }
+
+    std::string getNodeBranch(){
+    	if(node){
+    		return node->getBranch();
+    	} else {
+    		return "";
+    	}
+    }
+
+    std::string getNodeId(){
+    	if(node){
+    		return node->getId();
+    	} else {
+    		return "final";
+    	}
+    }
+
 //    size_t getPosition(){
 //    	return position;
 //    }
@@ -65,6 +86,8 @@ public slots:
 	void update();
 
 protected:
+	void init();
+
     QImage* pixels;
     Node* node;
 //    size_t position;

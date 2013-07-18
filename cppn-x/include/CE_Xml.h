@@ -23,6 +23,7 @@ const std::string	link= ("link");
 const std::string	marking= ("marking branch id");
 const std::string	activation= ("activation");
 const std::string	color= ("color r g b");
+//const std::string	color_old= ("color");
 const std::string	position= ("position x y");
 const std::string	source= ("source branch id");
 const std::string	target= ("target branch id");
@@ -45,7 +46,10 @@ const std::string	identifier= ("identifier branch id");
 const std::string	parent_count= ("parents count");
 const std::string	color_label= ("color-label id");
 
+const std::string	bookends= ("bookends start end step");
 
+const std::string	nodeview= ("nodeview");
+const std::string	nodeviews_count= ("nodeviews count");
 
 inline std::queue<std::string> split(std::string str){
 	std::queue<std::string> result;

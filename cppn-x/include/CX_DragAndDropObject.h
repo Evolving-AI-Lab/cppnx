@@ -16,6 +16,9 @@ public:
 	DragAndDropObject();
 	virtual ~DragAndDropObject();
 
+    enum { Type = UserType + DRAG_AND_DROP_OBJECT_TYPE };
+    virtual int type() const { return Type; }
+
 	void setDragImage(QPixmap* _dragImage){
 		dragImage = _dragImage;
 	}

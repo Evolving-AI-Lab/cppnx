@@ -50,7 +50,7 @@ public:
 
 	{
 //		finalNodeView = new FinalNodeView(width, height);
-		finalNodeView = new FinalNodeView();
+//		finalNodeView = new FinalNodeView();
 	}
 
 	~Cppn(){
@@ -154,9 +154,9 @@ public:
 
 
 
-	FinalNodeView* getFinalNodeView(){
-		return finalNodeView;
-	}
+//	FinalNodeView* getFinalNodeView(){
+//		return finalNodeView;
+//	}
 
     static const int width = 256;
     static const int height = 256;
@@ -216,7 +216,7 @@ private:
 //    std::vector<std::string> footerLines;
 
 //    bool newFile;
-    FinalNodeView* finalNodeView;
+//    FinalNodeView* finalNodeView;
 
     //File only data
 //    std::string age;

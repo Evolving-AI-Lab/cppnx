@@ -15,19 +15,40 @@
 
 Label::Label(QString text, QColor color, bool isDeleted):
 color(color){
+	deleted = isDeleted;
+	labelName = text;
+	init();
+}
+
+Label::Label(std::iostream &stream){
+	std::string text;
+	int r;
+	int g;
+	int b;
+
+//	stream >> colorStr;
+	text = util::readString(stream);
+	stream >> r;
+	stream >> g;
+	stream >> b;
+
+	labelName = QString(text.c_str());
+	color = QColor(r,g,b);
+	deleted = false;
+
+	init();
+}
+
+void Label::init(){
 	highlight=false;
 	id=0;
 	registerdObjects=0;
-	deleted = isDeleted;
+
 
 	//Create actions
-	colorAction = new QAction(text, this);
+	colorAction = new QAction(labelName, this);
 	changeColorAction = new QAction(tr("Change color..."), this);
 	renameAction = new QAction(tr("Rename..."), this);
-
-
-	//Create label
-	labelName = text;
 
 	//Create colored button
 	colorButton = new QPushButton();
@@ -62,7 +83,6 @@ color(color){
 	setIconSize(QSize(200, 50));
 	setPreferredSize(200, 50);
 }
-
 
 Label::~Label() {
 	delete(colorButton);

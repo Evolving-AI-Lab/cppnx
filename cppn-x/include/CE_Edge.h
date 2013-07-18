@@ -60,7 +60,6 @@ public:
     enum LabelMode {onlyLabels, onlyConnectionSign, both};
 
     Edge(
-//    		CppnWidget *graphWidget,
     		std::string branch,
     		std::string id,
     		Node *sourceNode,
@@ -76,6 +75,8 @@ public:
     		QGraphicsItem *parent = 0,
     		QGraphicsScene *scene = 0
     		);
+
+    Edge(std::iostream &stream, std::map<std::string, Node*> nodeMap, std::map<std::string, Label*> labelMap);
 
     Node *sourceNode() const;
     Node *destNode() const;
@@ -184,7 +185,7 @@ private:
 
     QPointF sourcePoint;
     QPointF destPoint;
-    qreal arrowSize;
+//    qreal arrowSize;
  //   QString edge_id;
 
 //    CppnWidget *graphWidget;
