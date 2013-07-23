@@ -30,6 +30,7 @@ public slots:
 signals:
 	void requestCommandExecution(QUndoCommand*);
 	void sceneModified();
+	void focusChanged();
 
 protected:
 	void addContextMenuObject(SelectableObject* object){
@@ -40,6 +41,16 @@ protected:
 	void removeContextMenuObject(SelectableObject* object){
 		disconnect(object, SIGNAL(contextMenuEvent(SelectableObject*, bool)), this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
 		scene()->removeItem(object);
+	}
+
+	void focusInEvent(QFocusEvent * event){
+		emit focusChanged();
+		QGraphicsView::focusInEvent(event);
+	}
+
+	void focusOutEvent(QFocusEvent * event){
+		emit focusChanged();
+		QGraphicsView::focusOutEvent(event);
 	}
 };
 

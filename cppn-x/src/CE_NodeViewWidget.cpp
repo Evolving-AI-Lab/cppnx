@@ -30,11 +30,18 @@ DragAndDropGraphicsView(widget){
     deleteViewNodeAction->setStatusTip(tr("Remove the selected node from the sidebar"));
     deleteViewNodeAction->setDisabled(true);
 
+    saveImageAction = new QAction(tr("&Export nodes as jpg"), this);
+    saveImageAction->setStatusTip(tr("Saves the current images of the nodes as jpg pictures"));
+
     connect(deleteViewNodeAction, SIGNAL(triggered()), this, SLOT(deleteNodeView()));
     connect(scene()	, SIGNAL(selectionChanged()), this, SLOT(selectionUpdated()));
+    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
 
     nodeviewMenu = new QMenu(tr("nodeview"));
     nodeviewMenu->addAction(deleteViewNodeAction);
+    nodeviewMenu->addAction(saveImageAction);
+
+
 }
 
 NodeViewWidget::~NodeViewWidget() {
@@ -121,35 +128,29 @@ void NodeViewWidget::selectionUpdated(){
 	deleteViewNodeAction->setEnabled(nodeIsViewSelected);
 }
 
-//void NodeViewWidget::moveNodes(uint source, uint target){
-//	nodeViews.move(source, target);
-////	NodeView* temp = nodeViews[source];
-////	nodeViews[source] = nodeViews[target];
-////	nodeViews[target] = temp;
-//	setNodeviewPositions();
-//}
+void NodeViewWidget::saveImage(){
+	if(scene()->selectedItems().count() > 1){
+		QString captureDirectory = QFileDialog::getExistingDirectory(this, tr("Chose save directory"), "", QFileDialog::ShowDirsOnly);
+		if(captureDirectory.isEmpty()) return;
 
-//void NodeViewWidget::ContextMenuEvent(SelectableObject* object, bool begin){
-////	std::cout << object << " " << " begin: " << begin << " selected: " << object->isSelected() << std::endl;
-//
-//	if(object->isSelected()){
-//		foreach(QGraphicsItem* item, scene()->selectedItems()){
-////			SelectableObject* currentObject = util::multiCast<SelectableObject*, NodeView*, FinalNodeView*>(item);
-//			SelectableObject* currentObject = dynamic_cast <SelectableObject*>(item);
-//
-////			std::cout << currentObject << " type: " << item->type() - QGraphicsItem::UserType << std::endl;
-//			currentObject->setPartOfContextMenuEvent(begin);
-//			currentObject->update();
-//		}
-//	} else {
-//		if(begin){
-//			foreach(QGraphicsItem* item, scene()->selectedItems()){
-//				item->setSelected(false);
-//			}
-//			object->setSelected(true);
-//		}
-//
-//		object->setPartOfContextMenuEvent(begin);
-//		object->update();
-//	}
-//}
+		foreach(QGraphicsItem* item, scene()->selectedItems()){
+			NodeView* nodeview = util::multiCast<NodeView*, FinalNodeView*>(item);
+			if(nodeview){
+				QString newFileName;
+				if(nodeview->getNode()){
+					newFileName = captureDirectory + "/node_" + util::toQString(nodeview->getNode()->getBranch()) + "_" + util::toQString(nodeview->getNode()->getId()) + ".jpg";
+				} else {
+					newFileName = captureDirectory + "/node_final.jpg";
+				}
+				nodeview->getImage()->save(newFileName);
+			}
+		}
+	} else if(scene()->selectedItems().count() == 1) {
+		NodeView* nodeview = util::multiCast<NodeView*, FinalNodeView*>(scene()->selectedItems().front());
+		if(nodeview){
+			QString newFileName = QFileDialog::getSaveFileName(this, tr("Save Node Image"), "",tr("JPEG File (*.jpg);;All Files (*)"));
+			if(newFileName.isEmpty()) return;
+			nodeview->getImage()->save(newFileName);
+		}
+	}
+}

@@ -60,6 +60,12 @@ public slots:
     void onSceneModified();
     void onCleanState(bool state);
 
+
+    void selectAll();
+    void exportToJpg();
+
+    void onSelectionChanged();
+
 public:
     Window();
     virtual ~Window();
@@ -95,6 +101,8 @@ private:
     QAction *saveAsAction;
     QAction *undoAction;
     QAction *redoAction;
+    QAction *selectAllAction;
+    QAction *exportImageAction;
 
     //Layout objects
     QHBoxLayout *mainLayout;

@@ -84,7 +84,7 @@ Version: 0.6.0
 - You can now export the current state of one or more nodes (both in the main view and in the sidebar) to jpeg pictures.
 - The final image is now always produced when filming
 
-Link: https://dl.dropboxusercontent.com/u/17367759/cppn-x-precompiled-win32.zip
+
 
 Known issues:
 - Reseting all nodes while no nodes were modified causes an action to be added to the undo stack and causes the file to be marked as modified. The same is true for dragging and dropping a label or node to the same position.
@@ -120,3 +120,5 @@ Wish-list:
 
 Category assignment pending answers to my questions: 
 - Improve connection visualization with curved or 90 degree bend lines. [is this hard? it would be nice if connections never went under nodes. that's the main thing, so if this is not too hard let's do it]
+
+Link: https://dl.dropboxusercontent.com/u/17367759/cppn-x-precompiled-win32.zip

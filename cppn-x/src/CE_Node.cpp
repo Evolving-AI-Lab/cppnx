@@ -174,6 +174,7 @@ void Node::init(){
 
     pixels = new QImage(256, 256, QImage::Format_RGB32);
     pixels->fill(0);
+
 }
 
 void Node::addIncommingEdge(Edge *edge)
@@ -424,3 +425,5 @@ void Node::setPixel(size_t index, const double& value){
 void Node::redraw(){
 	emit updateRequest(this);
 }
+
+

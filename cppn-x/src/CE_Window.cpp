@@ -75,6 +75,15 @@ Window::Window()
     redoAction = undoStack.createRedoAction(this, tr("Redo"));
     redoAction->setShortcuts(QKeySequence::Redo);
 
+    selectAllAction = new QAction(tr("&Select all"), this);
+    selectAllAction->setShortcuts(QKeySequence::SelectAll);
+    selectAllAction->setStatusTip(tr("Selects all objects in active window"));
+
+    exportImageAction = new QAction(tr("&Export nodes to jpg"), this);
+    exportImageAction->setShortcut(tr("Alt+X"));
+    exportImageAction->setStatusTip(tr("Exports the selected nodes to jpg files"));
+    exportImageAction->setEnabled(false);
+
     //Create menus
     fileMenu = new QMenu(tr("&File"), this);
     fileMenu->addAction(exitAction);
@@ -89,6 +98,11 @@ Window::Window()
     editMenu = new QMenu(tr("&Edit"), this);
     editMenu->addAction(undoAction);
     editMenu->addAction(redoAction);
+
+    editMenu->addAction(selectAllAction);
+    editMenu->addAction(exportImageAction);
+
+
 
     editMenu->addAction(weightWidget->getResetAllAction());
     editMenu->addAction(weightWidget->getFirstWeightSliderWidget()->getResetAction());
@@ -128,6 +142,14 @@ Window::Window()
     connect(saveAction, SIGNAL(triggered()), this, SLOT(save()));
     connect(saveAsAction, SIGNAL(triggered()), this, SLOT(saveAs()));
     connect(exitAction, SIGNAL(triggered()), this, SLOT(close ()));
+    connect(selectAllAction, SIGNAL(triggered()), this, SLOT(selectAll()));
+    connect(exportImageAction, SIGNAL(triggered()), this, SLOT(exportToJpg()));
+
+    connect(nodeviewWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+    connect(cppnWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+
+    connect(nodeviewWidget, SIGNAL(focusChanged()), this, SLOT(onSelectionChanged()));
+    connect(cppnWidget, SIGNAL(focusChanged()), this, SLOT(onSelectionChanged()));
 
 
     leftLayout = new QVBoxLayout;
@@ -231,6 +253,18 @@ void Window::startFilm(){
 	nodeViewEncoders.clear();
 	encoder.createFile(captureDirectory + "/fullApplication.mpg",this->width(),this->height(),this->width()*this->height()*4,10);
 #endif USE_FFMPEG
+
+	//Select the final nodeview
+	QList<QGraphicsItem*> allNodeviews = nodeviewWidget->scene()->items();
+	foreach(QGraphicsItem* item, allNodeviews){
+//		std::cout << "Searching for finalnodeview..." << std::endl;
+		FinalNodeView* finalnodeView = qgraphicsitem_cast<FinalNodeView*>(item);
+		if(finalnodeView){
+//			std::cout << "Final nodeview found!" << std::endl;
+			finalnodeView->setSelected(true);
+		}
+	}
+
 
 	QList<QGraphicsItem*> graphicsItemsToBeEncoded = nodeviewWidget->scene()->selectedItems();
 	foreach(QGraphicsItem* item, graphicsItemsToBeEncoded){
@@ -407,4 +441,42 @@ void Window::onSceneModified(){
 
 void Window::onCleanState(bool state){
 	setWindowModified(!state);
+}
+
+void Window::selectAll(){
+	QWidget* widget =  QApplication::focusWidget ();
+	if(widget){
+		QGraphicsView* graphicsView = qobject_cast<QGraphicsView*> (widget);
+		if(graphicsView){
+			foreach(QGraphicsItem* item, graphicsView->scene()->items()){
+				item->setSelected(true);
+			}
+		}
+	}
+}
+
+void Window::exportToJpg(){
+//	std::cout << "Hallo" << std::endl;
+
+	QWidget* widget =  QApplication::focusWidget ();
+	if(widget){
+		NodeViewWidget* nodeviewWidget = qobject_cast<NodeViewWidget*> (widget);
+		if(nodeviewWidget){
+			nodeviewWidget->saveImage();
+		}else {
+			CppnWidget* nodeviewWidget = qobject_cast<CppnWidget*> (widget);
+			if(nodeviewWidget){
+					nodeviewWidget->saveImage();
+			}
+		}
+	}
+}
+
+void Window::onSelectionChanged(){
+	if((nodeviewWidget->hasFocus() && nodeviewWidget->scene()->selectedItems().count() > 0) ||
+			(cppnWidget->hasFocus() && cppnWidget->getNodeSelected())){
+		exportImageAction->setEnabled(true);
+	} else {
+		exportImageAction->setEnabled(false);
+	}
 }

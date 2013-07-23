@@ -86,6 +86,11 @@ CppnWidget::CppnWidget(QWidget* widget)
     addNodeviewAction->setShortcut(tr("Alt+A"));
     addNodeviewAction->setStatusTip(tr("Add the selected node to the sidebar"));
 
+    saveImageAction = new QAction(tr("&Export nodes as jpg"), this);
+//    saveImageAction->setShortcut(tr("Alt+N"));
+    saveImageAction->setStatusTip(tr("Saves the current images of the nodes as jpg pictures"));
+
+
     labelOnlyAction = new QAction(tr("Label only"), this);
     labelOnlyAction->setStatusTip(tr("Capture the current screen"));
     labelOnlyAction->setCheckable(true);
@@ -110,6 +115,8 @@ CppnWidget::CppnWidget(QWidget* widget)
     layerAction = new QAction(tr("&Circle"), this);
     layerAction->setStatusTip(tr("Undo the last operation"));
 
+    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
+
     connect(addNodeviewAction, SIGNAL(triggered()), this, SLOT(addNodeView()));
     connect(labelOnlyAction, SIGNAL(triggered()), this, SLOT(setLabelView()));
     connect(signOnlyAction, SIGNAL(triggered()), this, SLOT(setSignView()));
@@ -128,6 +135,7 @@ CppnWidget::CppnWidget(QWidget* widget)
 
     nodeMenu = new QMenu(tr("Node"), this);
     nodeMenu->addAction(addNodeviewAction);
+    nodeMenu->addAction(saveImageAction);
 
     edgeMenu = new QMenu(tr("Edge"), this);
 }
@@ -272,7 +280,7 @@ void CppnWidget::onBookendStartChanged(double bookendStart){
 	Edge* edge = qgraphicsitem_cast<Edge*>(scene()->selectedItems().front());
 	if(edge){
 		edge->blockSignals(true);
-		std::cout << "Bookend start: " << bookendStart <<std::endl;
+//		std::cout << "Bookend start: " << bookendStart <<std::endl;
 		emit requestCommandExecution(new ComSetBookends(edge, bookendStart, edge->getBookendEnd()));
 		edge->blockSignals(false);
 	}
@@ -283,7 +291,7 @@ void CppnWidget::onBookendEndChanged(double bookendEnd){
 	Edge* edge = qgraphicsitem_cast<Edge*>(scene()->selectedItems().front());
 	if(edge){
 		edge->blockSignals(true);
-		std::cout << "Bookend end: " << bookendEnd <<std::endl;
+//		std::cout << "Bookend end: " << bookendEnd <<std::endl;
 		emit requestCommandExecution(new ComSetBookends(edge, edge->getBookendStart(), bookendEnd));
 		edge->blockSignals(false);
 	}
@@ -450,8 +458,34 @@ void CppnWidget::changeEvent(QEvent* event){
 void CppnWidget::setNodeSelected(bool selected){
 	nodeSelected = selected;
 	addNodeviewAction->setEnabled(selected);
+	saveImageAction->setEnabled(selected);
 }
 
 void CppnWidget::setEdgeSelected(bool selected){
 	edgeSelected = selected;
+}
+
+void CppnWidget::saveImage(){
+	if(nodeSelected){
+		if(scene()->selectedItems().count() > 1){
+			QString captureDirectory = QFileDialog::getExistingDirectory(this, tr("Chose save directory"), "", QFileDialog::ShowDirsOnly);
+			if(captureDirectory.isEmpty()) return;
+
+			foreach(QGraphicsItem* item, scene()->selectedItems()){
+				Node* node = qgraphicsitem_cast<Node*>(item);
+				if(node){
+					QString newFileName = captureDirectory + "/node_" + util::toQString(node->getBranch()) + "_" + util::toQString(node->getId()) + ".jpg";
+					node->getImage()->save(newFileName);
+				}
+			}
+		} else {
+			Node* node = qgraphicsitem_cast<Node*>(scene()->selectedItems().front());
+			if(node){
+				QString newFileName = QFileDialog::getSaveFileName(this, tr("Save Node Image"), "",tr("JPEG File (*.jpg);;All Files (*)"));
+				if(newFileName.isEmpty()) return;
+				node->getImage()->save(newFileName);
+			}
+		}
+	}
+
 }

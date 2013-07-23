@@ -133,9 +133,13 @@ public:
 ////		}
 //	}
 
-//	id_t getId(){
-//		return id;
-//	}
+	id_t getId(){
+		if(deleted){
+			return 0;
+		} else {
+			return getIndex() + 1;
+		}
+	}
 
 	unsigned int registerdObjects;
 

@@ -87,10 +87,10 @@ void CppnWriter::write(Cppn* cppn, QList<Label*> labels, FileInformation* fileIn
 	write(ce_xml::identifier, fileInformation->branch, fileInformation->id);
 
 	writeEach(ce_xml::parent_count, fileInformation->parent_branches.size(), write(ce_xml::identifier, fileInformation->parent_branches[i], fileInformation->parent_ids[i]));
-	writeEach(ce_xml::buttons_count, labels.count(), writeColorButton(labels.at(i)););
+	writeEach(ce_xml::buttons_count, (size_t)labels.count(), writeColorButton(labels.at(i)););
 	writeEach(ce_xml::nodes_count, cppn->getNrOfNodes(), writeNode(cppn->getNode(i)););
 	writeEach(ce_xml::link_count, cppn->getNrOfEdges(), writeEdge(cppn->getEdge(i)););
-	writeEach(ce_xml::nodeviews_count, nodeviews.count(), writeNodeview(nodeviews.at(i)););
+	writeEach(ce_xml::nodeviews_count, (size_t)nodeviews.count(), writeNodeview(nodeviews.at(i)););
 
 	close(ce_xml::genomePhen);
 	close(ce_xml::data);
@@ -116,7 +116,7 @@ void CppnWriter::writeNode(Node* node){
 	open(ce_xml::iocolornode, node->getAffinity(), node->getBias(), node->getXmlLabel(), node->getType());
 	write(ce_xml::marking, node->getBranch(), node->getId());
 	openClose(ce_xml::activation, node->getXmlActivationFunction());
-	write(ce_xml::color_label, node->getLabel()->getIndex());
+	write(ce_xml::color_label, node->getLabel()->getId());
 	write(ce_xml::position, node->pos().x(), node->pos().y());
 	openClose(ce_xml::text, node->getNote().toStdString());
 	close(ce_xml::colornode);
@@ -129,7 +129,7 @@ void CppnWriter::writeEdge(Edge* edge){
 	write(ce_xml::target, edge->destNode()->getBranch(), edge->destNode()->getId());
 	openClose(ce_xml::weight, util::toString(edge->getWeight()));
 	openClose(ce_xml::original_weight, util::toString(edge->getOriginalWeight()));
-	write(ce_xml::color_label, edge->getLabel()->getIndex());
+	write(ce_xml::color_label, edge->getLabel()->getId());
 	openClose(ce_xml::text, edge->getNote().toStdString());
 	write(ce_xml::bookends, edge->getBookendStart(), edge->getBookendEnd(), edge->getStepsize());
 	close(ce_xml::link);
@@ -137,7 +137,7 @@ void CppnWriter::writeEdge(Edge* edge){
 
 void CppnWriter::writeColorButton(Label* colorButton){
 	open(ce_xml::color_button);
-	write(ce_xml::color_label, colorButton->getIndex());
+	write(ce_xml::color_label, colorButton->getId());
 	openClose(ce_xml::text, colorButton->getText().toStdString());
 	write(ce_xml::color, colorButton->getColor().red(), colorButton->getColor().green(), colorButton->getColor().blue());
 	close(ce_xml::color_button);

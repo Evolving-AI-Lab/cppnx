@@ -107,6 +107,10 @@ public:
     	return nodeMenu;
     }
 
+    bool getNodeSelected(){
+    	return nodeSelected;
+    }
+
 public slots:
 	// Zoom functions
     void zoomIn();
@@ -145,6 +149,8 @@ public slots:
     void updatePreviousPositions();
 
     void itemMoved(Node * node);
+
+    void saveImage();
 //    void ContextMenuEvent(SelectableObject* object, bool begin);
 
 signals:
@@ -172,6 +178,8 @@ private:
     QAction* circleAction;
     QAction* layerAction;
     QActionGroup* viewGroup;
+    QAction* saveImageAction;
+
 
     QMenu* edgeMenu;
     QMenu* nodeMenu;

@@ -197,6 +197,8 @@ public:
     static const int footerBarSize = 10;
     static const int headerBarSize = 10;
 
+
+
 signals:
 	void updatePositionsRequest();
 	void positionChanged(Node*);
@@ -215,6 +217,7 @@ private:
     QList<Edge *> outgoingEdgeList;
 //    CppnWidget *graph;
     QImage* pixels;
+
 
     std::string branch;
     std::string id;

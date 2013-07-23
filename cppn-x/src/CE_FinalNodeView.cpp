@@ -22,6 +22,7 @@
 
 FinalNodeView::FinalNodeView():NodeView(0) {
 	pixels = new QImage(node_width, node_height, QImage::Format_RGB32);
+	pixels->fill(0);
 	hue = new int[node_width*node_height];
 	saturation = new unsigned char[node_width*node_height];
 	value = new unsigned char[node_width*node_height];

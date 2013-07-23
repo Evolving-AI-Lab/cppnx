@@ -53,6 +53,7 @@ public slots:
 	void deleteNodeView();
 	void addNodeView(QList<QGraphicsItem*> nodes);
 	void selectionUpdated();
+	void saveImage();
 //	void moveNodes(uint source, uint target);
 //	void ContextMenuEvent(SelectableObject* object, bool begin);
 
@@ -68,6 +69,7 @@ private:
 
 
     QAction* deleteViewNodeAction;
+    QAction* saveImageAction;
     QMenu* nodeviewMenu;
 };
 
