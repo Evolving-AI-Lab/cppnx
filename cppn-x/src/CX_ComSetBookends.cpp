@@ -8,18 +8,19 @@
 #include "CX_ComSetBookends.h"
 #include "CE_Edge.h"
 
-ComSetBookends::ComSetBookends(Edge* edge, double bookendStart, double bookendEnd):edge(edge),bookendStart(bookendStart),bookendEnd(bookendEnd) {
+ComSetBookends::ComSetBookends(Edge* edge, double bookendStart, double bookendEnd, double bookendStep):edge(edge),bookendStart(bookendStart),bookendEnd(bookendEnd), bookendStep(bookendStep) {
 	previousBookendStart = edge->getBookendStart();
 	previousBookendEnd = edge->getBookendEnd();
+	previousBookendStep = edge->getStepsize();
 	setText("set bookends");
 }
 
 void ComSetBookends::undo(){
-	edge->setBookends(previousBookendStart, previousBookendEnd);
+	edge->setBookends(previousBookendStart, previousBookendEnd, previousBookendStep);
 }
 
 void ComSetBookends::redo(){
-	edge->setBookends(bookendStart, bookendEnd);
+	edge->setBookends(bookendStart, bookendEnd, bookendStep);
 }
 
 bool ComSetBookends::mergeWith(const QUndoCommand *other){

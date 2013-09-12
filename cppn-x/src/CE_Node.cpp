@@ -53,7 +53,6 @@
 
 //! [0]
 Node::Node(
-//		CppnWidget *graphWidget,
 		std::string branch,
 		std::string id,
 		std::string type,
@@ -61,13 +60,10 @@ Node::Node(
 		std::string xml_label,
 		std::string affinity,
 		std::string bias,
-		int width,
-		int height,
 		Label* label,
 		std::string note
 		)
     : LabelableObject(label, note.c_str()),
-//      graph(graphWidget),
       branch(branch),
       id(id),
       nodetype(type),
@@ -75,41 +71,9 @@ Node::Node(
       xml_label(xml_label),
       affinity(affinity),
       bias(bias)
-//      nodeView(0),
-//      finalNodeView(0),
-//      depth(0)
-{
 
+{
 	init();
-//    setFlag(ItemIsMovable);
-//    setFlag(ItemIsSelectable);
-//    setFlag(ItemSendsGeometryChanges);
-//    setCacheMode(DeviceCoordinateCache);
-//    setZValue(1);
-//
-//	if(activationFunction_str == XML_GAUSSIAN){
-//		activationFunction = act_functions::gaussian;
-//		activationFunction_short = "gau()";
-//	} else if(activationFunction_str == XML_LINEAR){
-//		activationFunction = act_functions::identity;
-//		activationFunction_short = "lin()";
-//	} else if(activationFunction_str == XML_SIN){
-//		activationFunction = act_functions::sin;
-//		activationFunction_short = "sin()";
-//	} else if(activationFunction_str == XML_SIGMOID){
-//		activationFunction = act_functions::sigmoid;
-//		activationFunction_short = "sig()";
-//	} else if(activationFunction_str == XML_COS){
-//		activationFunction = act_functions::cos;
-//		activationFunction_short = "cos()";
-//	} else {
-//		throw CeParseException("File contains unknown activation function: '" + activationFunction_str + "'");
-//	}
-//
-//
-//    pixels = new QImage(width, height, QImage::Format_RGB32);
-//    pixels->fill(0);
-//    setPixels(pixels);
 }
 
 Node::Node(std::iostream &stream, std::map<std::string, Label*> labelMap):LabelableObject(stream, labelMap){
@@ -174,6 +138,8 @@ void Node::init(){
 
     pixels = new QImage(256, 256, QImage::Format_RGB32);
     pixels->fill(0);
+    labelMode = 0;
+    module = 0;
 
 }
 
@@ -187,6 +153,16 @@ void Node::addOutgoingEdge(Edge *edge)
 	outgoingEdgeList << edge;
     edge->adjust();
 }
+
+void Node::removeIncommingEdge(Edge *edge){
+	incomingEdgeList.removeAll(edge);
+}
+
+void Node::removeOutgoingEdge(Edge *edge){
+	outgoingEdgeList.removeAll(edge);
+}
+
+
 QList<Edge *> Node::incomingEdges() const
 {
     return incomingEdgeList;
@@ -218,10 +194,18 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 
 	QColor labelColor;
 //	std::cout << "Label address: " << (void*) label << std::endl;
-	if(label->isDeleted()){
-		labelColor= Qt::white;
+
+	if(labelMode){
+		if((*labelMode) == modules){
+			labelColor = QColor();
+			labelColor.setHsv(module*100+100, 255, 255);
+		}else if(label->isDeleted()){
+			labelColor= Qt::white;
+		} else {
+			labelColor = label->getColor();
+		}
 	} else {
-		labelColor = label->getColor();
+		labelColor= Qt::white;
 	}
 
 	QColor normalBorderColor;
@@ -232,7 +216,12 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     	normalBorderColor = QColor(Qt::black);
     }
 
-    painter->drawImage(QRect(-half_width, -half_height, node_width, node_height), *pixels);
+    if((*labelMode) == modules){
+    	painter->fillRect(QRect(-half_width, -half_height, node_width, node_height), labelColor);
+    } else {
+    	painter->drawImage(QRect(-half_width, -half_height, node_width, node_height), *pixels);
+    }
+
 
 	QRect footer(-half_width, half_height, node_width, footerBarSize);
 	QRect header(-half_width, -half_height-headerBarSize, node_width, headerBarSize);
@@ -248,7 +237,11 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     if (partOfContextMenuEvent){
     	painter->setPen(QPen(CONTEXT_EVENT_COLOR, 2));
     }else if (this->isSelected()){
-    	painter->setPen(QPen(SELECTED_COLOR, 2));
+    	if (*parentHasFocus){
+    		painter->setPen(QPen(SELECTED_COLOR, 2));
+    	}else{
+    		painter->setPen(QPen(NO_FOCUS_SELECTED_COLOR, 2));
+    	}
     }else{
     	painter->setPen(QPen(normalBorderColor, 0));
 
@@ -256,45 +249,17 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 
     painter->drawRect(border);
 
-//    painter->setPen(QPen(Qt::black, 0));
-//    painter->drawRect(QRect(-half_width, half_height, node_width, footerBarSize));
-
-
-
     if(labelColor.lightness() < 128){
     	painter->setPen(QPen(Qt::white, 0));
     } else {
     	painter->setPen(QPen(Qt::black, 0));
     }
 
-
-//    painter->drawText(-half_width,half_height+(footerBarSize-4), QString(util::toQString(branch + "_" + id)));
-//    painter->drawText(-half_width,-half_height, QString(util::toQString(branch + "_" + id)));
-
     QRect rect;
-
-//    QRect activationFunction(footer);
-//    QRect depth(footer);
-//    QRect name(footer);
-//
-//    activationFunction.adjusted()
-
-
-
-
-
-
-//    painter->drawText (-half_width+2,half_height+9, node_width-4, 9, Qt::TextSingleLine | Qt::AlignLeft| Qt::NoClip, util::toQString(activationFunction_short), &rect);
-//    painter->drawText (-half_width+2,half_height+9, node_width-4, 9, Qt::TextSingleLine | Qt::AlignRight| Qt::NoClip, util::toQString(depth), &rect);
-
-//    std::cout << rect.width() << " " << rect.height()  << std::endl;
-
-//    painter->setPen(QPen(Qt::black, 0));
     QFont font;
+
     font.setPointSize(6);
     font.setStyleHint(QFont::SansSerif);
-
-
 
     painter->setFont(font);
     painter->drawText (header, Qt::TextSingleLine | Qt::AlignCenter | Qt::NoClip, util::toQString(branch + "_" + id), &rect);
@@ -303,27 +268,19 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     painter->drawText (footer.adjusted(18, 0, 0, 0), Qt::TextSingleLine | Qt::AlignLeft| Qt::NoClip, util::toQString(xml_label.substr(0,1)).toUpper() , &rect);
 
 }
-//! [10]
+
 
 void Node::updateAll(){
 	update();
 	emit imageChanged();
-//	if(nodeView) nodeView->update();
 }
 
-
-//! [11]
 QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     switch (change) {
     case ItemPositionHasChanged:
-        foreach (Edge *edge, incomingEdgeList)
-            edge->adjust();
-//        graph->itemMoved(this);
-        foreach (Edge *edge, outgoingEdgeList)
-        	edge->adjust();
-//        graph->itemMoved(this);
-//        emit positionChanged(this);
+        foreach (Edge *edge, incomingEdgeList) edge->adjust();
+        foreach (Edge *edge, outgoingEdgeList) edge->adjust();
         break;
     default:
         break;
@@ -359,28 +316,6 @@ void Node::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsItem::mouseReleaseEvent(event);
 }
 
-//void Node::setPixels(QImage* pixels_)
-//{
-//    pixels = pixels_;
-//}
-//void Node::setPixel(int x, int y, char r, char g, char b){
-//	pixels->setPixel(x, y, qRgb(r, g, b));
-//}
-//
-//void Node::setPixel(size_t index, char r, char g, char b ){
-//	index = index*4;
-//	pixels->bits()[index]=r;
-//	pixels->bits()[index+1]=g;
-//	pixels->bits()[index+2]=b;
-//}
-//
-//void Node::setPixel(size_t index, char grey){
-//	index = index*4;
-//	pixels->bits()[index]=grey;
-//	pixels->bits()[index+1]=grey;
-//	pixels->bits()[index+2]=grey;
-//}
-
 void Node::setPixel(size_t index, const double& value){
 	size_t localindex = index*4;
 	//Grey does not use the min() function to prevent a bug on windows.
@@ -390,36 +325,7 @@ void Node::setPixel(size_t index, const double& value){
 	pixels->bits()[localindex]=alt;
 	pixels->bits()[localindex+1]=alt;
 	pixels->bits()[localindex+2]=grey;
-
-
-
-//	if(nodeView){
-//		nodeView->setPixel(localindex, grey, alt);
-//	}
-//	if(finalNodeView){
-//		char sat(std::min(std::max(value, 0.0), 1.0)*255);
-//		int hue(std::min(value+1, 2.0)*360);
-//		if(xml_label == "saturation") finalNodeView->setSaturation(index, sat);
-//		if(xml_label == "brightness" || xml_label == "ink") finalNodeView->setValue(index, grey);
-//		if(xml_label == "hue") finalNodeView->setHue(index, hue);
-//	}
 }
-
-//void Node::resetNodeView(bool toDelete){
-//	if(nodeView){
-//		if(toDelete){
-//			nodeView->resetNode();
-//			delete nodeView;
-//		}
-//		nodeView = 0;
-//	}
-//}
-//
-//void Node::setNodeView(NodeView* _nodeView){
-//	resetNodeView(false);
-//	nodeView = _nodeView;
-//	nodeView->setNode(this);
-//}
 
 
 void Node::redraw(){

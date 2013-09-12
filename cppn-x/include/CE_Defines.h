@@ -74,6 +74,7 @@
 
 #define SELECTED_COLOR QColor(150,200,255)
 #define CONTEXT_EVENT_COLOR QColor(226,226,255)
+#define NO_FOCUS_SELECTED_COLOR QColor(150,150,150)
 
 //    static const int width = 256;
 //    static const int height = 256;
@@ -88,5 +89,7 @@ enum inputs{
 
 typedef double (*ActivationFunctionPt)(double);
 typedef unsigned int id_t;
+
+
 
 #endif /* VISUALIZE_DEFINES_H_ */

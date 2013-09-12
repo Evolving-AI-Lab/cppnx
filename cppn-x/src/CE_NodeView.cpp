@@ -34,9 +34,13 @@ NodeView::~NodeView() {
 void NodeView::init(){
     setFlag(ItemIsSelectable);
     setCacheMode(DeviceCoordinateCache);
+
 //    setPixels(pixels);
     if(node){
     	pixels = node->getImage();
+		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
+		connect(node, SIGNAL(removed()), this, SLOT(remove()));
+		connect(node, SIGNAL(added()), this, SLOT(add()));
 //    	setDragImage(pixels);
 
     }
@@ -70,12 +74,19 @@ void NodeView::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     	painter->setPen(QPen(CONTEXT_EVENT_COLOR, 2));
     	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height ));
     } else if (this->isSelected()){
-    	painter->setPen(QPen(SELECTED_COLOR, 2));
+    	QColor highlightColor;
+		if(*parentHasFocus){
+			highlightColor = QColor(SELECTED_COLOR);
+		} else {
+			highlightColor = QColor(NO_FOCUS_SELECTED_COLOR);
+		}
+    	painter->setPen(QPen(highlightColor, 2));
     	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height ));
     }else{
     	painter->setPen(QPen(Qt::black, 0));
     	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height ));
     }
+
 }
 
 void NodeView::update(){

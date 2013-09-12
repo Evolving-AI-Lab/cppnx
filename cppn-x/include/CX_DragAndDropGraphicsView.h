@@ -95,7 +95,13 @@ signals:
 public slots:
 	void requestMove(uint source, uint target){
 //		std::cout << "Move requested" <<std::endl;
-		emit requestCommandExecution(new ComDragAndDrop(this, source, target));
+		ComDragAndDrop* command= new ComDragAndDrop(this, source, target);
+		if(command->isOk()){
+			emit requestCommandExecution(new ComDragAndDrop(this, source, target));
+		} else {
+			delete command;
+		}
+
 	}
 
 protected:

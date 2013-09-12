@@ -8,12 +8,11 @@
 #ifndef CE_COMMANDLABELOBJECT_H_
 #define CE_COMMANDLABELOBJECT_H_
 
-#include <QUndoCommand>
+#include "CX_ComBase.h"
 #include "CE_LabelableObject.h"
 #include "CE_Util.h"
-//#include "CX_CXUndoCommand.h"
 
-class CommandLabelObject: public QUndoCommand {
+class CommandLabelObject: public ComBase {
 public:
 	CommandLabelObject(QList<QGraphicsItem*> objects, Label* label);
 	virtual ~CommandLabelObject();

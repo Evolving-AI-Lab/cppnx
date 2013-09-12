@@ -41,6 +41,7 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include <stdexcept>
 #include <QtGui>
 #include <QGraphicsItem>
 #include <QList>
@@ -48,7 +49,6 @@
 
 #include "CE_Defines.h"
 #include "CE_Edge.h"
-//#include "CE_CppnWidget.h"
 #include "CE_LabelableObject.h"
 
 
@@ -70,6 +70,8 @@ class Node : public LabelableObject
 {
 	Q_OBJECT
 public:
+    enum NodeLabelMode {labels, modules};
+
     Node(
     		std::string branch = "",
     		std::string id = "",
@@ -78,8 +80,6 @@ public:
     		std::string xml_label = "",
     		std::string affinity = "",
     		std::string bias = "",
-    		int width = 256,
-    		int height = 256,
     		Label* label = 0,
     		std::string note = ""
     );
@@ -91,6 +91,10 @@ public:
 
     void addIncommingEdge(Edge *edge);
     void addOutgoingEdge(Edge *edge);
+
+    void removeIncommingEdge(Edge *edge);
+    void removeOutgoingEdge(Edge *edge);
+
     QList<Edge *> incomingEdges() const;
     QList<Edge *> outgoingEdges() const;
 
@@ -142,31 +146,25 @@ public:
     	return id;
     }
 
+    std::string getName() const{
+    	return branch + "_" + id;
+    }
+
     std::string getXmlActivationFunction(){
     	return activationFunction_str;
     }
 
-//    void setNodeView(NodeView* _nodeView);
-//    void resetNodeView(bool toDelete = true);
-
-//    NodeView* getNodeView(){
-//    	return nodeView;
-//    }
+    void setLabelMode(NodeLabelMode* _labelMode){
+    	labelMode = _labelMode;
+    }
 
     QImage* getImage(){
     	return pixels;
     }
 
-//    void setFinalNodeView(FinalNodeView* _nodeView){
-//    	finalNodeView = _nodeView;
-//    }
 
     std::string getAffinity(){return affinity;};
     std::string getBias(){return bias;};
-
-//    void setCppn(Cppn* _cppn){
-//    	cppn = _cppn;
-//    }
 
     void redraw();
 
@@ -186,9 +184,42 @@ public:
     	update();
     }
 
+    void setModule(size_t _module){
+    	module =_module;
+    }
+
+    enum AxisEnumerator {
+    	x_pos = 0,
+    	y_pos = 1
+    };
+
+
+    qreal getSortedValue(AxisEnumerator axisEnumerator){
+    	switch(axisEnumerator){
+    	case x_pos:
+    		return pos().x();
+    		break;
+    	case y_pos:
+    		return pos().y();
+    		break;
+    	default:
+    		throw std::out_of_range ("Unknown axis enumerator" + util::toString(axisEnumerator));
+    	}
+    }
+
+    void emitRemoved(){
+    	emit removed();
+    }
+
+    void emitAdded(){
+    	emit added();
+    }
+
 
     size_t y_index;
     size_t x_index;
+
+    size_t sortedIndex[2];
 
     static const int node_width = 40;
     static const int node_height = 40;
@@ -204,9 +235,10 @@ signals:
 	void positionChanged(Node*);
 	void updateRequest(Node*);
 	void imageChanged();
+	void removed();
+	void added();
 
 protected:
-//	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -215,9 +247,8 @@ protected:
 private:
     QList<Edge *> incomingEdgeList;
     QList<Edge *> outgoingEdgeList;
-//    CppnWidget *graph;
-    QImage* pixels;
 
+    QImage* pixels;
 
     std::string branch;
     std::string id;
@@ -231,15 +262,14 @@ private:
     ActivationFunctionPt activationFunction;
 
     size_t index;
-//    NodeView* nodeView;
-//    FinalNodeView* finalNodeView;
-//    Cppn* cppn;
 
     QPointF previousPosition;
 
     int depth;
+    size_t module;
+
+    NodeLabelMode* labelMode;
 
 };
-//! [0]
 
 #endif

@@ -12,13 +12,8 @@
 //
 
 LabelableObject::LabelableObject(Label* _label, QString note): note(note){
-	if(_label == 0){
-		label = new Label();
-		label->registerObject();
-	} else {
-		label = _label;
-		label->registerObject();
-	}
+	label = _label;
+	init();
 }
 
 LabelableObject::LabelableObject(std::iostream &stream, std::map<std::string, Label*> labelMap){
@@ -36,7 +31,7 @@ LabelableObject::LabelableObject(std::iostream &stream, std::map<std::string, La
 	label = labelMap[labelId];
 //	std::cout << "Label-pt: " << label << std::endl;
 	if(!label) label = new Label();
-	label->registerObject();
+	init();
 }
 
 //
@@ -44,16 +39,24 @@ LabelableObject::~LabelableObject() {
 	label->unregisterObject();
 }
 
+void LabelableObject::init(){
+	if(!label) label = new Label();
+	label->registerObject();
+	connect(label, SIGNAL(onSelected()), this, SLOT(onLabelSelected()));
+}
+
 Label* LabelableObject::getLabel(){
 	return label;
 }
 
 void LabelableObject::setLabel(Label* _label){
+	disconnect(label, SIGNAL(onSelected()), this, SLOT(onLabelSelected()));
 	label->unregisterObject();
 	label->setHighlightOff();
 	label = _label;
 	label->registerObject();
 	label->setHighlightOn();
+	connect(label, SIGNAL(onSelected()), this, SLOT(onLabelSelected()));
 }
 
 QVariant LabelableObject::itemChange(GraphicsItemChange change, const QVariant &value)

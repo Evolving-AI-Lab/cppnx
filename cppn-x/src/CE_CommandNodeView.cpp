@@ -17,9 +17,13 @@ CommandNodeView::CommandNodeView(NodeViewWidget* nodeViewWidget, QList<QGraphics
 			Node* node = qgraphicsitem_cast<Node*> (item);
 //			if(node && !node->getNodeView()){
 			NodeView* nodeView = new NodeView(node);
-			Node::connect(node, SIGNAL(imageChanged()), nodeView, SLOT(update()));
+//			Node::connect(node, SIGNAL(imageChanged()), nodeView, SLOT(update()));
 			nodeView->setIndex(nodeViewWidget->getNrOfItems() + index_mod);
 			nodeViewPairs.append(nodeView);
+
+			nodeViewWidget->connect(nodeView, SIGNAL(requestAdd(NodeView*)), nodeViewWidget, SLOT(insertNodeView(NodeView*)));
+			nodeViewWidget->connect(nodeView, SIGNAL(requestRemove(NodeView*)), nodeViewWidget, SLOT(deleteNodeView(NodeView*)));
+
 			index_mod++;
 //			}
 		}
@@ -72,25 +76,14 @@ void CommandNodeView::redo(){
 
 void CommandNodeView::addNodeViews(){
 	foreach(NodeView* nodeView, nodeViewPairs){
-		nodeViewWidget->insertNodeView(nodeView, nodeView->getIndex());
+		nodeView->add();
+//		nodeViewWidget->insertNodeView(nodeView, nodeView->getIndex());
 	}
-
-//	foreach(nodeViewPair_t pair, nodeViewPairs){
-//		pair.first->setNodeView(pair.second);
-//		nodeViewWidget->insertNodeView(pair.second, pair.second->getPosition());
-//		pair.first->redraw();
-//	}
-
 }
 
 void CommandNodeView::removeNodeViews(){
 	foreach(NodeView* nodeView, nodeViewPairs){
-		nodeViewWidget->deleteNodeView(nodeView);
+		nodeView->remove();
+//		nodeViewWidget->deleteNodeView(nodeView);
 	}
-
-//	for(int i = nodeViewPairs.count()-1; i>=0; i--){
-//		nodeViewPair_t pair = nodeViewPairs[i];
-//		nodeViewWidget->deleteNodeView(pair.second);
-//		pair.first->resetNodeView(false);
-//	}
 }

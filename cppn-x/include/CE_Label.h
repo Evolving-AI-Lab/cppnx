@@ -50,15 +50,9 @@ public:
     enum { Type = UserType + LABEL_TYPE };
     virtual int type() const { return Type; }
 
-//	QLabel* getLabel(){
-//		return label;
-//	}
 	QPushButton* getColorButton(){
 		return colorButton;
 	}
-//	QPushButton* getDeleteButton(){
-//		return deleteButton;
-//	}
 
 	QColor getColor(){
 		return color;
@@ -69,7 +63,6 @@ public:
 	QString getText() const{
 		return labelName;
 	}
-//	std::string getText() const;
 
 	void setText(const QString& name){
 		labelName = name;
@@ -80,31 +73,13 @@ public:
 		return colorAction;
 	}
 
-//	QAction* getDeleteAction(){
-//		return deleteAction;
-//	}
-//
-//	QAction* getRenameAction(){
-//		return deleteAction;
-//	}
-//
-//	QAction* getChangeColorAction(){
-//		return deleteAction;
-//	}
-
 	void registerObject(){
-//		std::cout << "Label: " << this << " Registerd: " << registerdObjects << std::endl;
 		registerdObjects++;
-//		std::cout << "Label: " << this << " Registerd: " << registerdObjects << std::endl;
 	}
 
 	void unregisterObject(){
-//		std::cout << "Label: " << this << " Registerd: " << registerdObjects << std::endl;
 		registerdObjects--;
-//		std::cout << "Label: " << this << " Unregisterd: " << registerdObjects << std::endl;
-
 		if(registerdObjects==0){
-//			std::cout << "Destroyed" <<std::endl;
 			delete this;
 		}
 	}
@@ -125,14 +100,6 @@ public:
 		}
 	}
 
-//	void setId(id_t _id){
-//////		id = _id;
-////		if(index+1>0){
-//		QString shortcut = "Alt+" + util::toQString(index+1);
-//		colorAction->setShortcut(shortcut);
-////		}
-//	}
-
 	id_t getId(){
 		if(deleted){
 			return 0;
@@ -143,15 +110,8 @@ public:
 
 	unsigned int registerdObjects;
 
-//	void contextMenuEvent(QContextMenuEvent *event);
-
 	void setHighlightOn();
 	void setHighlightOff();
-
-//	QString baseSs;
-//	QString selectedSs;
-//	QString highlightSs;
-//	QString selectedHighlightSs;
 
 public slots:
 	void changeLabelColor();
@@ -160,17 +120,16 @@ public slots:
 	void deleteLabel();
 
 signals:
-	void requestCommandExecution(QUndoCommand*);
+	void requestCommandExecution(ComBase*);
 	void labelChanged();
 	void applyLabel(Label*);
 	void deleteLabel(Label*);
 
 protected:
-//	void focusInEvent(QFocusEvent* event );
-//	void focusOutEvent(QFocusEvent* event );
 	QRectF boundingRect() const;
 	QPainterPath shape() const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *);
+    void mousePressEvent( QGraphicsSceneMouseEvent * event );
 
 private:
 	QPushButton* colorButton;

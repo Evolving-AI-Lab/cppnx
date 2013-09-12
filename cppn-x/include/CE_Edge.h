@@ -44,20 +44,16 @@
 #include <QGraphicsItem>
 
 #include "CE_Node.h"
-//#include "CE_CppnWidget.h"
 #include "CE_LabelableObject.h"
-//#include "CE_Cppn.h"
-
-
 
 class Node;
 
-//! [0]
 class Edge : public LabelableObject
 {
 	Q_OBJECT
 public:
     enum LabelMode {onlyLabels, onlyConnectionSign, both};
+    enum LineMode {straight, curved};
 
     Edge(
     		std::string branch,
@@ -71,9 +67,7 @@ public:
     		LabelMode* labelMode = 0,
     		double bookendStart = -3.0,
     		double bookendEnd = 3.0,
-    		double stepSize = 0.1,
-    		QGraphicsItem *parent = 0,
-    		QGraphicsScene *scene = 0
+    		double stepSize = 0.1
     		);
 
     Edge(std::iostream &stream, std::map<std::string, Node*> nodeMap, std::map<std::string, Label*> labelMap);
@@ -116,9 +110,12 @@ public:
     	return id;
     }
 
+    std::string getName() const{
+    	return branch + "_" + id;
+    }
+
 
     void flash(bool flashOn){
-//    	std::cout << flashOn << " " << _flash <<std::endl;
     	if(flashOn && _flash != 0){
     		_flash = -1*_flash;
     	} else if(flashOn) {
@@ -136,6 +133,10 @@ public:
     	labelMode = _labelMode;
     }
 
+    void setLineMode(LineMode* _lineMode){
+    	lineMode = _lineMode;
+    }
+
     void setBookendStart(double bookend){
     	bookendStart = bookend;
     	emit bookendsChanged(this);
@@ -146,9 +147,10 @@ public:
     	emit bookendsChanged(this);
     }
 
-    void setBookends(double _bookendStart, double _bookendEnd){
+    void setBookends(double _bookendStart, double _bookendEnd, double _bookendStep){
     	bookendStart = _bookendStart;
     	bookendEnd = _bookendEnd;
+    	stepSize = _bookendStep;
     	emit bookendsChanged(this);
     }
 
@@ -171,13 +173,31 @@ signals:
 
 
 protected:
-//	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     QPainterPath shape() const;
     
 private:
+    void init();
+
+    QPainterPath getPath() const{
+    	  QPainterPath path;
+    	  path.moveTo(_line.p1());
+
+    	  if(*lineMode == straight){
+    		  path.lineTo(_line.p2());
+    	  } else {
+    		  int offsetY = abs(_line.p1().y() - _line.p2().y()) / 2;
+    		  path.cubicTo(_line.p1().x(), _line.p1().y() - offsetY, _line.p2().x(), _line.p2().y() + offsetY, _line.p2().x(), _line.p2().y());
+    	  }
+
+    	  return path;
+    }
+
+
     LabelMode* labelMode;
+    LineMode* lineMode;
+
     std::string branch;
     std::string id;
     static const double m_click_easy_width;
@@ -185,10 +205,7 @@ private:
 
     QPointF sourcePoint;
     QPointF destPoint;
-//    qreal arrowSize;
- //   QString edge_id;
 
-//    CppnWidget *graphWidget;
     qreal currentWeight;
     qreal originalWeight;
     size_t index;
@@ -200,8 +217,6 @@ private:
     double bookendEnd;
     double stepSize;
 
-//    Cppn* cppn;
 };
-//! [0]
 
 #endif

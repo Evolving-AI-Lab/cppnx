@@ -23,6 +23,7 @@
 #include "CX_FileInformation.h"
 #include "CE_CppnWriter.h"
 #include "CE_CppnParser.h"
+#include "CX_ComBase.h"
 #ifdef USE_FFMPEG
 #include "QVideoEncoder.h"
 #endif //USE_FFMPEG
@@ -34,7 +35,7 @@ class QMenu;
 class QMenuBar;
 QT_END_NAMESPACE
 
-class Window : public QWidget
+class Window : public QMainWindow
 {
     Q_OBJECT
 public slots:
@@ -52,9 +53,10 @@ public slots:
 
     //Update actions
     void updateEdge(Edge* edge);
+    void updateNode(Node* node);
 
     //Execute command action
-    void executeCommand(QUndoCommand* command);
+    void executeCommand(ComBase* command);
 
     //Custom modified slot to circumvent a QT bug (https://bugreports.qt-project.org/browse/QTBUG-20150)
     void onSceneModified();
@@ -62,9 +64,12 @@ public slots:
 
 
     void selectAll();
+    void remove();
     void exportToJpg();
 
     void onSelectionChanged();
+
+    void updateModularity(double qscore);
 
 public:
     Window();
@@ -74,6 +79,10 @@ protected:
     void closeEvent(QCloseEvent * event);
 
 private:
+    static const QString modularityText;
+    static const QString hierachyText;
+
+    bool askSaveChanges();
     void fileLoaded(bool selected);
     void actualSave(const QString& fileName);
 
@@ -102,6 +111,7 @@ private:
     QAction *undoAction;
     QAction *redoAction;
     QAction *selectAllAction;
+    QAction *removeAction;
     QAction *exportImageAction;
 
     //Layout objects
@@ -110,8 +120,15 @@ private:
 
     //Capture variables
     QString captureDirectory;
+    QString extention;
     QList<NodeView*> nodeViewsToBeCaptured;
     size_t frame;
+
+//    QStatusBar* bar;
+
+    QLabel* modularityLabel;
+    QLabel* hierachyLabel;
+
 
 #ifdef USE_FFMPEG
     QList<QVideoEncoder*> nodeViewEncoders;

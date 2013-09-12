@@ -40,17 +40,13 @@
 
 #include <QPainter>
 #include <iostream>
+#include <math.h>
 
 #include "CE_Edge.h"
 #include "CE_LabelWidget.h"
 
 
-#include <math.h>
-
-//static const double Pi = 3.14159265358979323846264338327950288419717;
 const double Edge::m_click_easy_width = 10.0;
-
-//! [0]
 
 
 Edge::Edge(std::string branch,
@@ -64,9 +60,7 @@ Edge::Edge(std::string branch,
 		LabelMode* labelMode,
 		double bookendStart,
 		double bookendEnd,
-		double stepSize,
-		QGraphicsItem *parent,
-		QGraphicsScene *scene)
+		double stepSize)
     : LabelableObject(label, note.c_str()),
       labelMode(labelMode),
       branch(branch),
@@ -79,25 +73,17 @@ Edge::Edge(std::string branch,
       bookendEnd(bookendEnd),
       stepSize(stepSize)
 {
-	this->setFlag(QGraphicsItem::ItemIsSelectable);
-	this->setCacheMode(NoCache);
+
     source = sourceNode;
     dest = destNode;
-    source->addOutgoingEdge(this);
-    dest->addIncommingEdge(this);
-    adjust();
 
-//    cppn=0;
+    init();
 }
 
 Edge::Edge(std::iostream &stream, std::map<std::string, Node*> nodeMap, std::map<std::string, Label*> labelMap):LabelableObject(stream, labelMap)
 {
 	std::string sourceId;
 	std::string targetId;
-
-//	int test;
-//	stream >> test;
-//	std::cout << test << std::endl;
 
 	stream >> branch;
 //	std::cout << "Branch: "<< branch << std::endl;
@@ -118,16 +104,18 @@ Edge::Edge(std::iostream &stream, std::map<std::string, Node*> nodeMap, std::map
 	stream >> stepSize;
 //	std::cout << stepSize << std::endl;
 
-	_flash = 0;
-	labelMode = 0;
+
 	source = nodeMap[sourceId];
 	dest = nodeMap[targetId];
+	init();
+}
 
+void Edge::init(){
+	_flash = 0;
+	labelMode = 0;
 	this->setFlag(QGraphicsItem::ItemIsSelectable);
 	this->setCacheMode(NoCache);
-    source->addOutgoingEdge(this);
-    dest->addIncommingEdge(this);
-    adjust();
+	adjust();
 }
 
 
@@ -145,13 +133,9 @@ void Edge::setWeight(qreal weight, bool update){
 	if(weight == currentWeight) return;
 	currentWeight = weight;
 	emit weightChanged(this, currentWeight, update);
-//	if(cppn) cppn->setWeight(this, weight, update);
 	if(update) this->update();
 }
 
-//! [1]
-
-//! [2]
 void Edge::adjust()
 {
     if (!source || !dest)
@@ -163,16 +147,8 @@ void Edge::adjust()
     prepareGeometryChange();
 
     if (length > qreal(20.)) {
-//    	QPointF edgeOffset;
-//    	if(abs(newline.dx()) > abs(newline.dy())){
-
     	QPointF sourceOffset = QPointF(0, Node::half_height);
     	QPointF targetOffset = QPointF(0, Node::half_height+Node::footerBarSize);
-
-//    		edgeOffset = QPointF((20/std::fabs(float(newline.dx())))*newline.dx(), (20/std::fabs(float(newline.dx())))*newline.dy());
-//    	} else {
-//    		edgeOffset = QPointF((20/std::fabs(float(newline.dy())))*newline.dx(), (20/std::fabs(float(newline.dy())))*newline.dy());
-//    	}
 
         sourcePoint = newline.p1() - sourceOffset;
         destPoint = newline.p2() + targetOffset;
@@ -182,25 +158,18 @@ void Edge::adjust()
 
     _line = QLineF(sourcePoint, destPoint);
 }
-//! [2]
 
-//! [3]
 QRectF Edge::boundingRect() const
 {
-    if (!source || !dest)
-        return QRectF();
+    if (!source || !dest) return QRectF();
 
-    qreal penWidth = 1;
-//    qreal extra = (penWidth + arrowSize) / 2.0;
+    qreal extra = abs(_line.p1().y() - _line.p2().y()) / 2;
 
     return QRectF(sourcePoint, QSizeF(destPoint.x() - sourcePoint.x(),
                                       destPoint.y() - sourcePoint.y()))
-        .normalized();
-//        .adjusted(-extra, -extra, extra, extra);
+        .normalized().adjusted(-extra, -extra, extra, extra);
 }
-//! [3]
 
-//! [4]
 void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
 	bool drawBackground= false;
@@ -208,16 +177,12 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 		return;
 
 	QPen pen;
-	QBrush brush;
+	QPainterPath path = getPath();
+
 
 	QLineF line(sourcePoint, destPoint);
 	if (qFuzzyCompare(line.length(), qreal(0.)))
 		return;
-	//! [4]
-
-	     //! [5]
-	// Draw the line itself
-
 
 	//Set connection color
 	QColor connectionColor;
@@ -237,7 +202,11 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 	if (partOfContextMenuEvent){
 		highlightColor = QColor(CONTEXT_EVENT_COLOR);
 	} else if (this->isSelected()){
-		highlightColor = QColor(SELECTED_COLOR);
+		if(*parentHasFocus){
+			highlightColor = QColor(SELECTED_COLOR);
+		} else {
+			highlightColor = QColor(NO_FOCUS_SELECTED_COLOR);
+		}
 	}
 
 	switch(*labelMode){
@@ -291,61 +260,20 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 	//Draw lines
 	if(drawBackground){
 		pen.setColor(backgroundColor);
-		pen.setWidthF(6.0);
+		pen.setWidthF(10.0);
 		painter->setPen(pen);
-		painter->drawLine(_line);
+		painter->drawPath(path);
 	}
 
 	pen.setColor(lineColor);
 	pen.setWidthF(abs(currentWeight)+2.0);
-	brush.setColor(lineColor);
-	brush.setStyle(Qt::SolidPattern);
-	painter->setBrush(brush);
 	painter->setPen(pen);
-	painter->drawLine(_line);
-	//! [5]
-
-//! [6]
-    // Draw the arrows
-//    double angle = ::acos(line.dx() / line.length());
-//    if (line.dy() >= 0)
-//        angle = TwoPi - angle;
-//
-////    QPointF sourceArrowP1 = sourcePoint + QPointF(sin(angle + Pi / 3) * arrowSize,
-////                                                  cos(angle + Pi / 3) * arrowSize);
-////    QPointF sourceArrowP2 = sourcePoint + QPointF(sin(angle + Pi - Pi / 3) * arrowSize,
-////                                                  cos(angle + Pi - Pi / 3) * arrowSize);
-//    QPointF destArrowP1 = destPoint + QPointF(sin(angle - Pi / 3) * arrowSize,
-//                                              cos(angle - Pi / 3) * arrowSize);
-//    QPointF destArrowP2 = destPoint + QPointF(sin(angle - Pi + Pi / 3) * arrowSize,
-//                                              cos(angle - Pi + Pi / 3) * arrowSize);
-//
-//    painter->setBrush(Qt::black);
-////    painter->drawPolygon(QPolygonF() << line.p1() << sourceArrowP1 << sourceArrowP2);
-//    painter->drawPolygon(QPolygonF() << line.p2() << destArrowP1 << destArrowP2);
+	painter->drawPath(path);
 }
 
 QPainterPath Edge::shape() const
 {
-  //Thanks to norobro for posting this code at
-  //http://www.qtcentre.org/threads/49201-Increase-margin-for-detecting-tooltip-events-of-QGraphicsLineItem
-  QPainterPath path;
-  QPainterPathStroker stroker;
-  path.moveTo(_line.p1());
-  path.lineTo(_line.p2());
-  stroker.setWidth(m_click_easy_width);
-  return stroker.createStroke(path);
+	QPainterPathStroker stroker;
+	stroker.setWidth(m_click_easy_width);
+	return stroker.createStroke(getPath());
 }
-
-//void Edge::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
-//{
-////	QMenu* menu = QMenu(this->actions());
-//
-//	setSelected(true);
-////	graphWidget->getWindow()->getLabelWidget()->getLabelMenu()->exec(event->screenPos());;
-////    QMenu menu(graphWidget->getWindow());
-////    QAction* action = new QAction("Dummy action", graphWidget->getWindow());
-////    menu.addAction(action);
-////    menu.exec(event->screenPos());
-//}
-//! [6]

@@ -8,13 +8,11 @@
 #ifndef CE_COMMANDSETWEIGHT_H_
 #define CE_COMMANDSETWEIGHT_H_
 
-#include <qundostack.h>
-
 #include "CE_Defines.h"
 #include "CE_Edge.h"
-//#include "CX_CXUndoCommand.h"
+#include "CX_ComBase.h"
 
-class CommandSetWeight: public QUndoCommand {
+class CommandSetWeight: public ComBase {
 public:
 	CommandSetWeight(QList<QGraphicsItem*> items);
 	CommandSetWeight(Edge* edge, qreal weight);
@@ -28,6 +26,9 @@ public:
 	}
 	bool mergeWith(const QUndoCommand *other);
 
+	bool isOk(){
+		return edgeTriples.size() > 0;
+	}
 
 private:
 	typedef std::pair<qreal, qreal> weightPair_t;

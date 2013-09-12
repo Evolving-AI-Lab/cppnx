@@ -15,10 +15,12 @@
 #include <istream>
 #include <ostream>
 #include <QString>
-#include <QGraphicsItem>
+
 
 #include "CE_Defines.h"
 
+class QMenu;
+class QAction;
 
 namespace util{
 
@@ -101,9 +103,13 @@ inline double toDouble(std::string value){
 	return result;
 }
 
+QString getSupportedExtentions();
+QString getSupportedFilename(QWidget* parent, const QString& text);
 
+QString getBase(const QString& fileName);
+QString getExtention(const QString& fileName);
+
+void insertFront(QMenu* menu, QAction* action);
 
 }
-
-
 #endif /* CE_UTIL_H_ */

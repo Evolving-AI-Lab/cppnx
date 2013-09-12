@@ -15,6 +15,7 @@ class Label;
 
 class LabelableObject : public SelectableObject {
 	Q_OBJECT
+
 public:
 	LabelableObject(Label* label = 0, QString note = "");
 	LabelableObject(std::iostream &stream, std::map<std::string, Label*> labelMap);
@@ -33,6 +34,13 @@ public:
 
 	void setNote(QString _note){
 		note = _note;
+	}
+
+	void init();
+
+public slots:
+	void onLabelSelected(){
+		this->setSelected(true);
 	}
 
 

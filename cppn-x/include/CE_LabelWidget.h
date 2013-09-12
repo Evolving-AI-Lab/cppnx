@@ -31,11 +31,13 @@ public slots:
 	void requestDelete();
 	void unlabel();
 	void labelableObjectSelected(bool selected);
-//	void indexChanged(uint index);
-//	void objectsMoved();
 	void rebuildMenu();
 	void labelSelected(bool labelSelected);
+	void singleLabelSelected(bool singleLabelSelected);
 	void updateSelection();
+	void rename();
+	void recolor();
+	void applyLabel();
 
 public:
 	LabelWidget();
@@ -63,11 +65,32 @@ public:
 		return labelMenu;
 	}
 
+	QMenu* getLabelContextMenu(){
+		return labelContextMenu;
+	}
+
+	QMenu* getNodeContextMenu(){
+		return nodeContextMenu;
+	}
+
+	bool getLabelSelected(){
+		return labelIsSelected;
+	}
+
+	bool getGraphicsViewHasFocus(){
+		return dragAndDropLabelBar->getIsActive();
+	}
+
+	void setDeleteAction(QAction* _deleteAction){
+		deleteAction = _deleteAction;
+	}
+
 signals:
-	void requestCommandExecution(QUndoCommand*);
+	void requestCommandExecution(ComBase*);
 	void applyLabel(Label*);
 	void labelsChanged();
 	void sceneModified();
+	void selectionChanged();
 
 
 private:
@@ -78,20 +101,22 @@ private:
     QLineEdit *labelName;
 
     QVBoxLayout* colorMainLayout;
-//    QVBoxLayout* colorLabelLayout;
-//    VerticalScrollArea* labelBar;
     DragAndDropGraphicsView* dragAndDropLabelBar;
-
-//    QSignalMapper* deleteSignalMapper;
-//    QSignalMapper* colorSignalMapper;
 
     QAction *addLabelAction;
     QAction *unlabelAction;
     QAction* deleteAction;
+	QAction* changeColorAction;
+	QAction* renameAction;
+	QAction* applyLabelAction;
 
     QMenu* labelMenu;
+    QMenu* labelContextMenu;
+    QMenu* nodeContextMenu;
 
     bool labelIsSelected;
+    bool singleLabelIsSelected;
+    bool labelableObjectIsSelected;
 };
 
 #endif /* CE_LABELWIDGET_H_ */

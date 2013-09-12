@@ -42,27 +42,35 @@ public:
 		numberOfNodes(0),
 		numberOfEdges(0),
 //		widget(widget),
-		nodes(nr_of_inputs),
-		edges(0),
+//		nodes(nr_of_inputs),
+//		edges(),
 		nodeMap(),
 		validPhenotype(false)
 //		newFile(false)
 
 	{
+		for(int i =0; i<nr_of_inputs; i++) nodes.append(0);
 //		finalNodeView = new FinalNodeView(width, height);
 //		finalNodeView = new FinalNodeView();
 	}
 
 	~Cppn(){
 		deletePhenotype();
-//		delete finalNodeView;
+		foreach(Node* node, removedNodes){
+			delete node;
+		}
+
+		foreach(Edge* edge, removedEdges){
+			delete edge;
+		}
 	}
 
 
 	void addNode(Node* node);
 	void addConnection(Edge* edge);
 
-
+	void removeNode(Node* node);
+	void removeConnection(Edge* edge);
 
 
 	void buildPhenotype();
@@ -72,91 +80,22 @@ public:
 
 	void positionNodes();
 	void positionNodesCircle();
+	void positionNodesONP();
 
-	size_t getNrOfNodes(){ return numberOfNodes;};
-	size_t getNrOfEdges(){ return numberOfEdges;};
+	double calculateModularity();
+
+	size_t getNrOfNodes() const{ return numberOfNodes;};
+	size_t getNrOfEdges() const{ return numberOfEdges;};
 
 	Node* getNode(size_t i){return nodes[i];};
 	Node* getNode(std::string name){return nodeMap[name];};
 	Edge* getEdge(size_t i){return edges[i];};
 
-//	std::string getHeaderLine(size_t i){
-//		return headerLines[i];
-//	}
-//	void addHeaderLine(std::string line){
-//		headerLines.push_back(line);
-//	}
-//	size_t getNrOfHeaderLines(){
-//		return headerLines.size();
-//	}
-//
-//	std::string getFooterLine(size_t i){
-//		return footerLines[i];
-//	}
-//	void addFooterLine(std::string line){
-//		footerLines.push_back(line);
-//	}
-//	size_t getNrOfFooterLines(){
-//		return footerLines.size();
-//	}
+	QList<Node*> getNodes() const{return nodes;};
+	QList<Edge*> getEdges() const{return edges;};
 
-//	void setNewFile(bool _newFile){
-//		newFile = _newFile;
-//	}
-//
-//	bool getNewFile(){
-//		return newFile;
-//	}
-
-//	//Genome getters and setters
-//	void setGenome(std::string _age = "unknown", std::string _phenotype = "grey"){
-//		age = _age;
-//		phenotype = _phenotype;
-//	}
-//
-//	std::string getAge(){
-//		return age;
-//	}
-//
-//	std::string getPhenotype(){
-//		return phenotype;
-//	}
-//
-//	//Identifier getters and setters
-//	void setIdentifier(std::string _branch = "unknown", std::string _id = "unknown"){
-//		branch = _branch;
-//		id = _id;
-//	}
-//
-//	std::string getBranch(){return branch;}
-//	std::string getId(){return id;}
-//
-//	//Parent getters and setters
-//	void addParent(std::string branch = "unknown", std::string id = "unknown"){
-//		parent_branches.push_back(branch);
-//		parent_ids.push_back(id);
-//	}
-//
-//	size_t getNrOfParents(){return parent_ids.size();}
-//	std::string getParentBranch(size_t index){return parent_branches[index];}
-//	std::string getParentId(size_t index){return parent_ids[index];}
-//
-//	//Data version getters and setters
-//	void setDataVersion(std::string _dataVersion = "unknown"){dataVersion = _dataVersion;}
-//	std::string getDataVersion(){return dataVersion;}
-
-	//Color button getters and setters
-//	size_t getNrOfColorButtons();
-//	Label* getColorButton(size_t i);
-////	void addColorButton(std::string text, QColor color);
-//
-//	void addLabelWidget(Label* labelWidget);
-
-
-
-//	FinalNodeView* getFinalNodeView(){
-//		return finalNodeView;
-//	}
+	QList<Node*> getInputs() const{return inputs;};
+	QList<Node*> getOutputs() const{return outputs;};
 
     static const int width = 256;
     static const int height = 256;
@@ -166,12 +105,16 @@ public slots:
 	void setWeight(Edge* edge, double weight, bool update = true);
 	void updateNodes();
 
+signals:
+	void newModularity(double);
+
 private:
 	void updateFromLink(Edge* edge);
 	void placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastSource);
 	std::vector< std::vector <Node*> > buildLayers();
 
 	void deletePhenotype(){
+//		std::cout << "Deleting phenotype..." << std::flush;
 		if(activationFunctions) delete[] activationFunctions;
 		if(linkWeights) delete[] linkWeights;
 		if(lastTargets) delete[] lastTargets;
@@ -182,6 +125,7 @@ private:
 		if(linkChache) delete[] linkChache;
 		if(toUpdate) delete[] toUpdate;
 		if(toUpdateStart) delete[] toUpdateStart;
+//		std::cout << "done" << std::endl;
 	}
 
 	//Phenotype (maybe make a separate class for it?)
@@ -202,8 +146,12 @@ private:
 
 
 //	CppnWidget* widget;
-    std::vector<Node*> nodes;
-    std::vector<Edge*> edges;
+    QList<Node*> nodes;
+    QList<Node*> inputs;
+    QList<Node*> outputs;
+    QList<Edge*> edges;
+    QList<Node*> removedNodes;
+    QList<Edge*> removedEdges;
     std::map<std::string, Node*> nodeMap;
 
     bool validPhenotype;

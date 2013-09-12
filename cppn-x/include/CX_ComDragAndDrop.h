@@ -8,11 +8,11 @@
 #ifndef CX_COMDRAGANDDROP_H_
 #define CX_COMDRAGANDDROP_H_
 
-#include <QUndoCommand>
+#include "CX_ComBase.h"
 
 class DragAndDropGraphicsView;
 
-class ComDragAndDrop: public QUndoCommand {
+class ComDragAndDrop: public ComBase {
 public:
 	ComDragAndDrop(DragAndDropGraphicsView* dragAndDropGraphicsView, uint from, uint to):
 		dragAndDropGraphicsView(dragAndDropGraphicsView), from(from), to(to){
@@ -25,6 +25,10 @@ public:
 
 	void undo();
 	void redo();
+
+	bool isOk(){
+		return from != to;
+	}
 
 private:
 	DragAndDropGraphicsView* dragAndDropGraphicsView;

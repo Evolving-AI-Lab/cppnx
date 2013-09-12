@@ -7,12 +7,12 @@
 
 #include "../include/CX_CXUndoCommand.h"
 
-CXUndoCommand::CXUndoCommand() {
+ComBase::ComBase() {
 	// TODO Auto-generated constructor stub
 
 }
 
-CXUndoCommand::~CXUndoCommand() {
+ComBase::~ComBase() {
 	// TODO Auto-generated destructor stub
 }
 

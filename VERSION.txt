@@ -84,26 +84,37 @@ Version: 0.6.0
 - You can now export the current state of one or more nodes (both in the main view and in the sidebar) to jpeg pictures.
 - The final image is now always produced when filming
 
-Link: https://dl.dropboxusercontent.com/u/17367759/cppn-x-precompiled-win32.zip
+Version: 0.7.0
+- ONP was added as a node placement
+- Display red-blue modularity for all modules that add to the modularity Q-score.
+- The modularity (Q-score) of each network is now shown in the bottom left of the application.
+- Nodes and connection can now be removed (this action can be undone to get them back).
+- When selecting a label, all connections and nodes with that label will now be selected. Pressing the label again will cause those connections and nodes to 'blink'.
+- Cppn-x now uses the same sigmoid and gaussian tables as picbreeder, meaning that pictures like 4266 are now correctly displayed.
+- Added a 'start here' button. Checking the button causes all scans and films to start from the current position, scan to the start, scan to the end and then scan back to the initial position.
+- Added the possibility to show curved lines instead of straight lines.
+- When showing modules the image of each node is now replaced with its module color.
+- When saving a node or a film you can now select different image formats. All supported formats are listed meaning that this could provide a workaround for the fact that the jpg format is not always available on all windows machines.
+- Precision for start, end and step were reduced to 2.
+- Fixed a bug where the step-size was not saved to file.
+- Fixed a bug where reseting with no changes or drag-and-dropping something to the same location would cause an action to be added to the undo stack.
+- Fixed a bug where, when selecting a node after selecting an edge, the ID displayed would still be the ID of the edge.
+- Fixed a bug where nodes added to the sidebar would not update properly after loading the file.
+- Fixed a bug where, when the window was in fullscreen move, the window moved when when filming causing part of the application to go off screen.
+- Fixed a bug where the program would not ask if you want to save a modified file upon loading a different file.
+- Fixed a bug where an oddly named frame would be produced.
 
 Known issues:
-- Reseting all nodes while no nodes were modified causes an action to be added to the undo stack and causes the file to be marked as modified. The same is true for dragging and dropping a label or node to the same position.
-- Nodes on the sidebar are not written to the file (the original nodes in the cppn are unaffected).
 - Undoing or redoing a 'reset all' rapidly selects all nodes that were changed.
-- There is a bug were, if the window is in fullscreen mode, the window is moved when filming, causing part of the application to go off-screen.
-- The step-size is not saved, and it does not change when selecting different edges.
-- The precision for begin, end and step-size might be a bit too high.
-- When selecting a node after selecting an edge the ID displayed will still be the ID of the edge.
+- JPG is not supported on windows
+- Sometimes oddly named frames are created.
 
 Priority:
-- Automatically calculate and display various statistics such as modularity, hierarchy, red-blue modularity (and maybe split the network into even more parts). [This would be great. Note that red-blue modularity has two colors only for a network with two modules, so what you really mean is a view in which nodes are colored by membership in modules, which would be great." Showing the modularity and hierarchy numbers would be great too.]
-
-- ONP node placement
-
-- Add or remove nodes and connections. [You can eliminate connections by setting them to 0, and you will be able to eliminate nodes via the knockout feature above, no? If so, this is not a high priority]
+-
 
 Wish-list:
-- Create a custom film.
+- Add nodes and connections
+- Calculate and display hierarchy.
 - Support for knockout experiments. [I think by this you mean clicking on a node and saying "deactivate" which grays it out an all incoming/outgoing connections and sets them to 0]
 - Add notes to objects.
 - Create a picture for an arbitrary node.
@@ -119,4 +130,6 @@ Wish-list:
 
 
 Category assignment pending answers to my questions: 
-- Improve connection visualization with curved or 90 degree bend lines. [is this hard? it would be nice if connections never went under nodes. that's the main thing, so if this is not too hard let's do it]
+- 
+
+Link: https://dl.dropboxusercontent.com/u/17367759/cppn-x-precompiled-win32.zip

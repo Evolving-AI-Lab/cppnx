@@ -10,6 +10,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QDoubleSpinBox>
+#include <QCheckBox>
 #include <QLabel>
 #include <QEvent>
 #include <iostream>
@@ -24,6 +25,12 @@ WeightWidget::WeightWidget(QWidget* parent): QGroupBox(parent) {
     weightSlidersLayout = new QVBoxLayout;
     buttonLayout = new QHBoxLayout;
 
+    stepLayout = new QVBoxLayout;
+    startLayout = new QVBoxLayout;
+    endLayout = new QVBoxLayout;
+    resetStartHereLayout = new QVBoxLayout;
+    scanFilmLayout = new QVBoxLayout;
+
     //Create actions
     scanAction = new QAction(tr("&Start scan"), this);
     scanAction->setShortcut(tr("Alt+S"));
@@ -32,6 +39,7 @@ WeightWidget::WeightWidget(QWidget* parent): QGroupBox(parent) {
     addAction(scanAction);
 
     resetAllAction = new QAction(tr("&Reset all"), this);
+    resetAllAction->setShortcut(tr("Alt+Shift+R"));
     resetAllAction->setStatusTip(tr("Reset all weights"));
     addAction(resetAllAction);
 
@@ -54,24 +62,34 @@ WeightWidget::WeightWidget(QWidget* parent): QGroupBox(parent) {
     scanAndCapture = new QPushButton;
     connect(scanAndCapture, SIGNAL(clicked()), screenCaptureAction, SLOT(trigger()));
 
-    QLabel* stepSizeLabel = new QLabel("step size");
-    QLabel* scanStartLabel = new QLabel("scan start");
-    QLabel* scanStopLabel = new QLabel("scan stop");
+    stepSizeLabel = new QLabel("step");
+    scanStartLabel = new QLabel("start");
+    scanStopLabel = new QLabel("end");
+
+    stepSizeLabel->setAlignment(Qt::AlignCenter);
+    scanStartLabel->setAlignment(Qt::AlignCenter);
+    scanStopLabel->setAlignment(Qt::AlignCenter);
+
+    startHereButton = new QPushButton(tr("start here"));
+    startHereButton->setCheckable(true);
+
+
 
     stepSizeSpinBox = new QDoubleSpinBox;
     stepSizeSpinBox->setMinimum(0);
     stepSizeSpinBox->setMaximum(3);
-    stepSizeSpinBox->setSingleStep(0.0001);
-    stepSizeSpinBox->setDecimals(4);
+    stepSizeSpinBox->setSingleStep(0.01);
+    stepSizeSpinBox->setDecimals(2);
     connect(stepSizeSpinBox, SIGNAL(valueChanged(double)), weightSliderWidget, SLOT(setStepSize(double)));
+    connect(stepSizeSpinBox, SIGNAL(valueChanged(double)), this, SIGNAL(bookendStepChanged(double)));
     stepSizeSpinBox->setValue(0.10);
 
     scanStartSpinBox = new QDoubleSpinBox;
     scanStartSpinBox->setMinimum(-3);
     scanStartSpinBox->setMaximum(3);
     scanStartSpinBox->setValue(-3);
-    scanStartSpinBox->setSingleStep(0.0001);
-    scanStartSpinBox->setDecimals(4);
+    scanStartSpinBox->setSingleStep(0.01);
+    scanStartSpinBox->setDecimals(2);
     connect(scanStartSpinBox, SIGNAL(valueChanged(double)), this, SIGNAL(bookendStartChanged(double)));
 
 
@@ -79,19 +97,27 @@ WeightWidget::WeightWidget(QWidget* parent): QGroupBox(parent) {
     scanStopSpinBox->setMinimum(-3);
     scanStopSpinBox->setMaximum(3);
     scanStopSpinBox->setValue(3);
-    scanStopSpinBox->setSingleStep(0.0001);
-    scanStopSpinBox->setDecimals(4);
+    scanStopSpinBox->setSingleStep(0.01);
+    scanStopSpinBox->setDecimals(2);
     connect(scanStopSpinBox, SIGNAL(valueChanged(double)), this, SIGNAL(bookendEndChanged(double)));
 
-    buttonLayout->addWidget(resetAll);
-    buttonLayout->addWidget(scan);
-    buttonLayout->addWidget(scanAndCapture);
-    buttonLayout->addWidget(stepSizeLabel);
-    buttonLayout->addWidget(stepSizeSpinBox);
-    buttonLayout->addWidget(scanStartLabel);
-    buttonLayout->addWidget(scanStartSpinBox);
-    buttonLayout->addWidget(scanStopLabel);
-    buttonLayout->addWidget(scanStopSpinBox);
+    resetStartHereLayout->addWidget(resetAll);
+    resetStartHereLayout->addWidget(startHereButton);
+    scanFilmLayout->addWidget(scan);
+    scanFilmLayout->addWidget(scanAndCapture);
+
+    stepLayout->addWidget(stepSizeLabel);
+    stepLayout->addWidget(stepSizeSpinBox);
+    startLayout->addWidget(scanStartLabel);
+    startLayout->addWidget(scanStartSpinBox);
+    endLayout->addWidget(scanStopLabel);
+    endLayout->addWidget(scanStopSpinBox);
+
+    buttonLayout->addLayout(resetStartHereLayout);
+    buttonLayout->addLayout(scanFilmLayout);
+    buttonLayout->addLayout(stepLayout);
+    buttonLayout->addLayout(startLayout);
+    buttonLayout->addLayout(endLayout);
 
     weightSlidersLayout->addWidget(weightSliderWidget);
     weightSlidersLayout->addLayout(buttonLayout);
@@ -130,7 +156,17 @@ void WeightWidget::startScan(){
 //	std::cout << timerId <<std::endl;
 	if(!timerId){
 //		std::cout << "Scan started at: " << scanStartSpinBox->value() <<std::endl;
-		weightSliderWidget->setSlider(scanStartSpinBox->value());
+		if(startHereButton->isChecked()){
+			scanState = 1;
+			start = weightSliderWidget->getValue();
+		} else {
+			scanState = 0;
+			weightSliderWidget->setSlider(scanStartSpinBox->value());
+		}
+
+		weightSliderWidget->resetFlash();
+
+
 		scanStarted(true);
 		emit scanStarted();
 		timerId = startTimer(10);
@@ -152,6 +188,7 @@ void WeightWidget::startScan(){
 void WeightWidget::stopScan(){
 	killTimer(timerId);
 	timerId=0;
+	emit flash(false);
 	emit scanStopped();
 	if(capturing){
 		emit filmStopped();
@@ -171,13 +208,42 @@ void WeightWidget::timerEvent(QTimerEvent *event)
 
 //	std::cout << "Scan from: " << scanStartSpinBox->value() << " to: " << scanStopSpinBox->value() <<std::endl;
 //	std::cout << "Slider at: " << weightSliderWidget->getValue() << " step size: " << stepSizeSpinBox->value() <<std::endl;
-	weightSliderWidget->setSlider(weightSliderWidget->getValue() + stepSizeSpinBox->value());
+
+	if(scanState == 0 || scanState == 2){
+		weightSliderWidget->setSlider(weightSliderWidget->getValue() + stepSizeSpinBox->value());
+	} else {
+		weightSliderWidget->setSlider(weightSliderWidget->getValue() - stepSizeSpinBox->value());
+	}
+
+	if(weightSliderWidget->flash()) emit flash(true);
 	if(capturing) emit frameReady();
-	if(weightSliderWidget->getValue() >= scanStopSpinBox->value()) stopScan();
+
+	switch(scanState){
+	case 0:
+		if(weightSliderWidget->getValue() >= scanStopSpinBox->value()) stopScan();
+	break;
+	case 1:
+		if(weightSliderWidget->getValue() <= scanStartSpinBox->value()) scanState++;
+	break;
+	case 2:
+		if(weightSliderWidget->getValue() >= scanStopSpinBox->value()) scanState++;
+	break;
+	case 3:
+		if(weightSliderWidget->getValue() <= start){
+			stopScan();
+			weightSliderWidget->setSlider(start);
+		}
+	break;
+	default:
+
+	break;
+	}
+
 }
 
 void WeightWidget::edgeSelected(bool selected){
 //	std::cout << "Edge selected: " << selected <<std::endl;
+	weightSliderWidget->setNode(tr(""));
 	edgeIsSelected = selected;
 	scanAction->setEnabled(selected);
 	screenCaptureAction->setEnabled(selected);
@@ -239,7 +305,7 @@ void WeightWidget::changeEvent(QEvent* event){
 	}
 }
 
-void WeightWidget::setEdge(double weight, double originalWeight, QString id, double bookendStart, double bookendEnd){
+void WeightWidget::setEdge(double weight, double originalWeight, QString id, double bookendStart, double bookendEnd, double bookendStep){
 	stopScan();
 //	std::cout << "Bookends: " << bookendStart << " " << bookendEnd <<std::endl;
 	blockSignals(true);
@@ -247,6 +313,13 @@ void WeightWidget::setEdge(double weight, double originalWeight, QString id, dou
 	weightSliderWidget->setEdge(weight, originalWeight, id);
 	scanStartSpinBox->setValue(bookendStart);
 	scanStopSpinBox->setValue(bookendEnd);
+	stepSizeSpinBox->setValue(bookendStep);
 	weightSliderWidget->blockSignals(false);
 	blockSignals(false);
+}
+
+void WeightWidget::setNode(QString id){
+//	stopScan();
+//	std::cout << "Bookends: " << bookendStart << " " << bookendEnd <<std::endl;
+	weightSliderWidget->setNode(id);
 }

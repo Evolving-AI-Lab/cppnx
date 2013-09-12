@@ -5,6 +5,9 @@
 TEMPLATE = app
 TARGET = cppn-x
 
+CONFIG += release 
+CONFIG += static 
+
 QMAKE_CFLAGS_X86_64 -= -mmacosx-version-min=10.5
 QMAKE_CFLAGS_X86_64 += -mmacosx-version-min=10.7
 QMAKE_CXXFLAGS_X86_64 = $$QMAKE_CFLAGS_X86_64
@@ -24,7 +27,15 @@ INCLUDEPATH += . \
                libzip-0.11.1/xcode \
                libzip-0.11.1/src
 
-LIBS += -lm 
+#QTPLUGIN += qjpeg 
+#            qgif \
+#            qmng \
+#            qico \
+#            qsvg \
+#            qtiff
+
+LIBS += -lm \ 
+        -lgsl
 #LIBS += -lz 
 
 # Requied for some C99 defines
@@ -67,6 +78,8 @@ HEADERS += zlib/crc32.h \
            cppn-x/include/CX_DragAndDropGraphicsView.h \
            cppn-x/include/CX_ComDragAndDrop.h \
            cppn-x/include/CX_ComSetBookends.h \
+           cppn-x/include/CX_SortedNodesList.h \
+           cppn-x/include/CX_ComAddRemoveObject.h \
            libzip-0.11.1/lib/zip.h \
            libzip-0.11.1/lib/zipconf.h \
            libzip-0.11.1/lib/zipint.h
@@ -105,6 +118,7 @@ SOURCES += zlib/adler32.c \
            cppn-x/src/CE_CommandChangeLabelName.cpp \
            cppn-x/src/CE_NodeViewWidget.cpp \
            cppn-x/src/CE_LabelWidget.cpp \
+           cppn-x/src/CE_Util.cpp \
            cppn-x/src/CX_WeightWidget.cpp \
            cppn-x/src/CX_WeightSliderWidget.cpp \
            cppn-x/src/CX_SelectableObject.cpp \
@@ -112,6 +126,7 @@ SOURCES += zlib/adler32.c \
            cppn-x/src/CX_ContextMenuGraphicsView.cpp \
            cppn-x/src/CX_ComDragAndDrop.cpp \
            cppn-x/src/CX_ComSetBookends.cpp \
+           cppn-x/src/CX_ComAddRemoveObject.cpp \
            libzip-0.11.1/lib/mkstemp.c \
            libzip-0.11.1/lib/zip_add.c \
            libzip-0.11.1/lib/zip_add_dir.c \

@@ -20,6 +20,7 @@ CommandSetWeight::CommandSetWeight(QList<QGraphicsItem*> items){
 			}
 		}
 	}
+
 	setText("reset weight");
 	comId = RESET_WEIGHT_ID;
 }
@@ -29,6 +30,7 @@ CommandSetWeight::CommandSetWeight(Edge* edge, qreal weight) {
 	weightPair_t weightPair(edge->getWeight(), weight);
 	triple_t triple(edge, weightPair);
 	edgeTriples.push_back(triple);
+
 	setText("set weight");
 	comId = SET_WEIGHT_ID;
 }

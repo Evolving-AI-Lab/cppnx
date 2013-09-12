@@ -9,7 +9,7 @@
 #define CX_CONTEXTMENUGRAPHICSVIEW_H_
 
 #include <QGraphicsView>
-#include <QUndoCommand>
+#include "CX_ComBase.h"
 #include "CX_SelectableObject.h"
 
 class ContextMenuGraphicsView: public QGraphicsView {
@@ -18,23 +18,34 @@ public:
 	ContextMenuGraphicsView(QWidget* parent = 0):QGraphicsView(parent){
 		QGraphicsScene *scene = new QGraphicsScene(this);
 		setScene(scene);
+		thisHasFocus = false;
+		partOfContextMenuEvent = false;
 	}
 
 	virtual ~ContextMenuGraphicsView(){
 		//nix
 	}
 
+	bool getIsActive(){
+		return this->hasFocus() || partOfContextMenuEvent;
+	}
+
+	bool thisHasFocus;
+	bool partOfContextMenuEvent;
+
 public slots:
 	void ContextMenuEvent(SelectableObject* object, bool begin);
+	void updateAll();
 
 signals:
-	void requestCommandExecution(QUndoCommand*);
+	void requestCommandExecution(ComBase*);
 	void sceneModified();
 	void focusChanged();
 
 protected:
 	void addContextMenuObject(SelectableObject* object){
 		connect(object, SIGNAL(contextMenuEvent(SelectableObject*, bool)), this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
+		object->setHasFocus(&thisHasFocus);
 		scene()->addItem(object);
 	}
 
@@ -44,11 +55,17 @@ protected:
 	}
 
 	void focusInEvent(QFocusEvent * event){
+		thisHasFocus= true;
+		update();
+		updateAll();
 		emit focusChanged();
 		QGraphicsView::focusInEvent(event);
 	}
 
 	void focusOutEvent(QFocusEvent * event){
+		thisHasFocus= false;
+		update();
+		updateAll();
 		emit focusChanged();
 		QGraphicsView::focusOutEvent(event);
 	}

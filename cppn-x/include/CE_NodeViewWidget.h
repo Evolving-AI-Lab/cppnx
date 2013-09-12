@@ -21,9 +21,8 @@ public:
 	virtual ~NodeViewWidget();
 
 	void clearNodeViews();
-	void deleteNodeView(NodeView* nodeToDelete);
 	void addNodeView(NodeView* node);
-	void insertNodeView(NodeView* nodeView, size_t index);
+
 
 	void setNodeviews(QList<NodeView*> nodeviews){
 		clearNodeViews();
@@ -42,34 +41,32 @@ public:
 		return result;
 	}
 
+    QMenu* getNodeviewMenu(){
+    	return nodeviewMenu;
+    }
+
+    bool deletableNodeviewSelected(){
+		foreach(QGraphicsItem* item, scene()->selectedItems()){
+			NodeView* nodeview = qgraphicsitem_cast<NodeView*>(item);
+			if(nodeview) return true;
+		}
+		return false;
+    }
+
 	static const int sidebarMargin = 20;
     static const int betweenNodeMargin = 20;
 
-    QAction* getDeleteViewNodeAction(){
-    	return deleteViewNodeAction;
-    }
-
 public slots:
+	void insertNodeView(NodeView* nodeView, size_t index);
+	void insertNodeView(NodeView* nodeView);
+	void deleteNodeView(NodeView* nodeToDelete);
+
 	void deleteNodeView();
 	void addNodeView(QList<QGraphicsItem*> nodes);
 	void selectionUpdated();
 	void saveImage();
-//	void moveNodes(uint source, uint target);
-//	void ContextMenuEvent(SelectableObject* object, bool begin);
-
-//signals:
-//	void requestCommandExecution(QUndoCommand*);
 
 private:
-//    void setNodeviewPositions();
-//	void setNodeviewPosition(NodeView* node, size_t index);
-//	void setSidebarSceneRect();
-
-//	QList<NodeView*> nodeViews;
-
-
-    QAction* deleteViewNodeAction;
-    QAction* saveImageAction;
     QMenu* nodeviewMenu;
 };
 

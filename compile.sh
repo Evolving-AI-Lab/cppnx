@@ -8,13 +8,6 @@ then
 	exit
 fi
 
-if [[ $2 = clean ]]
-then
-	echo "Running clean"
-	./clean.sh
-	exit
-fi
-
 rootDir=`pwd`
 
 if [[ $1 = ffmpeg ]]

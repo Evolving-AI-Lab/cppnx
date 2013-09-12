@@ -32,15 +32,23 @@ public:
 		partOfContextMenuEvent = partOf;
 	}
 
+	void setHasFocus(bool* _parentHasFocus){
+		parentHasFocus = _parentHasFocus;
+	}
+
 	signals:
 	void contextMenuEvent(SelectableObject*, bool);
+	void selectedHasChanged();
+	void onSelected();
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 
+
 	QMenu* contextMenu;
 	bool partOfContextMenuEvent;
+	bool* parentHasFocus;
 };
 
 #endif /* CX_SELECTABLEOBJECT_H_ */

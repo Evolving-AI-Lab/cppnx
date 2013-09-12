@@ -11,9 +11,9 @@
 #include <QGraphicsView>
 
 #include "CE_NodeViewWidget.h"
-//#include "CX_CXUndoCommand.h"
+#include "CX_ComBase.h"
 
-class CommandNodeView: public QUndoCommand {
+class CommandNodeView: public ComBase {
 public:
 //	typedef std::pair<Node*, NodeView*> nodeViewPair_t;
 

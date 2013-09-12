@@ -8,14 +8,14 @@
 #ifndef CX_COMSETBOOKENDS_H_
 #define CX_COMSETBOOKENDS_H_
 
-#include <QUndoCommand>
+#include "CX_ComBase.h"
 #include "CE_Defines.h"
 
 class Edge;
 
-class ComSetBookends: public QUndoCommand {
+class ComSetBookends: public ComBase {
 public:
-	ComSetBookends(Edge* edge, double bookendStart, double bookendEnd);
+	ComSetBookends(Edge* edge, double bookendStart, double bookendEnd, double bookendStep);
 //	virtual ~ComSetBookends();
 
 	void undo();
@@ -31,8 +31,10 @@ private:
 	Edge* edge;
 	double bookendStart;
 	double bookendEnd;
+	double bookendStep;
 	double previousBookendStart;
 	double previousBookendEnd;
+	double previousBookendStep;
 };
 
 #endif /* CX_COMSETBOOKENDS_H_ */

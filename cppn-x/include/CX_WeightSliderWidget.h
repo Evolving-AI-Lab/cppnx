@@ -29,10 +29,14 @@ public:
 
 	double getValue();
 
+	void resetFlash(){
+		flashCounter = 0;
+	}
 	bool flash();
 
 public slots:
 	void setEdge(double weight, double originalWeight, QString id);
+	void setNode(QString id);
 	void reset();
 	void setSlider(double weight);
 	void setSlider(int value);
@@ -45,6 +49,7 @@ private:
 	void setSlider(int value, double weight);
 	int sliderBase;
 	int sliderRange;
+	int flashCounter;
 
 	QLabel* idLabel;
     QSlider* slider;

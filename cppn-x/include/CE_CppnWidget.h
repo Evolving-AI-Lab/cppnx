@@ -51,7 +51,10 @@
 #include "CE_CommandSetPos.h"
 #include "CE_CommandLabelObject.h"
 #include "CE_CommandSetWeight.h"
+#include "CX_ComAddRemoveObject.h"
 #include "CX_ContextMenuGraphicsView.h"
+#include "CX_SortedNodesList.h"
+
 
 class Node;
 class Edge;
@@ -95,8 +98,33 @@ public:
     	return layerAction;
     }
 
+    QAction* getONPAction(){
+    	return ONPAction;
+    }
+
+    QAction* getNodeLabelAction(){
+    	return nodeLabelAction;
+    }
+
+    QAction* getNodeModuleAction(){
+    	return nodeModuleAction;
+    }
+
+    QAction* getCurvedLineAction(){
+    	return curvedLineAction;
+    }
+
+    QAction* getStraightLineAction(){
+    	return straightLineAction;
+    }
+
+
     QActionGroup* getViewGroup(){
     	return viewGroup;
+    }
+
+    QActionGroup* getNodeViewGroup(){
+    	return nodeViewGroup;
     }
 
     QMenu* getEdgeMenu(){
@@ -111,6 +139,13 @@ public:
     	return nodeSelected;
     }
 
+    bool getEdgeSelected(){
+    	return edgeSelected;
+    }
+
+    void removeNode(Node* node);
+    void removeEdge(Edge* edge);
+
 public slots:
 	// Zoom functions
     void zoomIn();
@@ -123,10 +158,12 @@ public slots:
     void weightUpdated(Edge* edge);
     void onBookendStartChanged(double);
     void onBookendEndChanged(double);
+    void onBookendStepChanged(double);
 
     //Position functions
     void positionNodesLayers();
     void positionNodesCircle();
+    void positionNodesONP();
 
     //Add node/edge functions
     void addNode(Node* node);
@@ -139,34 +176,54 @@ public slots:
     void addNodeView();
 
     //Set view functions
+    void setCurvedLines();
+    void setStraightLines();
+
     void setLabelView();
     void setSignView();
     void setLabelAndSignView();
 
+    void setNodeLabelView();
+    void setNodeModuleView();
+
     //Update functions
     void updateSelection();
-    void updateAll();
+//    void updateAll();
     void updatePreviousPositions();
+    void rebuildPhenotype();
 
     void itemMoved(Node * node);
 
     void saveImage();
+
+    void deleteObjects();
+
+    void deselectItems();
+
+    void flash(bool flashOn);
 //    void ContextMenuEvent(SelectableObject* object, bool begin);
 
 signals:
-	void requestCommandExecution(QUndoCommand*);
+//	void requestCommandExecution(QUndoCommand*);
 	void requestAddNodeview(QList<QGraphicsItem*>);
 	void edgeUpdated(Edge*);
+	void nodeUpdated(Node*);
 	void labelableObjectSelected(bool);
+	void newModularity(double);
 
 protected:
     void wheelEvent(QWheelEvent* event);
     void scaleView(qreal scaleFactor);
     void changeEvent(QEvent* event);
+    void mousePressEvent(QMouseEvent * event);
+    void mouseReleaseEvent(QMouseEvent * event);
+    void focusOutEvent ( QFocusEvent * event);
+
 
 private:
     void setNodeSelected(bool selected);
     void setEdgeSelected(bool selected);
+    void setSceneRect();
 
     Cppn* cppn;
 
@@ -175,24 +232,39 @@ private:
     QAction *labelOnlyAction;
     QAction *signOnlyAction;
     QAction *labelAndSignAction;
-    QAction* circleAction;
+
+    //Positioning actions
     QAction* layerAction;
+    QAction* ONPAction;
+    QAction* circleAction;
     QActionGroup* viewGroup;
-    QAction* saveImageAction;
+
+    QAction* nodeLabelAction;
+    QAction* nodeModuleAction;
+    QActionGroup* nodeViewGroup;
+
+    QAction* curvedLineAction;
+    QAction* straightLineAction;
+    QActionGroup* lineModeGroup;
+
+
 
 
     QMenu* edgeMenu;
     QMenu* nodeMenu;
 
     //Sorted vectors for modifying scene
-    std::vector<Node*> x_sorted;
-    std::vector<Node*> y_sorted;
+    SortedNodesList x_sorted;
+    SortedNodesList y_sorted;
 
     //Misc
     bool blockWeightUpdates;
     Edge::LabelMode labelMode;
+    Edge::LineMode lineMode;
+    Node::NodeLabelMode nodeLabelMode;
 	bool nodeSelected;
 	bool edgeSelected;
+	bool firstClick;
 	QList<QGraphicsItem*> previousSelection;
 
     //Current borders

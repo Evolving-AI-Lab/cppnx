@@ -8,16 +8,15 @@
 #ifndef CE_COMMANDADDLABEL_H_
 #define CE_COMMANDADDLABEL_H_
 
-#include <QUndoCommand>
 #include <QGraphicsItem>
-//#include "CX_CXUndoCommand.h"
-//#include "CE_Window.h"
+#include <QList>
 
+#include "CX_ComBase.h"
 
 class LabelWidget;
 class Label;
 
-class CommandAddLabel: public QUndoCommand {
+class CommandAddLabel: public ComBase {
 public:
 	CommandAddLabel(LabelWidget* labelWidget, Label* label, bool add = true);
 	CommandAddLabel(LabelWidget* labelWidget, QList<QGraphicsItem*> labels, bool add = true);

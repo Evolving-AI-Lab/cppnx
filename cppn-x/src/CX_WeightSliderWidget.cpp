@@ -19,7 +19,7 @@
 #define MIN_VALUE -3.0
 #define MAX_VALUE 3.0
 
-#define MAX_SLIDER_PRECISION 4.0
+#define MAX_SLIDER_PRECISION 2.0
 #define NR_OF_TICKS 10
 
 WeightSliderWidget::WeightSliderWidget(QWidget* object):QWidget(object) {
@@ -78,6 +78,10 @@ void WeightSliderWidget::setEdge(double weight, double originalWeight, QString i
 	idLabel->setText("Id: " + id);
 }
 
+void WeightSliderWidget::setNode(QString id){
+	idLabel->setText("Id: " + id);
+}
+
 void WeightSliderWidget::setSlider(int value){
 	double weight = (float(value))*((MAX_VALUE - MIN_VALUE)/sliderRange) + MIN_VALUE;
 //	spinBox->blockSignals(true);
@@ -96,6 +100,7 @@ void WeightSliderWidget::setSlider(double weight){
 
 void WeightSliderWidget::setSlider(int value, double weight){
 //	std::cout << value << " " << weight <<std::endl;
+	if(++flashCounter > 5) flashCounter = 0;
 	slider->blockSignals(true);
 	slider->setValue(value);
 	slider->blockSignals(false);
@@ -120,7 +125,8 @@ double WeightSliderWidget::getValue(){
 }
 
 bool WeightSliderWidget::flash(){
-	return slider->value()%(slider->singleStep() * 5) == 0;
+//	return slider->value()%(slider->singleStep() * 5) == 0;
+	return flashCounter == 0;
 }
 
 void WeightSliderWidget::reset(){

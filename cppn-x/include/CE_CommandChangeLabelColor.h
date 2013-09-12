@@ -8,13 +8,13 @@
 #ifndef CE_COMMANDCHANGELABELCOLOR_H_
 #define CE_COMMANDCHANGELABELCOLOR_H_
 
-#include <QUndoCommand>
 #include <QColor>
-//#include "CX_CXUndoCommand.h"
+#include <iostream>
+#include "CX_ComBase.h"
 
 class Label;
 
-class CommandChangeLabelColor: public QUndoCommand {
+class CommandChangeLabelColor: public ComBase {
 public:
 	CommandChangeLabelColor(Label* labelWidget);
 	virtual ~CommandChangeLabelColor();

@@ -5,59 +5,75 @@
  *      Author: joost
  */
 
-#include "CE_Cppn.h"
 #include <queue>
 #include <set>
 #include <cmath>
 #include <algorithm>
 
+#include "CE_Cppn.h"
+#include "opt_placement.hpp"
+
 
 static const double Pi = 3.14159265358979323846264338327950288419717;
 
-void Cppn::addNode(Node* QTnode){
-	if(QTnode->getXmlLabel() == INPUT_X){
-		nodes[input_x]=QTnode;
-		QTnode->setIndex(input_x);
-	} else if(QTnode->getXmlLabel() == INPUT_Y){
-		nodes[input_y]=QTnode;
-		QTnode->setIndex(input_y);
-	} else if(QTnode->getXmlLabel() == INPUT_D){
-		nodes[input_d]=QTnode;
-		QTnode->setIndex(input_d);
-	} else if(QTnode->getXmlLabel() == INPUT_BIAS){
-		nodes[input_b]=QTnode;
-		QTnode->setIndex(input_b);
-//	} else if(QTnode->getXmlLabel() == OUTPUT_INK){
-//		finalNodeView->setValueImage(QTnode->getImage());
-////		QTnode->setFinalNodeView(finalNodeView);
-//		nodes.push_back(QTnode);
-//	} else if(QTnode->getXmlLabel() == OUTPUT_SATURATION){
-////		QTnode->setFinalNodeView(finalNodeView);
-//		finalNodeView->setSaturationImage(QTnode->getImage());
-//		nodes.push_back(QTnode);
-//	} else if(QTnode->getXmlLabel() == OUTPUT_HUE){
-////		QTnode->setFinalNodeView(finalNodeView);
-//		finalNodeView->setHueImage(QTnode->getImage());
-//		nodes.push_back(QTnode);
-//	} else if(QTnode->getXmlLabel() == OUTPUT_BRIGTHNESS){
-////		QTnode->setFinalNodeView(finalNodeView);
-//		finalNodeView->setValueImage(QTnode->getImage());
-//		nodes.push_back(QTnode);
+void Cppn::addNode(Node* node){
+	removedNodes.removeAll(node);
+
+	if(node->getXmlLabel() == INPUT_X){
+		nodes[input_x]=node;
+		node->setIndex(input_x);
+	} else if(node->getXmlLabel() == INPUT_Y){
+		nodes[input_y]=node;
+		node->setIndex(input_y);
+	} else if(node->getXmlLabel() == INPUT_D){
+		nodes[input_d]=node;
+		node->setIndex(input_d);
+	} else if(node->getXmlLabel() == INPUT_BIAS){
+		nodes[input_b]=node;
+		node->setIndex(input_b);
 	} else {
-		nodes.push_back(QTnode);
+		nodes.push_back(node);
 	}
 
-	nodeMap[QTnode->getBranch() + "_" + QTnode->getId()]=QTnode;
+	if(node->getType() == XML_TYPE_INPUT){
+		inputs.push_back(node);
+	} else if(node->getType() == XML_TYPE_OUTPUT){
+		outputs.push_back(node);
+	}
+
+	nodeMap[node->getBranch() + "_" + node->getId()]=node;
 	numberOfNodes++;
 	validPhenotype=false;
-//	QTnode->setCppn(this);
+}
+
+void Cppn::removeNode(Node* node){
+	nodes.removeAll(node);
+	removedNodes.append(node);
+	numberOfNodes--;
+	validPhenotype=false;
 }
 
 void Cppn::addConnection(Edge* edge){
+//	std::cout << "Adding connection: " << edge << " from: " << edge->sourceNode() << " to " << edge->destNode() << std::endl;
+	edge->sourceNode()->addOutgoingEdge(edge);
+	edge->destNode()->addIncommingEdge(edge);
+	removedEdges.removeAll(edge);
 	edges.push_back(edge);
 	validPhenotype=false;
 	numberOfEdges++;
 //	edge->setCppn(this);
+}
+
+
+
+void Cppn::removeConnection(Edge* edge){
+	edge->sourceNode()->removeOutgoingEdge(edge);
+	edge->destNode()->removeIncommingEdge(edge);
+	edges.removeAll(edge);
+	removedEdges.push_back(edge);
+	validPhenotype=false;
+	numberOfEdges--;
+//	buildPhenotype();
 }
 
 void Cppn::setWeight(Edge* edge, double weight, bool update){
@@ -72,6 +88,7 @@ void Cppn::setWeight(Edge* edge, double weight, bool update){
 void Cppn::updateNodes(){
 	if(!validPhenotype) buildPhenotype();
 
+//	std::cout << "Setting input values... " << std::flush;
 	//Set input values
 	for(int x=0; x<width; x++){
 		for(int y=0; y<height; y++){
@@ -85,8 +102,10 @@ void Cppn::updateNodes(){
 			updateNode(input_b, index, 1.0);
 		}
 	}
+//	std::cout << "done" << std::endl;
 
 	//Update the rest
+//	std::cout << "Updating other nodes... " << std::flush;
 	for(size_t currentNode=nr_of_inputs; currentNode<numberOfNodes; currentNode++){
 //		std::cout << "Current node: " << currentNode << std::endl;
 		for(size_t xy_index=0; xy_index < width*height;  xy_index++){
@@ -95,21 +114,18 @@ void Cppn::updateNodes(){
 		}
 		phenotypeNodes[currentNode]->updateAll();
 	}
+//	std::cout << "done" << std::endl;
 
-//	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
-//		finalNodeView->updateFinalView(xy_index);
-//	}
-//	finalNodeView->update();
 }
 
 std::vector< std::vector <Node*> > Cppn::buildLayers(){
 	std::vector< std::vector <Node*> > layers;
 	layers.push_back(std::vector <Node*>());
-	std::vector <Node*> notPlaced = nodes;
-	std::vector <Node*> nextNotPlaced;
+	QList <Node*> notPlaced = nodes;
+	QList <Node*> nextNotPlaced;
 	std::map <Node*, int> incommingEdges;
 
-	for(size_t i=0; i<nodes.size(); i++){
+	for(int i=0; i<nodes.size(); i++){
 		incommingEdges[nodes[i]]= nodes[i]->incomingEdges().size();
 		//std::cout << nodes[i]->incomingEdges().size() << std::endl;
 	}
@@ -117,7 +133,7 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 	int depth = 0;
 	while(notPlaced.size()>0){
 		nextNotPlaced.clear();
-		for(size_t i=0; i<notPlaced.size(); i++){
+		for(int i=0; i<notPlaced.size(); i++){
 			if(incommingEdges[notPlaced[i]] <= 0){
 				layers.back().push_back(notPlaced[i]);
 				notPlaced[i]->setDepth(depth);
@@ -143,6 +159,7 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 
 
 void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastSource){
+//	std::cout << "Placing node: " << node << " index:" << index << " ... " << std::flush;
 	activationFunctions[index]=node->getActivationFunction();
 
 	node->setIndex(index);
@@ -151,22 +168,28 @@ void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastS
 	QList<Edge *> outgoingEdges = node->outgoingEdges();
 	foreach(Edge* outgoing_edge, outgoingEdges){
 		linkWeights[lastTarget] = outgoing_edge->getWeight();
+//		std::cout << "Outgoing edge: " << outgoing_edge << " index:" << lastTarget << " ... " << std::endl;
 		outgoing_edge->setIndex(lastTarget);
 		lastTarget++;
 	}
 
 	QList<Edge *> incommingEdges = node->incomingEdges();
 	foreach(Edge* incommingEdge, incommingEdges){
+//		std::cout << "Incomming edge: " << incommingEdge << " index:" << lastSource << " ... " << std::endl;
 		nodeSources[lastSource] = incommingEdge->getIndex()*width*height;
 		lastSource++;
 	}
 
 	lastTargets[index+1]=lastTarget;
 	lastSources[index+1]=lastSource;
+//	std::cout << "done" << std::endl;
 }
 
 void Cppn::buildPhenotype(){
+//	std::cout << "Building phenotype" <<std::endl;
 	deletePhenotype();
+//	std::cout << "New nodes size: " << nodes.size() <<std::endl;
+//	std::cout << "New edges size: " << edges.size() <<std::endl;
 	activationFunctions = new ActivationFunctionPt[nodes.size()];
 	lastTargets = new size_t[nodes.size()+1];
 	lastSources = new size_t[nodes.size()+1];
@@ -183,7 +206,7 @@ void Cppn::buildPhenotype(){
 
 	std::vector< std::vector <Node*> > layers = buildLayers();
 
-
+	std::queue<Node*> test1;
 
 	size_t currentNodeIndex=nr_of_inputs;
 	lastTargets[0]=0;
@@ -193,6 +216,7 @@ void Cppn::buildPhenotype(){
 	//size_t lastTarget=0;
 	//size_t lastSource=0;
 
+//	std::cout << "Ordering input nodes... " << std::flush;
 	//Put the input nodes in the right order
 	Node* inputs[4];
 	for(size_t i=0; i<layers[0].size(); i++ ){
@@ -200,12 +224,20 @@ void Cppn::buildPhenotype(){
 			inputs[layers[0][i]->getIndex()] = layers[0][i];
 		}
 	}
+//	std::cout << "done " << std::endl;
 
+	std::queue<Node*> test2;
+
+//	std::cout << "Building input nodes... " << std::flush;
 	//Process the input nodes
 	for(size_t i=0; i<4; i++ ){
 		placeNode(inputs[i], i, targetEdgeIndex, sourceEdgeIndex);
 	}
+//	std::cout << "done " << std::endl;
 
+	std::queue<Node*> test3;
+
+//	std::cout << "Building other nodes... " << std::endl;
 	//Process the rest
 	for(size_t i=0; i< layers.size(); i++){
 		for(size_t j=0; j< layers[i].size(); j++){
@@ -220,12 +252,17 @@ void Cppn::buildPhenotype(){
 			}
 		}
 	}
+//	std::cout << "done " << std::endl;
 
-
+//	std::cout << "Initializing queue " << std::endl;
 	std::queue<Node*> toProcess;
+//	std::cout << "Initialized queue " << std::endl;
+
+
 	std::set<std::pair<size_t, size_t> > ancestor;
 
-	for(size_t i=0; i<nodes.size(); i++){
+//	std::cout << "Building ancestors... " << std::endl;
+	for(int i=0; i<nodes.size(); i++){
 		toUpdateStart[i]=ancestor.size();
 		toProcess.push(phenotypeNodes[i]);
 		size_t fromNodeIndex = phenotypeNodes[i]->getIndex();
@@ -233,6 +270,8 @@ void Cppn::buildPhenotype(){
 
 		while(!toProcess.empty()){
 			QList<Edge *> outgoingEdges = toProcess.front()->outgoingEdges();
+//			std::cout << "Node: " << toProcess.front() << std::endl;
+//			std::cout << "Outgoing edges size: " << toProcess.front()->outgoingEdges().size() << std::endl;
 			toProcess.pop();
 			foreach(Edge* outgoing_edge, outgoingEdges){
 				size_t toNodeIndex = outgoing_edge->destNode()->getIndex();
@@ -243,19 +282,26 @@ void Cppn::buildPhenotype(){
 			}
 		}
 	}
+//	std::cout << "done " << std::endl;
+
 //	std::cout << "ancestor.size() " << ancestor.size() << std::endl;
 	toUpdateStart[nodes.size()]=ancestor.size();
 	toUpdate=new size_t[ancestor.size()];
 
 	size_t index=0;
-	for(size_t fromNodeIndex=0; fromNodeIndex<nodes.size(); fromNodeIndex++){
-		for(size_t toNodeIndex=0; toNodeIndex<nodes.size(); toNodeIndex++){
+
+//	std::cout << "Filling update array... " << std::flush;
+	for(int fromNodeIndex=0; fromNodeIndex<nodes.size(); fromNodeIndex++){
+		for(int toNodeIndex=0; toNodeIndex<nodes.size(); toNodeIndex++){
 			if(ancestor.count(std::pair<size_t, size_t>(fromNodeIndex, toNodeIndex))==1){
 				toUpdate[index]=toNodeIndex;
 				index++;
 			}
 		}
 	}
+//	std::cout << "done " << std::endl;
+
+	calculateModularity();
 
 	validPhenotype=true;
 }
@@ -288,9 +334,9 @@ void Cppn::positionNodesCircle(){
 	int k =1;
 	QPointF position1;
 	QPointF position2;
-	Node* edge1;
-	qreal distanceEdge1;
-	qreal distanceEdge2;
+	Node* edge1 = NULL;
+	qreal distanceEdge1 = 0;
+	qreal distanceEdge2 = 0;
 
 	for(size_t i=0; i< layers.size(); i++){
 		for(size_t j=0; j< layers[i].size(); j++){
@@ -348,18 +394,8 @@ void Cppn::positionNodes(){
 		for(size_t j=0; j< layerSize; j++){
 			positions[j] = QPointF(int(j)*xscale-(int(layerSize)-1)*(xscale/2), -(int(i)*yscale-(int(layers.size())-1)*(yscale/2)));
 		}
-		Node** currentLayer = layers[i].data();
-//		std::sort (currentLayer, currentLayer+layerSize);
-		std::vector<Node*> shortestLayout = layers[i];
 
-//		qreal shortestLength = getLength(shortestLayout, positions);
-//		do {
-//			qreal currentLength = getLength(layers[i], positions);
-//		    if(currentLength<shortestLength || (currentLength==shortestLength && compareIds(layers[i], shortestLayout))){
-//		    	shortestLength = currentLength;
-//		    	shortestLayout = layers[i];
-//		    }
-//		} while ( std::next_permutation(currentLayer, currentLayer+layerSize) );
+		std::vector<Node*> shortestLayout = layers[i];
 
 		for(size_t j=0; j< layerSize; j++){
 			shortestLayout[j]->setPos(positions[j]);
@@ -386,18 +422,7 @@ void Cppn::updateFromLink(Edge* edge){
 		phenotypeNodes[toUpdate[i]]->updateAll();
 	}
 
-//	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
-//		finalNodeView->updateFinalView(xy_index);
-//	}
-//	finalNodeView->update();
 }
-
-
-//inline void Cppn::updateLink(const size_t& node, const size_t& link, const size_t& xy_index){
-//	//Calculate outgoing links
-//	linkChache[xy_index+link*width*height]=nodeChache[xy_index+node*width*height]*linkWeights[link];
-//}
-
 
 
 inline void Cppn::updateNode(const size_t& node, const size_t& xy_index, const double& initialValue){
@@ -435,23 +460,56 @@ inline void Cppn::updateNode(const size_t& node){
 	}
 	phenotypeNodes[node]->updateAll();
 }
+
 void Cppn::updateNode(Node* node){
 	updateNode(node->getIndex());
 }
 
+void Cppn::positionNodesONP(){
+//    std::vector<std::vector<Node*> > mods;
+//    double qscore =  mod::modules(this, mods);
+//
+//	std::cout << "Modularity: " << qscore << std::endl;
 
-//size_t Cppn::getNrOfColorButtons(){
-//	return widget->getWindow()->getNrOfColorButtons();
-//}
+	QList<Node*> inputs = getInputs();
+	QList<Node*> outputs = getOutputs();
+	QList<Node*> nodes = getNodes();
 
-//Label* Cppn::getColorButton(size_t i){
-//	return widget->getWindow()->getColorButton(i);
-//}
+	QVector<double> input_x_coords(inputs.size());
+	QVector<double> output_x_coords(outputs.size());
+	QVector<double> input_y_coords(inputs.size());
+	QVector<double> output_y_coords(outputs.size());
 
-//void Cppn::addColorButton(std::string text, QColor color){
-//	widget->getWindow()->addColorButton(QString(text.c_str()), color);
-//}
+	for(int i=0; i<inputs.size(); i++){
+		input_x_coords[i] = inputs[i]->pos().x();
+		input_y_coords[i] = inputs[i]->pos().y();
+	}
 
-//void Cppn::addLabelWidget(Label* labelWidget){
-//	widget->getWindow()->addLabelWidget(labelWidget);
-//}
+	for(int i=0; i<outputs.size(); i++){
+		output_x_coords[i] = outputs[i]->pos().x();
+		output_y_coords[i] = outputs[i]->pos().y();
+	}
+
+	QVector<double> x_coords = opt_placement::compute(this, inputs, input_x_coords, outputs, output_x_coords);
+	QVector<double> y_coords = opt_placement::compute(this, inputs, input_y_coords, outputs, output_y_coords);
+
+	for(int i=0; i<nodes.size(); i++){
+		nodes[i]->setPos(x_coords[i], y_coords[i]);
+	}
+}
+
+double Cppn::calculateModularity(){
+    std::vector<std::vector<Node*> > mods;
+    double qscore =  mod::modules(this, mods);
+
+	for(size_t i=0; i <mods.size(); i++){
+		for(size_t j=0; j <mods[i].size(); j++){
+			mods[i][j]->setModule(i);
+		}
+	}
+
+	emit newModularity(qscore);
+
+	return qscore;
+}
+

@@ -47,8 +47,9 @@ void Label::init(){
 
 	//Create actions
 	colorAction = new QAction(labelName, this);
-	changeColorAction = new QAction(tr("Change color..."), this);
-	renameAction = new QAction(tr("Rename..."), this);
+//	changeColorAction = new QAction(tr("Change color..."), this);
+//	renameAction = new QAction(tr("Rename..."), this);
+//	renameAction->setShortcut(tr("F2"));
 
 	//Create colored button
 	colorButton = new QPushButton();
@@ -67,16 +68,16 @@ void Label::init(){
     setLayout(colorButtonLayout);
 
     connect(colorButton, SIGNAL(clicked()), colorAction, SLOT(trigger()));
-    connect(changeColorAction, SIGNAL(triggered()), this, SLOT(changeLabelColor()));
-    connect(renameAction, SIGNAL(triggered()), this, SLOT(changeLabelName()));
+//    connect(changeColorAction, SIGNAL(triggered()), this, SLOT(changeLabelColor()));
+//    connect(renameAction, SIGNAL(triggered()), this, SLOT(changeLabelName()));
     connect(colorAction, SIGNAL(triggered()), this, SLOT(applyLabel()));
 
     setAutoFillBackground(true);
 
-    QMenu* menu = new QMenu("label");
-    menu->addAction(renameAction);
-    menu->addAction(changeColorAction);
-    this->setContextMenu(menu);
+//    QMenu* menu = new QMenu("label");
+//    menu->addAction(renameAction);
+//    menu->addAction(changeColorAction);
+//    this->setContextMenu(menu);
 
     //Set Size
 	boundingBox = QRectF(0, 0, 200, 50);
@@ -94,38 +95,24 @@ void Label::setColor(QColor _color){
     QString qss = QString("background-color: %1").arg(color.name());
     colorButton->setStyleSheet(qss);
     emit labelChanged();
-//    window->getGraphWidget()->updateAll();
 }
 
 void Label::changeLabelColor(){
-	CommandChangeLabelColor* command = new CommandChangeLabelColor(this);
-	if(command->isOk()) emit requestCommandExecution(command);
+	emit requestCommandExecution(new CommandChangeLabelColor(this));
 }
 
 void Label::changeLabelName(){
-	CommandChangeLabelName* command = new CommandChangeLabelName(this);
-//	std::cout << command->isOk() << std::endl;
-	if(command->isOk()) emit requestCommandExecution(command);
+	emit requestCommandExecution(new CommandChangeLabelName(this));
 }
 
 void Label::setHighlightOn(){
 	highlight = true;
 	update();
-//	if(hasFocus()){
-////		setStyleSheet(selectedHighlightSs);
-//	} else {
-////    	setStyleSheet(highlightSs);
-//    }
 }
 
 void Label::setHighlightOff(){
 	highlight = false;
 	update();
-//	if(hasFocus()){
-////		setStyleSheet(selectedSs);
-//	} else {
-////    	setStyleSheet(baseSs);
-//    }
 }
 
 QRectF Label::boundingRect() const
@@ -177,7 +164,13 @@ void Label::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
     if (partOfContextMenuEvent){
     	painter->setPen(QPen(CONTEXT_EVENT_COLOR, 2));
     } else if (this->isSelected()){
-    	painter->setPen(QPen(SELECTED_COLOR, 2));
+    	QColor highlightColor;
+		if(*parentHasFocus){
+			highlightColor = QColor(SELECTED_COLOR);
+		} else {
+			highlightColor = QColor(NO_FOCUS_SELECTED_COLOR);
+		}
+    	painter->setPen(QPen(highlightColor, 2));
     }else{
     	painter->setPen(QPen(Qt::black, 0));
     }
@@ -192,4 +185,12 @@ void Label::applyLabel(){
 
 void Label::deleteLabel(){
 	emit deleteLabel(this);
+}
+
+
+void Label::mousePressEvent( QGraphicsSceneMouseEvent * event ){
+	Q_UNUSED(event);
+	if(this->isSelected()){
+		this->setSelected(false);
+	}
 }

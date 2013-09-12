@@ -8,6 +8,9 @@
 #include "CE_Window.h"
 #include "CE_Util.h"
 
+const QString Window::modularityText = "Modularity (Q-score): ";
+const QString Window::hierachyText = "Hierarchy: ";
+
 Window::Window()
 {
 
@@ -18,25 +21,34 @@ Window::Window()
     weightWidget = new WeightWidget();
 
 	//Connect cppn widget
-    connect(cppnWidget, SIGNAL(sceneModified()), this, SLOT(onSceneModified()));
-    connect(cppnWidget, SIGNAL(requestCommandExecution(QUndoCommand*)), this, SLOT(executeCommand(QUndoCommand*)));
-    connect(cppnWidget, SIGNAL(requestAddNodeview(QList<QGraphicsItem*>)), nodeviewWidget, SLOT(addNodeView(QList<QGraphicsItem*>)));
+//    connect(cppnWidget, SIGNAL(sceneModified()), this, SLOT(onSceneModified()));
+    connect(cppnWidget, SIGNAL(requestCommandExecution(ComBase*)), this, SLOT(executeCommand(ComBase*)));
     connect(cppnWidget, SIGNAL(edgeUpdated(Edge*)), this, SLOT(updateEdge(Edge*)));
+    connect(cppnWidget, SIGNAL(nodeUpdated(Node*)), this, SLOT(updateNode(Node*)));
+    connect(cppnWidget, SIGNAL(newModularity(double)), this, SLOT(updateModularity(double)));
     connect(cppnWidget, SIGNAL(labelableObjectSelected(bool)), labelWidget, SLOT(labelableObjectSelected(bool)));
+    connect(cppnWidget, SIGNAL(requestAddNodeview(QList<QGraphicsItem*>)), nodeviewWidget, SLOT(addNodeView(QList<QGraphicsItem*>)));
+    connect(cppnWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+
 
 	//Connect label widget
-    connect(labelWidget, SIGNAL(requestCommandExecution(QUndoCommand*)), this, SLOT(executeCommand(QUndoCommand*)));
+    connect(labelWidget, SIGNAL(requestCommandExecution(ComBase*)), this, SLOT(executeCommand(ComBase*)));
     connect(labelWidget, SIGNAL(applyLabel(Label*)), cppnWidget, SLOT(applyLabel(Label*)));
     connect(labelWidget, SIGNAL(labelsChanged()), cppnWidget, SLOT(updateAll()));
-    connect(labelWidget, SIGNAL(sceneModified()), this, SLOT(onSceneModified()));
+    connect(labelWidget, SIGNAL(selectionChanged()), cppnWidget, SLOT(deselectItems()));
+    connect(labelWidget, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+//    connect(labelWidget, SIGNAL(sceneModified()), this, SLOT(onSceneModified()));
+
 
     //Connect nodeview widget
-    connect(nodeviewWidget, SIGNAL(requestCommandExecution(QUndoCommand*)), this, SLOT(executeCommand(QUndoCommand*)));
-    connect(nodeviewWidget, SIGNAL(sceneModified()), this, SLOT(onSceneModified()));
+    connect(nodeviewWidget, SIGNAL(requestCommandExecution(ComBase*)), this, SLOT(executeCommand(ComBase*)));
+    connect(nodeviewWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+//    connect(nodeviewWidget, SIGNAL(sceneModified()), this, SLOT(onSceneModified()));
 
     //Connect weight widget
     connect(weightWidget->getResetAllAction(), SIGNAL(triggered()), cppnWidget, SLOT(resetAllWeights()));
     connect(weightWidget->getFirstWeightSliderWidget(), SIGNAL(weightChanged(double)), cppnWidget, SLOT(setWeight(double)));
+    connect(weightWidget, SIGNAL(flash(bool)), cppnWidget, SLOT(flash(bool)));
     connect(weightWidget, SIGNAL(scanStarted()), this, SLOT(startScan()), Qt::DirectConnection);
     connect(weightWidget, SIGNAL(scanStopped()), this, SLOT(stopScan()), Qt::DirectConnection);
     connect(weightWidget, SIGNAL(requestFilmStart()), this, SLOT(startFilm()), Qt::DirectConnection);
@@ -44,6 +56,10 @@ Window::Window()
     connect(weightWidget, SIGNAL(frameReady()), this, SLOT(captureFrame()), Qt::DirectConnection);
     connect(weightWidget, SIGNAL(bookendStartChanged(double)), cppnWidget, SLOT(onBookendStartChanged(double)), Qt::DirectConnection);
     connect(weightWidget, SIGNAL(bookendEndChanged(double)), cppnWidget, SLOT(onBookendEndChanged(double)), Qt::DirectConnection);
+    connect(weightWidget, SIGNAL(bookendStepChanged(double)), cppnWidget, SLOT(onBookendStepChanged(double)), Qt::DirectConnection);
+
+
+
 
 
     //Connect undostack
@@ -78,11 +94,25 @@ Window::Window()
     selectAllAction = new QAction(tr("&Select all"), this);
     selectAllAction->setShortcuts(QKeySequence::SelectAll);
     selectAllAction->setStatusTip(tr("Selects all objects in active window"));
+    selectAllAction->setEnabled(false);
 
-    exportImageAction = new QAction(tr("&Export nodes to jpg"), this);
+    removeAction = new QAction(tr("&Delete"), this);
+    removeAction->setShortcut(Qt::Key_Backspace);
+    removeAction->setStatusTip(tr("Deletes all selected objects"));
+    removeAction->setEnabled(false);
+
+    exportImageAction = new QAction(tr("&Export nodes"), this);
     exportImageAction->setShortcut(tr("Alt+X"));
-    exportImageAction->setStatusTip(tr("Exports the selected nodes to jpg files"));
+    exportImageAction->setStatusTip(tr("Exports the selected nodes as image files"));
     exportImageAction->setEnabled(false);
+
+    util::insertFront(cppnWidget->getNodeMenu(), exportImageAction);
+    util::insertFront(nodeviewWidget->getNodeviewMenu(), exportImageAction);
+
+    util::insertFront(cppnWidget->getNodeMenu(), removeAction);
+    util::insertFront(cppnWidget->getEdgeMenu(), removeAction);
+    util::insertFront(labelWidget->getLabelContextMenu(), removeAction);
+    util::insertFront(nodeviewWidget->getNodeviewMenu(), removeAction);
 
     //Create menus
     fileMenu = new QMenu(tr("&File"), this);
@@ -92,28 +122,33 @@ Window::Window()
     fileMenu->addAction(saveAsAction);
 
     posMenu = new QMenu(tr("&Position"), this);
-    posMenu->addAction(cppnWidget->getLayerAction());
     posMenu->addAction(cppnWidget->getCircleAction());
+    posMenu->addAction(cppnWidget->getONPAction());
+    posMenu->addAction(cppnWidget->getLayerAction());
 
     editMenu = new QMenu(tr("&Edit"), this);
     editMenu->addAction(undoAction);
     editMenu->addAction(redoAction);
+    editMenu->addSeparator();
 
+    editMenu->addAction(removeAction);
     editMenu->addAction(selectAllAction);
-    editMenu->addAction(exportImageAction);
+    editMenu->addSeparator();
 
-
-
-    editMenu->addAction(weightWidget->getResetAllAction());
+    //Edge actions:
     editMenu->addAction(weightWidget->getFirstWeightSliderWidget()->getResetAction());
+    editMenu->addAction(weightWidget->getResetAllAction());
+    editMenu->addSeparator();
+
     editMenu->addAction(weightWidget->getScanAction());
     editMenu->addAction(weightWidget->getScreenCaptureAction());
-
-    editMenu->addAction(cppnWidget->getAddNodeviewAction());
-    editMenu->addAction(nodeviewWidget->getDeleteViewNodeAction());
-
     editMenu->addSeparator();
-    editMenu->addMenu(posMenu);
+
+    //Node actions
+
+    editMenu->addAction(exportImageAction);
+    editMenu->addAction(cppnWidget->getAddNodeviewAction());
+
     editMenu->addSeparator();
     editMenu->addMenu(labelWidget->getLabelMenu());
 
@@ -122,11 +157,18 @@ Window::Window()
     viewMenu->addAction(cppnWidget->getLabelViewAction());
     viewMenu->addAction(cppnWidget->getSignViewAction());
     viewMenu->addAction(cppnWidget->getLabelAndSignViewAction());
+    viewMenu->addSeparator();
+    viewMenu->addAction(cppnWidget->getNodeLabelAction());
+    viewMenu->addAction(cppnWidget->getNodeModuleAction());
+    viewMenu->addSeparator();
+    viewMenu->addAction(cppnWidget->getCurvedLineAction());
+    viewMenu->addAction(cppnWidget->getStraightLineAction());
 
     menuBar = new QMenuBar;
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(editMenu);
     menuBar->addMenu(viewMenu);
+    menuBar->addMenu(posMenu);
 
     cppnWidget->getNodeMenu()->addSeparator();
     cppnWidget->getNodeMenu()->addMenu(labelWidget->getLabelMenu());
@@ -135,7 +177,9 @@ Window::Window()
     cppnWidget->getEdgeMenu()->addAction(weightWidget->getScanAction());
     cppnWidget->getEdgeMenu()->addAction(weightWidget->getScreenCaptureAction());
     cppnWidget->getEdgeMenu()->addSeparator();
-    cppnWidget->getEdgeMenu()->addMenu(labelWidget->getLabelMenu());
+    cppnWidget->getEdgeMenu()->addMenu(labelWidget->getNodeContextMenu());
+
+
 
     //Connect actions
     connect(loadAction, SIGNAL(triggered()), this, SLOT(load()));
@@ -143,27 +187,38 @@ Window::Window()
     connect(saveAsAction, SIGNAL(triggered()), this, SLOT(saveAs()));
     connect(exitAction, SIGNAL(triggered()), this, SLOT(close ()));
     connect(selectAllAction, SIGNAL(triggered()), this, SLOT(selectAll()));
+    connect(removeAction, SIGNAL(triggered()), this, SLOT(remove()));
     connect(exportImageAction, SIGNAL(triggered()), this, SLOT(exportToJpg()));
 
-    connect(nodeviewWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
-    connect(cppnWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
 
     connect(nodeviewWidget, SIGNAL(focusChanged()), this, SLOT(onSelectionChanged()));
     connect(cppnWidget, SIGNAL(focusChanged()), this, SLOT(onSelectionChanged()));
 
+    modularityLabel = new QLabel(modularityText);
+    hierachyLabel = new QLabel(hierachyText);
 
     leftLayout = new QVBoxLayout;
     leftLayout->addWidget(cppnWidget);
     leftLayout->addWidget(weightWidget);
 
+
+
     mainLayout = new QHBoxLayout;
     mainLayout->addLayout(leftLayout, 1);
     mainLayout->addWidget(nodeviewWidget, 0);
     mainLayout->addWidget(labelWidget, 0);
-    mainLayout->setMenuBar(menuBar);
-    setLayout(mainLayout);
+    setMenuBar(menuBar);
+
+    QWidget* temp = new QWidget();
+    temp->setLayout(mainLayout);
+    setCentralWidget(temp);
+
+    statusBar()->addWidget(modularityLabel);
 
     setWindowTitle(tr("Untitled"));
+
+
+
     fileLoaded(false);
 }
 
@@ -178,6 +233,8 @@ Window::~Window(){
 
 //Loading and saving
 void Window::load(){
+	if(not(askSaveChanges())) return;
+
 	QString newFileName = QFileDialog::getOpenFileName(this,
 	         tr("Open Genome File"), "",
 	         tr("Genome file (*.xml;*.zip);;All Files (*)"));
@@ -237,16 +294,17 @@ void Window::saveAs(){
 
 //Scan an screen capture
 void Window::startFilm(){
-//	std::cout << "Euh..." << std::endl;
-	captureDirectory = QFileDialog::getExistingDirectory(this, tr("Chose save directory"), "", QFileDialog::ShowDirsOnly);
-	if(captureDirectory == "") return;
+	QString newFileName = util::getSupportedFilename(this, tr("Chose save directory"));
+	if(newFileName.isEmpty()) return;
+	captureDirectory = util::getBase(newFileName);
+	extention = util::getExtention(newFileName);
+	QDir().mkdir(captureDirectory);
 
 	nodeViewsToBeCaptured.clear();
-//	capture=true;
-//	captureDirectory = QFileDialog::getSaveFileName(this, tr("Chose save directory"), "");
 
+	if(this->isMaximized()) this->move(0,0);
+	this->setFixedSize(this->width()+this->width()%2,this->height()+this->height()%2);
 
-	this->setFixedSize(this->width(),this->height());
 	QDir().mkdir(captureDirectory + "/fullApplication");
 
 #ifdef USE_FFMPEG
@@ -283,8 +341,8 @@ void Window::startFilm(){
 		}
 	}
 
-	weightWidget->startFilm();
 	frame=0;
+	weightWidget->startFilm();
 }
 
 void Window::stopFilm(){
@@ -311,8 +369,9 @@ void Window::stopFilm(){
 void Window::captureFrame(){
 	//		QPixmap test = QPixmap::grabWindow(this->winId(), 0, 0, 1024, 768);
 	QPixmap test = QPixmap::grabWidget(this, 0, 0, this->width(), this->height());
-	QString name = captureDirectory + "/fullApplication/frame%1.jpg";
+	QString name = captureDirectory + "/fullApplication/frame%1" + extention;
 	name = name.arg(util::toQString(frame), 4, '0');
+//	std::cout << name.toStdString() << std::endl;
 	test.save(name);
 
 #ifdef USE_FFMPEG
@@ -325,9 +384,9 @@ void Window::captureFrame(){
 
 	for(int i=0; i<nodeViewsToBeCaptured.size(); i++){
 		QImage nodeViewImage = nodeViewsToBeCaptured[i]->getImage()->copy(0,0,256,256);
-		QString name = captureDirectory + "/node%1/frame%2.jpg";
+		QString name = captureDirectory + "/node%1/frame%2" + extention;
 		name = name.arg(util::toQString(i+1)).arg(util::toQString(frame), 4, '0');
-//		 name = captureDirectory + "/node" + util::toQString(i+1) + "/frame"+ QString::arg(util::toQString(slider->value()) + ".jpg";
+//		std::cout << name.toStdString() << std::endl;
 		nodeViewImage.save(name);
 
 #ifdef USE_FFMPEG
@@ -362,15 +421,30 @@ void Window::updateEdge(Edge* edge){
 				edge->getOriginalWeight(),
 				util::toQString(edge->getId() + "_" + edge->getBranch()),
 				edge->getBookendStart(),
-				edge->getBookendEnd());
+				edge->getBookendEnd(),
+				edge->getStepsize());
 	} else {
 		weightWidget->edgeSelected(false);
 	}
 }
 
-void Window::executeCommand(QUndoCommand* command){
+void Window::updateNode(Node* node){
+//	std::cout << edge << std::endl;
+	if(node){
+		weightWidget->edgeSelected(false);
+		weightWidget->setNode(util::toQString(node->getBranch()  + "_" + node->getId()));
+	} else {
+
+	}
+}
+
+void Window::executeCommand(ComBase* command){
 //	std::cout << "Command pushed: " << command->text().toStdString() << std::endl;
-	undoStack.push(command);
+	if(command->isOk()){
+		undoStack.push(command);
+	} else {
+		delete command;
+	}
 }
 
 /*********************************************
@@ -394,10 +468,8 @@ void Window::actualSave(const QString& fileName){
 	}
 }
 
-void Window::closeEvent(QCloseEvent * event){
+bool Window::askSaveChanges(){
 	if(isWindowModified ()){
-//		 QMessageBox msgBox(tr("String"),tr("String"), QMessageBox::Question, 10, 10, 10, this, Qt::Drawer);
-//		 QMessageBox msgBox(QMessageBox::Question,tr("String"),tr("String"), QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this, Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint |  Qt::Sheet);
 		 QMessageBox msgBox(QMessageBox::Question,tr("Save as"),"The file " + fileInformation->fileName +  " has been modified.", QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this, Qt::Dialog);
 		 msgBox.setWindowModality ( Qt::WindowModal);
 
@@ -412,16 +484,21 @@ void Window::closeEvent(QCloseEvent * event){
 		       save();
 		       break;
 		   case QMessageBox::Discard:
-		       //Do nothing
 		       break;
 		   case QMessageBox::Cancel:
-			   event->setAccepted(false);
+			   return false;
 		       break;
 		   default:
 		       // should never be reached
 		       break;
 		 }
 	}
+
+	return true;
+}
+
+void Window::closeEvent(QCloseEvent * event){
+	event->setAccepted(askSaveChanges());
 }
 
 
@@ -455,28 +532,48 @@ void Window::selectAll(){
 	}
 }
 
-void Window::exportToJpg(){
-//	std::cout << "Hallo" << std::endl;
-
+void Window::remove(){
 	QWidget* widget =  QApplication::focusWidget ();
 	if(widget){
 		NodeViewWidget* nodeviewWidget = qobject_cast<NodeViewWidget*> (widget);
 		if(nodeviewWidget){
-			nodeviewWidget->saveImage();
-		}else {
-			CppnWidget* nodeviewWidget = qobject_cast<CppnWidget*> (widget);
-			if(nodeviewWidget){
-					nodeviewWidget->saveImage();
-			}
+			nodeviewWidget->deleteNodeView();
+			return;
+		}
+		CppnWidget* cppnWidget = qobject_cast<CppnWidget*> (widget);
+		if(cppnWidget){
+			cppnWidget->deleteObjects();
+			return;
+		}
+		DragAndDropGraphicsView* dargAndDropGraphicsView = qobject_cast<DragAndDropGraphicsView*> (widget);
+		if(dargAndDropGraphicsView){
+			labelWidget->requestDelete();
+			return;
 		}
 	}
 }
 
-void Window::onSelectionChanged(){
-	if((nodeviewWidget->hasFocus() && nodeviewWidget->scene()->selectedItems().count() > 0) ||
-			(cppnWidget->hasFocus() && cppnWidget->getNodeSelected())){
-		exportImageAction->setEnabled(true);
-	} else {
-		exportImageAction->setEnabled(false);
+void Window::exportToJpg(){
+	if(nodeviewWidget->getIsActive()){
+		nodeviewWidget->saveImage();
+	} else if(cppnWidget->getIsActive()){
+		cppnWidget->saveImage();
 	}
+}
+
+void Window::onSelectionChanged(){
+	bool nodeViewSelected = (nodeviewWidget->getIsActive() && nodeviewWidget->scene()->selectedItems().count() > 0);
+	bool deletableNodeviewSelected = (nodeviewWidget->getIsActive() && nodeviewWidget->deletableNodeviewSelected());
+
+	bool nodeSelected = (cppnWidget->getIsActive() && cppnWidget->getNodeSelected());
+	bool edgeSelected = (cppnWidget->getIsActive() && cppnWidget->getEdgeSelected());
+	bool labelSelected = (labelWidget->getGraphicsViewHasFocus() && labelWidget->getLabelSelected());
+
+	exportImageAction->setEnabled(nodeViewSelected || nodeSelected);
+	removeAction->setEnabled(deletableNodeviewSelected || nodeSelected || edgeSelected || labelSelected);
+	selectAllAction->setEnabled(nodeviewWidget->hasFocus() || cppnWidget->hasFocus() || labelWidget->getGraphicsViewHasFocus());
+}
+
+void Window::updateModularity(double qscore){
+	modularityLabel->setText(modularityText + util::toQString(qscore));
 }

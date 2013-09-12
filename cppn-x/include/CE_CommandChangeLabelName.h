@@ -8,12 +8,11 @@
 #ifndef CE_COMMANDCHANGELABELNAME_H_
 #define CE_COMMANDCHANGELABELNAME_H_
 
-#include <QUndoCommand>
-//#include "CX_CXUndoCommand.h"
+#include "CX_ComBase.h"
 
 class Label;
 
-class CommandChangeLabelName: public QUndoCommand {
+class CommandChangeLabelName: public ComBase {
 public:
 	CommandChangeLabelName(Label* labelWidget);
 	virtual ~CommandChangeLabelName();
