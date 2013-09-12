@@ -17,12 +17,14 @@ DEPENDPATH += . \
               cppn-x/include \
               cppn-x/src \
               JGTL/include \
-              libzip-0.11.1/lib
+              libzip-0.11.1/lib \
+			  gsl/lib
 
 INCLUDEPATH += . \
                zlib \
                cppn-x/include \
                JGTL/include \
+			   gsl/include \
                libzip-0.11.1/lib \
                libzip-0.11.1/xcode \
                libzip-0.11.1/src
