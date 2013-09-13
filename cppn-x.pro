@@ -12,6 +12,9 @@ QMAKE_CFLAGS_X86_64 -= -mmacosx-version-min=10.5
 QMAKE_CFLAGS_X86_64 += -mmacosx-version-min=10.7
 QMAKE_CXXFLAGS_X86_64 = $$QMAKE_CFLAGS_X86_64
 
+#Might need to add this option to the linker
+#-headerpad_max_install_names
+
 DEPENDPATH += . \
               zlib \
               cppn-x/include \
@@ -40,7 +43,7 @@ LIBS += -lm \
         -lgsl
 #LIBS += -lz 
 
-# Requied for some C99 defines
+# Required for some C99 defines
 DEFINES += __STDC_CONSTANT_MACROS        
 
 # Input

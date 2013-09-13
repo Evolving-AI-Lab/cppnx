@@ -8,12 +8,15 @@ DEPENDPATH += qtffmpeg/QTFFmpegWrapper
 INCLUDEPATH += qtffmpeg/QTFFmpegWrapper 
 win32:INCLUDEPATH += $$QT_DEV_PATH/include
 
-win32:LIBS += -L"$$QT_DEV_PATH/lib" 
+win32:LIBS += -L"$$QT_DEV_PATH/lib"
+#Possibly uncomment when it is not compiling on windows 
+#LIBS += -lavdevice 
 LIBS +=	-lavutil 
 LIBS += -lavcodec 
 LIBS += -lavformat 
-LIBS += -lavdevice 
-LIBS += -lswscale 
+LIBS += -lswscale
+macx:LIBS += -liconv 
+macx:LIBS += -lbz2 
 unix:LIBS += -liconv 
 unix:LIBS += -lbz2
 
