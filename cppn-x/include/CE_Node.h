@@ -41,7 +41,6 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include <stdexcept>
 #include <QtGui>
 #include <QGraphicsItem>
 #include <QList>
@@ -63,6 +62,24 @@ class QGraphicsSceneMouseEvent;
 QT_END_NAMESPACE
 
 
+class LabelModeException : public std::exception
+{
+    std::string text;
+
+public:
+
+    LabelModeException(const std::string &_reason){
+        text = _reason;
+    }
+
+    ~LabelModeException() throw (){
+
+    }
+
+    virtual const char* what() const throw(){
+        return text.c_str();
+    }
+};
 
 
 //! [0]
@@ -70,8 +87,65 @@ class Node : public LabelableObject
 {
 	Q_OBJECT
 public:
-    enum NodeLabelMode {labels, modules};
+	static size_t nodes_in_memory;
 
+    enum NodeLabelMode {labels, modules, labelsNoImage};
+    enum NodeImageMode {showImage, noImage};
+    enum NodeType      {input, hidden, output};
+
+    /**
+     * Creates a new node based on explicit information.
+     *
+     * @param branch                 The branch of the node.
+     *                               A branch is an identifier associated with one Picbreeder session,
+     *                               a new 'branch' starts whenever a user picks an image (evolved or from scratch)
+     *                               and starts evolving that image. A branch stops as soon as the user saves or discards the image.
+     *                               Each node is tagged according to the branch in which it was added, meaning that a single network
+     *                               can have nodes from multiple branches if the network was evolved by multiple users.
+     *                               When creating a network from scratch you can chose an arbitrary branch but,
+     *                               if you were to ever use this tool to compare your network with other networks,
+     *                               this tool may mistakenly classify different nodes as being the same.
+     * @param id                     The id of this node.
+     *                               Is used to distinguish nodes when saving or loading files, and should be unique for each
+     *                               node and each edge.
+     * @param type                   The type of this node as a string.
+     *                               Types available in CE_Defines.h are:
+     *                               - XML_TYPE_INPUT
+     *                               - XML_TYPE_OUTPUT
+     *                               - XML_TYPE_HIDDEN
+     * @param activationFunction_str The activation function as a string:
+     *                               Activation function, available in CE_Defines.h are:
+     *                               - XML_GAUSSIAN
+     *                               - XML_LINEAR
+     *                               - XML_SIN
+     *                               - XML_COS
+     *                               - XML_SIGMOID
+     * @param xml_label              The xml label determines the type of input or output of this node,
+     *                               if this node is an input or output.
+     *                               The xml field is called 'label' which is why this parameter is called the xml_label.
+     *                               Output type, available in CE_Defines.h are:
+     *                               - OUTPUT_INK         The only output for grey scale networks
+     *                               - OUTPUT_BRIGTHNESS  The brightness for color networks
+     *                               - OUTPUT_SATURATION  The saturation for color networks
+     *                               - OUTPUT_HUE         The hue for color networks
+     *                               - INPUT_X            The x input
+     *                               - INPUT_Y            The y input
+     *                               - INPUT_D            The distance from the center input
+     *                               - INPUT_BIAS         The bias input (always 1)
+     * @param affinity               The affinity of this node in color networks.
+     *                               Determines whether this node will change if the user decided to only evolve color.
+     *                               This value is not used by cppn-x, and can safely be omitted.
+     * @param bias                   The bias of this node.
+     *                               While present in the xml files, the bias is never set in the Picbreeder networks,
+     *                               and as a result the bias is not used by the cppn network defined here
+     *                               (setting it here does NOT change the function of the node)
+     *                               A sensible default value is thus: 0.0.
+     * @param label                  The label associated with this node.
+     *                               Set to null if this node is unlabeled.
+     * @param note                   A custom note that can be added to a node object.
+     *                               This value is written to the xml file, but it is currently not displayed
+     *                               anywhere within the program, nor can it be edited.
+     */
     Node(
     		std::string branch = "",
     		std::string id = "",
@@ -95,8 +169,8 @@ public:
     void removeIncommingEdge(Edge *edge);
     void removeOutgoingEdge(Edge *edge);
 
-    QList<Edge *> incomingEdges() const;
-    QList<Edge *> outgoingEdges() const;
+    const QList<Edge *>& incomingEdges() const;
+    const QList<Edge *>& outgoingEdges() const;
 
     enum { Type = UserType + NODE_TYPE };
     int type() const { return Type; }
@@ -117,6 +191,8 @@ public:
 
    // std::string getName(){return name;}
     std::string getType(){return nodetype;}
+
+    void setActivationFunction(const std::string& xmlActivationFunction);
 
     void setActivationFunction(ActivationFunctionPt _activationFunction){
     	activationFunction =_activationFunction;
@@ -166,11 +242,11 @@ public:
     std::string getAffinity(){return affinity;};
     std::string getBias(){return bias;};
 
+    size_t getModule(){return module;};
+
     void redraw();
 
-    void setPrevPos(QPointF point);
-    QPointF getPrevPos();
-    void updatePosition();
+
 
     void setDepth(int _depth){
     	depth =_depth;
@@ -188,25 +264,6 @@ public:
     	module =_module;
     }
 
-    enum AxisEnumerator {
-    	x_pos = 0,
-    	y_pos = 1
-    };
-
-
-    qreal getSortedValue(AxisEnumerator axisEnumerator){
-    	switch(axisEnumerator){
-    	case x_pos:
-    		return pos().x();
-    		break;
-    	case y_pos:
-    		return pos().y();
-    		break;
-    	default:
-    		throw std::out_of_range ("Unknown axis enumerator" + util::toString(axisEnumerator));
-    	}
-    }
-
     void emitRemoved(){
     	emit removed();
     }
@@ -215,11 +272,19 @@ public:
     	emit added();
     }
 
+    NodeType getNodeType(){
+        return _nodeType;
+    }
 
-    size_t y_index;
-    size_t x_index;
+    void setNodeType(NodeType nodeType){
+        _nodeType = nodeType;
+    }
 
-    size_t sortedIndex[2];
+    void setCustomColor(QColor color){
+        _customColor = color;
+        _useCustomColor = QBool(true);
+        update();
+    }
 
     static const int node_width = 40;
     static const int node_height = 40;
@@ -231,8 +296,6 @@ public:
 
 
 signals:
-	void updatePositionsRequest();
-	void positionChanged(Node*);
 	void updateRequest(Node*);
 	void imageChanged();
 	void removed();
@@ -241,8 +304,8 @@ signals:
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+//    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+
     
 private:
     QList<Edge *> incomingEdgeList;
@@ -263,13 +326,18 @@ private:
 
     size_t index;
 
-    QPointF previousPosition;
-
     int depth;
     size_t module;
 
+    NodeType _nodeType;
+
     NodeLabelMode* labelMode;
 
+    QBool _useCustomColor;
+    QColor _customColor;
+
 };
+
+std::ostream& operator<< (std::ostream& os, const Node& obj);
 
 #endif

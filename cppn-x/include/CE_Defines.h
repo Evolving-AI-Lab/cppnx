@@ -11,7 +11,7 @@
 //#include <boost/shared_ptr.hpp>
 #include <string>
 #include <iostream>
-
+#include <vector>
 
 
 //Input values for NEAT_GeneticNodeGene
@@ -19,17 +19,9 @@
 #define TYPE_OUTPUT "NetworkOutputNode"
 #define TYPE_HIDDEN "HiddenNode"
 
-
-
-
 #define XML_TYPE_INPUT "in"
 #define XML_TYPE_OUTPUT "out"
 #define XML_TYPE_HIDDEN "hidden"
-#define XML_GAUSSIAN "gaussian(x)"
-#define XML_LINEAR "identity(x)"
-#define XML_SIN "sin(x)"
-#define XML_COS "cos(x)"
-#define XML_SIGMOID "sigmoid(x)"
 
 #define DRAW_POS_ZERO 0
 #define DRAW_POS_HALF_MAX numeric_limits<double>::max()/2
@@ -60,6 +52,7 @@
 #define LABELABLE_OBJECT_TYPE 6
 #define DRAG_AND_DROP_OBJECT_TYPE 7
 #define LABEL_TYPE 8
+#define MOVABLE_OBJECT_TYPE 9
 
 #define SET_WEIGHT_ID 1
 #define RESET_WEIGHT_ID 2
@@ -87,7 +80,7 @@ enum inputs{
 	nr_of_inputs =4
 };
 
-typedef double (*ActivationFunctionPt)(double);
+
 typedef unsigned int id_t;
 
 

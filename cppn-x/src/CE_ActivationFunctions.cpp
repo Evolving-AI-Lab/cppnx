@@ -5,11 +5,16 @@
  *      Author: joost
  */
 
-#include "CE_ActivationFunctions.h"
-#include "CE_Defines.h"
+//Standard includes
 #include <cmath>
 #include <iostream>
 #include <iomanip>
+
+//Local includes
+#include "CE_ActivationFunctions.h"
+#include "CE_Defines.h"
+#include "CX_InvalidCaseException.hpp"
+
 
 namespace act_functions{
 	//Facts derived from the PicBreeder source
@@ -43,6 +48,51 @@ namespace act_functions{
 //	double low;
 //	double high;
 
+	ActivationFunctionInfo getActivationFunction(const std::string& xmlActivationFunction){
+	    ActivationFunctionInfo result;
+	    if(xmlActivationFunction == XML_GAUSSIAN){
+	        result.activationFunction = act_functions::gaussian;
+	        result.shortName = "gau()";
+	    } else if(xmlActivationFunction == XML_LINEAR){
+	        result.activationFunction = act_functions::identity;
+	        result.shortName = "lin()";
+	    } else if(xmlActivationFunction == XML_SIN){
+	        result.activationFunction = act_functions::sin;
+	        result.shortName = "sin()";
+	    } else if(xmlActivationFunction == XML_SIGMOID){
+	        result.activationFunction = act_functions::sigmoid;
+	        result.shortName = "sig()";
+	    } else if(xmlActivationFunction == XML_COS){
+	        result.activationFunction = act_functions::cos;
+	        result.shortName = "cos()";
+	    } else if(xmlActivationFunction == XML_STEP){
+	        result.activationFunction = act_functions::ustep;
+	        result.shortName = "ustep()";
+	    } else if(xmlActivationFunction == XML_U_SIGMOID){
+	        result.activationFunction = act_functions::uSigmoid;
+	        result.shortName = "usig()";
+	    } else if(xmlActivationFunction == XML_U_GUASSIAN){
+	        result.activationFunction = act_functions::uGaussian;
+	        result.shortName = "ugau()";
+        } else if(xmlActivationFunction == XML_U_BOUNDED_LINEAR){
+            result.activationFunction = act_functions::uBoundedLinear;
+            result.shortName = "ublin()";
+	    } else {
+	        throw InvalidCaseException("Unknown activation function: '" + xmlActivationFunction + "'");
+	    }
+	    return result;
+	}
+
+	std::vector<std::string> getDefaultXmlActivationFunctions(){
+	    std::vector<std::string> result;
+	    result.push_back(XML_GAUSSIAN);
+	    result.push_back(XML_LINEAR);
+	    result.push_back(XML_SIN);
+	    result.push_back(XML_COS);
+	    result.push_back(XML_SIGMOID);
+	    return result;
+	}
+
 	double actualSigmoid ( double input ) {
 		return (1.0 / (1+std::exp(float(-input)))) * 2.0 - 1.0;
 	}
@@ -50,6 +100,18 @@ namespace act_functions{
 	double actualGaussian ( double input ) {
 		return std::exp(float(-input*input)) * 2.0 - 1.0;
 	}
+
+    double uSigmoid ( double input ) {
+        return (1.0 / (1+std::exp(float(-input))));
+    }
+
+    double uGaussian ( double input ) {
+        return std::exp(float(-input*input));
+    }
+
+    double uBoundedLinear ( double input) {
+        return std::min(std::max(0.0, input), 1.0);
+    }
 
 	double findPoint(ActivationFunctionPt f, double center, double boundary, double tolerance){
 		double extreme = (*f)(boundary);
@@ -103,8 +165,6 @@ namespace act_functions{
 		return input;
 	}
 
-
-
 	double sin ( double input ) {
 //		std::cout << "Sin" << std::endl;
 		return std::sin(input);
@@ -130,5 +190,8 @@ namespace act_functions{
 	    return signedSigmoidTable[(sigmoidOffset + (int)(input * RESOLUTION + 0.5))];
 	}
 
+    double ustep ( double input ) {
+        return input > 0 ? 1.0 : 0.0;
+    }
 
 }

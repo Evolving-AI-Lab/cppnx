@@ -40,7 +40,6 @@ void DragAndDropObject::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         return;
     }
 
-    QColor color = Qt::blue;
     QDrag *drag = new QDrag(event->widget());
     QMimeData *mime = new QMimeData;
     drag->setMimeData(mime);

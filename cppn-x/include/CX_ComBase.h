@@ -13,9 +13,9 @@
 
 class ComBase: public QUndoCommand {
 public:
-	virtual bool isOk(){
-		return true;
-	}
+    ComBase(QUndoCommand * parent = 0): QUndoCommand(parent){}
+
+	virtual bool isOk() const{return true;}
 };
 
 #endif /* CX_COMBASE_H_ */

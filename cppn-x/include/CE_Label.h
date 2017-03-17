@@ -8,6 +8,8 @@
 #ifndef CE_COLORBUTTON_H_
 #define CE_COLORBUTTON_H_
 
+#include <CX_ComChangeLabelColor.h>
+#include <CX_ComChangeLabelName.h>
 #include <QWidget>
 #include <QLabel>
 #include <QPushButton>
@@ -20,9 +22,8 @@
 
 #include "CE_Defines.h"
 #include "CE_Util.h"
-#include "CE_CommandChangeLabelColor.h"
-#include "CE_CommandChangeLabelName.h"
 #include "CX_DragAndDropObject.h"
+#include "CX_Debug.hpp"
 
 
 //#include "CE_Window.h"
@@ -35,10 +36,13 @@ class QHBoxLayout;
 //class Window;
 
 
+
 class Label : public DragAndDropObject{
 	Q_OBJECT
 
 public:
+	static size_t labelsInMemory;
+
 
 	Label(QString text = "", QColor color = Qt::white, bool isDeleted = true);
 	Label(std::iostream &stream);
@@ -46,6 +50,7 @@ public:
 	virtual ~Label();
 
 	void init();
+	void copy(Label* otherLabel);
 
     enum { Type = UserType + LABEL_TYPE };
     virtual int type() const { return Type; }
@@ -80,6 +85,7 @@ public:
 	void unregisterObject(){
 		registerdObjects--;
 		if(registerdObjects==0){
+//		    std::cout << "Deleted: " << labelName.toStdString() << " " << labelDeleted << std::endl;
 			delete this;
 		}
 	}
@@ -143,7 +149,7 @@ private:
 
 	QRectF boundingBox;
 
-	id_t id;
+//	id_t id;
 	bool deleted;
 	bool highlight;
 };

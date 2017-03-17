@@ -10,8 +10,13 @@
 
 class FileInformation {
 public:
-	FileInformation(){
-		newFile=false;
+	FileInformation(bool _newFile = false, std::string _dataVersion="0.0", std::string _age = "0", std::string _phenotype = "grey", std::string _branch="0", std::string _id="0"){
+		newFile=_newFile;
+		dataVersion = _dataVersion;
+		age = _age;
+		phenotype = _phenotype;
+		branch = _branch;
+		id = _id;
 	}
 //	virtual ~FileInformation();
 

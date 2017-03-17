@@ -51,6 +51,10 @@ QString util::getBase(const QString& fileName){
 	return fileName.left(fileName.lastIndexOf('.'));
 }
 
+QString util::getNameFromBase(const QString& fileName){
+    return fileName.mid(fileName.lastIndexOf('/'));
+}
+
 QString util::getExtention(const QString& fileName){
 	return fileName.mid(fileName.lastIndexOf('.'));
 }
@@ -61,4 +65,17 @@ void util::insertFront(QMenu* menu, QAction* action){
 	} else {
 		menu->addAction(action);
 	}
+}
+
+size_t util::factorial(size_t n){
+    size_t result = n;
+    while(n > 1){
+        --n;
+        result*=n;
+    }
+    return result;
+}
+
+size_t util::combinations(size_t n, size_t k){
+    return factorial(n)/(factorial(k)*factorial(n-k));
 }

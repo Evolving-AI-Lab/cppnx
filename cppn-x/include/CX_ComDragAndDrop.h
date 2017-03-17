@@ -26,9 +26,7 @@ public:
 	void undo();
 	void redo();
 
-	bool isOk(){
-		return from != to;
-	}
+	bool isOk() const{return from != to;}
 
 private:
 	DragAndDropGraphicsView* dragAndDropGraphicsView;

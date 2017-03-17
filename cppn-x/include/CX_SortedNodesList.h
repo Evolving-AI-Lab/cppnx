@@ -8,11 +8,11 @@
 #ifndef CX_SORTEDNODESLIST_H_
 #define CX_SORTEDNODESLIST_H_
 
-#include "CE_Node.h"
+#include "CX_MovableObject.hpp"
 
 class SortedNodesList {
 public:
-	SortedNodesList(Node::AxisEnumerator compareIndex):axisEnum(compareIndex){
+	SortedNodesList(MovableObject::AxisEnumerator compareIndex):axisEnum(compareIndex){
 		//nix
 	}
 
@@ -20,7 +20,7 @@ public:
 		//nix
 	}
 
-	void add(Node* node){
+	void add(MovableObject* node){
 //		std::cout << "Adding node: " << node->getBranch() << "_" << node->getId() << std::endl;
 		int i;
 		for(i = sortedNodes.size()-1; i>=0; i--){
@@ -33,7 +33,7 @@ public:
 		sortedNodes.insert(i+1, node);
 	}
 
-	void remove(Node* node){
+	void remove(MovableObject* node){
 //		std::cout << "Removing node: " << node->getBranch() << "_" << node->getId() << std::endl;
 		for(int i = node->sortedIndex[axisEnum]+1; i<sortedNodes.size(); i++){
 			sortedNodes[i]->sortedIndex[axisEnum]--;
@@ -41,7 +41,7 @@ public:
 		sortedNodes.removeAt(node->sortedIndex[axisEnum]);
 	}
 
-	void update(Node* node){
+	void update(MovableObject* node){
 		int index = node->sortedIndex[axisEnum];
 //		std::cout << "node: " << node << " index: " << index << std::endl;
 		while(index > 0 ? sortedNodes[index-1]->getSortedValue(axisEnum) > node->getSortedValue(axisEnum) :  false){
@@ -87,18 +87,47 @@ public:
 		sortedNodes.clear();
 	}
 
-	Node* front(){
+	MovableObject* front(){
 		return sortedNodes.front();
 	}
 
-	Node* back(){
+	MovableObject* back(){
 		return sortedNodes.back();
+	}
+
+	qreal edgeValue(){
+	    switch(axisEnum){
+	    case MovableObject::left:
+	        return sortedNodes.front()->getSortedValue(axisEnum);
+	    break;
+	    case MovableObject::right:
+	        return sortedNodes.back()->getSortedValue(axisEnum);
+	    break;
+	    case MovableObject::top:
+	        return sortedNodes.front()->getSortedValue(axisEnum);
+	    break;
+	    case MovableObject::bottom:
+	        return sortedNodes.back()->getSortedValue(axisEnum);
+	    break;
+	    default:
+	        dbg::sentinel(DBG_HERE);
+	    }
+	    dbg::sentinel(DBG_HERE);
+	    return 0.0;
+	}
+
+	inline int size() const{
+	    return sortedNodes.size();
+	}
+
+	inline bool empty() const{
+	    return sortedNodes.empty();
 	}
 
 
 private:
-	QList<Node*> sortedNodes;
-	Node::AxisEnumerator axisEnum;
+	QList<MovableObject*> sortedNodes;
+	MovableObject::AxisEnumerator axisEnum;
 };
 
 #endif /* CX_SORTEDNODESLIST_H_ */

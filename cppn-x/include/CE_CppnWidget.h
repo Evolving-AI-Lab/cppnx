@@ -40,21 +40,22 @@
 
 #ifndef GRAPHWIDGET_H
 #define GRAPHWIDGET_H
-//#include <JGTL_LocatedException.h>
-#include <QtGui/QGraphicsView>
-#include <QActionGroup>
-#include <map>
-#include "CE_Defines.h"
-//#include "CE_Label.h"
-//#include "CE_Window.h"
 
-#include "CE_CommandSetPos.h"
-#include "CE_CommandLabelObject.h"
-#include "CE_CommandSetWeight.h"
+//Qt includes
+//#include <QtGui/QGraphicsView>
+#include <QActionGroup>
+
+//Local includes
+#include "CE_Defines.h"
+#include "CX_ComLabelObject.h"
+#include "CX_ComSetPos.h"
+#include "CX_ComSetWeight.h"
+#include "CX_ComChangeActivation.hpp"
 #include "CX_ComAddRemoveObject.h"
 #include "CX_ContextMenuGraphicsView.h"
 #include "CX_SortedNodesList.h"
-
+#include "CX_Legend.hpp"
+#include "CX_Debug.hpp"
 
 class Node;
 class Edge;
@@ -67,89 +68,113 @@ class CppnWidget : public ContextMenuGraphicsView
     Q_OBJECT
 
 public:
+
+    //Minimum borders
+//    static const double left_border_min;
+//    static const double right_border_min;
+//    static const double top_border_min;
+//    static const double bottom_border_min;
+    static const double extra_space;
+    static const double snapshot_super_resolution;
+    static const qreal minimum_zoom_factor;
+    static const qreal maximum_zoom_factor;
+
     CppnWidget(QWidget* widget = 0);
 
+    void deleteCppn();
     void setCppn(QList<Node*> nodes, QList<Edge*> edges);
-    Cppn* getCppn(){
-    	return cppn;
-    }
+    Cppn* getCppn(){return cppn;}
 
-    QAction* getAddNodeviewAction(){
-    	return addNodeviewAction;
-    }
+    QAction* getAddNodeviewAction(){return addNodeviewAction;}
+    QAction* getEdgeNoSignAction(){return _noSignAction;}
+    QAction* getEdgeShowSignAction(){return _showSignAction;}
+    QAction* getEdgeShowSignIfNoLabelAction(){return _showSignIfNoLabelAction;}
+    QAction* getEdgeShowLabelAction(){return _showLabelAction;}
+    QAction* getEdgeNoLabelAction(){return _noLabelAction;}
+    QAction* getToggleAnnotationsAction(){return _toggleAnnotationsAction;}
+    QAction* getCircleAction(){return circleAction;}
+    QAction* getLayerAction(){return layerAction;}
+    QAction* getONPAction(){return ONPAction;}
+    QAction* getNodeLabelAction(){return nodeLabelAction;}
+    QAction* getNodeModuleAction(){return nodeModuleAction;}
+    QAction* getNodeLabelNoImageAction(){return nodeLabelNoImageAction;}
+    QAction* getCurvedLineAction(){return curvedLineAction;}
+    QAction* getStraightLineAction(){return straightLineAction;}
+    QAction* getIncreaseCurveOffsetAction(){return _increaseCurveOffset;}
+    QAction* getDecreaseCurveOffsetAction(){return _decreaseCurveOffset;}
+    QAction* getSnapshotAction(){return _snapshotAction;}
 
-    QAction* getLabelViewAction(){
-    	return labelOnlyAction;
-    }
+    // Zoom actions
+    QAction* getZoomInAction(){return _zoomInAction;}
+    QAction* getZoomOutAction(){return _zoomOutAction;}
+    QAction* getSetZoomAction(){return _setZoomAction;}
 
-    QAction* getSignViewAction(){
-    	return signOnlyAction;
-    }
+    //Find actions
+    QAction* getFindUnlabeledEdgeAction(){return _findUnlabeledEdgeAction;}
+    QAction* getFindEdgeByIdAction(){return _findEdgeByIdAction;}
 
-    QAction* getLabelAndSignViewAction(){
-    	return labelAndSignAction;
-    }
+    QAction* getWeightEdgeWidthAction(){return _weightEdgeWidthAction;}
+    QAction* getFixedEdgeWidthAction(){return _fixedEdgeWidthAction;}
 
-    QAction* getCircleAction(){
-    	return circleAction;
-    }
+    //Activation functions
+    QAction* getSetSinAction(){return _setSin;}
+    QAction* getSetCosAction(){return _setCos;}
+    QAction* getSetGausAction(){return _setGaus;}
+    QAction* getSetSigmoidAction(){return _setSigmoid;}
+    QAction* getSetLinAction(){return _setLin;}
+    QAction* getSetStepAction(){return _setStep;}
+    QAction* getSetUSigmoidAction(){return _setUSigmoid;}
+    QAction* getSetUGaussianAction(){return _setUGuas;}
+    QAction* getSetUBoundedLinearAction(){return _setUBoundedLinear;}
 
-    QAction* getLayerAction(){
-    	return layerAction;
-    }
+    QAction* getAddNodeAction(){return _addNode;}
+    QAction* getAddNodeOnConnectionAction(){return _addNodeOnConnection;}
+    QAction* getAddEdgeAction(){return _addEdge;}
 
-    QAction* getONPAction(){
-    	return ONPAction;
-    }
+    //Arrange actions
+    QAction* getAlignHorizontalAction(){return _alignHorizontal;}
+    QAction* getAlignVerticalAction(){return _alignVertical;}
+    QAction* getSpaceHorizontalAction(){return _spaceHorizontal;}
+    QAction* getSpaceVerticalAction(){return _spaceVertical;}
 
-    QAction* getNodeLabelAction(){
-    	return nodeLabelAction;
-    }
+    QAction* getColorPathAction(){return _colorPathAction;}
 
-    QAction* getNodeModuleAction(){
-    	return nodeModuleAction;
-    }
+    QAction* getScaleLegendAction(){return _scaleLegend;}
+//    QAction* getSetFavoriteAction(){return _setFavorite;}
 
-    QAction* getCurvedLineAction(){
-    	return curvedLineAction;
-    }
+    double getLeftBorder(){return left_border;}
+    double getRightBorder(){return right_border;}
+    double getTopBorder(){return top_border;}
+    double getBottomBorder(){return bottom_border;}
 
-    QAction* getStraightLineAction(){
-    	return straightLineAction;
-    }
+    QActionGroup* getNodeViewGroup(){return nodeViewGroup;}
+    QMenu* getEdgeMenu(){return edgeMenu;}
+    QMenu* getNodeMenu(){return nodeMenu;}
+    bool getNodeSelected(){return nodeSelected;}
+    bool getEdgeSelected(){return edgeSelected;}
 
+    Edge* getSelectedEdge();
 
-    QActionGroup* getViewGroup(){
-    	return viewGroup;
-    }
-
-    QActionGroup* getNodeViewGroup(){
-    	return nodeViewGroup;
-    }
-
-    QMenu* getEdgeMenu(){
-    	return edgeMenu;
-    }
-
-    QMenu* getNodeMenu(){
-    	return nodeMenu;
-    }
-
-    bool getNodeSelected(){
-    	return nodeSelected;
-    }
-
-    bool getEdgeSelected(){
-    	return edgeSelected;
-    }
+    size_t getNrOfModules() const;
 
     void removeNode(Node* node);
     void removeEdge(Edge* edge);
+
+    void setActivationFunction(std::string activationFunction);
+
+    void addLegend(const QList<Label*>& labels);
+    void removeLegend();
+    Legend* getLegend();
 
 public slots:
 	// Zoom functions
     void zoomIn();
     void zoomOut();
+    void setZoom();
+
+    //Experimental functions
+    void increaseCurveOffset();
+    void decreaseCurveOffset();
 
     //Weight functions
     void setWeight(double value);
@@ -179,12 +204,33 @@ public slots:
     void setCurvedLines();
     void setStraightLines();
 
+    void setEdgeShowSign();
+    void setEdgeShowSignIfNoLabel();
+    void setEdgeNoSign();
+
+    void setEdgeShowLabel();
+    void setEdgeNoLabel();
+
+    void setEdgeWeightWidth();
+    void setEdgeFixedWidth();
+
+    void setShowAnnotations();
+    void setHideAnnotations();
+    void toggleAnnotations();
+
     void setLabelView();
     void setSignView();
     void setLabelAndSignView();
 
     void setNodeLabelView();
     void setNodeModuleView();
+    void setNodeLabelNoImageView();
+
+//    void setFavourite();
+
+    //Search functions
+    void findUnlabeledEdge();
+    void findEdgeById();
 
     //Update functions
     void updateSelection();
@@ -192,7 +238,7 @@ public slots:
     void updatePreviousPositions();
     void rebuildPhenotype();
 
-    void itemMoved(Node * node);
+    void itemMoved(MovableObject* object);
 
     void saveImage();
 
@@ -202,6 +248,34 @@ public slots:
 
     void flash(bool flashOn);
 //    void ContextMenuEvent(SelectableObject* object, bool begin);
+
+    //Experimental
+    void snapShot();
+    void scaleLegend();
+    void colorPaths();
+
+    //Change activation function functions
+    void setSin();
+    void setCos();
+    void setSigmoid();
+    void setGaus();
+    void setLin();
+    void setStep();
+    void setUGuas();
+    void setUSigmoid();
+    void setUBoundedLinear();
+
+    //Add node functions
+    void addNode();
+    void addNodeOnConnection();
+    void addEdge();
+
+    //Arrange functions
+    void alignHorizontal();
+    void alignVertical();
+    void spaceHorizontal();
+    void spaceVertical();
+
 
 signals:
 //	void requestCommandExecution(QUndoCommand*);
@@ -225,60 +299,120 @@ private:
     void setEdgeSelected(bool selected);
     void setSceneRect();
 
+    QList<Node*> _getSelectedNodes();
+
     Cppn* cppn;
 
     //Actions
     QAction* addNodeviewAction;
-    QAction *labelOnlyAction;
-    QAction *signOnlyAction;
-    QAction *labelAndSignAction;
+
+    QAction* _zoomInAction;
+    QAction* _zoomOutAction;
+    QAction* _setZoomAction;
+
+//    QAction *labelOnlyAction;
+//    QAction *signOnlyAction;
+//    QAction *labelAndSignAction;
+//    QActionGroup* viewGroup;
+
+    QAction* _noLabelAction;
+    QAction* _showLabelAction;
+    QActionGroup* _edgeShowLabelGroup;
+
+    QAction* _showSignAction;
+    QAction* _showSignIfNoLabelAction;
+    QAction* _noSignAction;
+    QActionGroup* _edgeShowSignGroup;
+
+    QAction* _weightEdgeWidthAction;
+    QAction* _fixedEdgeWidthAction;
+    QActionGroup* _edgeWidthGroup;
+
+    QAction* _toggleAnnotationsAction;
 
     //Positioning actions
     QAction* layerAction;
     QAction* ONPAction;
     QAction* circleAction;
-    QActionGroup* viewGroup;
+
 
     QAction* nodeLabelAction;
     QAction* nodeModuleAction;
+    QAction* nodeLabelNoImageAction;
     QActionGroup* nodeViewGroup;
 
     QAction* curvedLineAction;
     QAction* straightLineAction;
     QActionGroup* lineModeGroup;
 
+    QAction* _increaseCurveOffset;
+    QAction* _decreaseCurveOffset;
+    QAction* _snapshotAction;
+    QAction* _colorPathAction;
+
+    //Find actions
+    QAction* _findUnlabeledEdgeAction;
+    QAction* _findEdgeByIdAction;
+
+    //Edit node actions
+    QAction* _setSin;
+    QAction* _setCos;
+    QAction* _setGaus;
+    QAction* _setSigmoid;
+    QAction* _setLin;
+    QAction* _setStep;
+    QAction* _setUSigmoid;
+    QAction* _setUGuas;
+    QAction* _setUBoundedLinear;
+
+    //Add node actions
+    QAction* _addNode;
+    QAction* _addNodeOnConnection;
+    QAction* _addEdge;
+
+    //Arrange functions
+    QAction* _alignHorizontal;
+    QAction* _alignVertical;
+    QAction* _spaceHorizontal;
+    QAction* _spaceVertical;
 
 
+    QAction* _scaleLegend;
+    //
+//    QAction* _setFavorite;
 
     QMenu* edgeMenu;
     QMenu* nodeMenu;
 
     //Sorted vectors for modifying scene
-    SortedNodesList x_sorted;
-    SortedNodesList y_sorted;
+    SortedNodesList left_sorted;
+    SortedNodesList right_sorted;
+    SortedNodesList top_sorted;
+    SortedNodesList bottom_sorted;
 
     //Misc
     bool blockWeightUpdates;
     Edge::LabelMode labelMode;
+    Edge::EdgeSignMode _signMode;
     Edge::LineMode lineMode;
+    Edge::EdgeLineWidthMode _lineWidthMode;
+    Edge::EdgeLAnnotationMode _annotationMode;
     Node::NodeLabelMode nodeLabelMode;
 	bool nodeSelected;
 	bool edgeSelected;
 	bool firstClick;
-	QList<QGraphicsItem*> previousSelection;
+
+	Node* _firstNodeSelected;
+
+	Legend* _legend;
+//	QList<QGraphicsItem*> previousSelection;
+//	size_t _current_favourite_index;
 
     //Current borders
     double left_border;
     double right_border;
     double top_border;
     double bottom_border;
-
-    //Minimum borders
-    static const double left_border_min;
-    static const double right_border_min;
-    static const double top_border_min;
-    static const double bottom_border_min;
-    static const double extra_space;
 };
 //! [0]
 

@@ -5,6 +5,8 @@
  *      Author: joost
  */
 
+#include <CX_ComAddLabel.h>
+#include <CX_ComLabelObject.h>
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QLineEdit>
@@ -18,8 +20,6 @@
 #include "CE_LabelWidget.h"
 //#include "CE_Window.h"
 #include "CE_VerticalScrollArea.h"
-#include "CE_CommandLabelObject.h"
-#include "CE_CommandAddLabel.h"
 
 LabelWidget::LabelWidget() {
     applyLabelAction = new QAction(tr("Apply label"), this);

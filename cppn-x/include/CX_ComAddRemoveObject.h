@@ -12,6 +12,7 @@
 #include <QList>
 
 #include "CX_ComBase.h"
+#include "CX_Debug.hpp"
 
 class CppnWidget;
 class Node;
@@ -19,26 +20,38 @@ class Edge;
 
 class ComAddRemoveObject: public ComBase {
 public:
+    enum AddOrRemove {addEnum, removeEnum};
+//    typedef QPair<QGraphicsItem*, AddOrRemove> pair_t;
+
+    ComAddRemoveObject(QUndoCommand * parent = 0):ComBase(parent), _widget(0), ok(false){}
 	ComAddRemoveObject(CppnWidget* widget, QList<QGraphicsItem*> objects, bool add);
-	virtual ~ComAddRemoveObject(){
-		//nix
-	}
+//	virtual ~ComAddRemoveObject(){
+//		//nix
+//	}
+
+	void init(CppnWidget* widget);
+	void addObject(QGraphicsItem* object);
+	void removeObject(QGraphicsItem* object);
 
 	void undo();
 	void redo();
 
-	bool isOk(){
-		return ok;
-	}
+	bool isOk() const{return ok;}
 
 private:
-	void addObjects();
-	void removeObjects();
+//	void addObjects();
+//	void removeObjects();
 
-	CppnWidget* widget;
-	QList<Node*> nodes;
-	QList<Edge*> edges;
-	bool add;
+	void _addObject(QGraphicsItem* item);
+	void _removeObject(QGraphicsItem* item);
+
+	CppnWidget* _widget;
+	QList<QGraphicsItem*> _objects;
+	QMap<QGraphicsItem*, AddOrRemove> _addORemoveMap;
+//	QList<QPair<Node*, AddOrRemove> > nodes;
+//	QList<QPair<Edge*, AddOrRemove> > edges;
+//	QList<Edge*> edges;
+//	bool add;
 	bool ok;
 };
 

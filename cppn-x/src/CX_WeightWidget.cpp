@@ -5,7 +5,10 @@
  *      Author: joost
  */
 
-#include "CX_WeightWidget.h"
+//Standard includes
+#include <iostream>
+
+//QT includes
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -13,8 +16,9 @@
 #include <QCheckBox>
 #include <QLabel>
 #include <QEvent>
-#include <iostream>
 
+//Local includes
+#include "CX_WeightWidget.h"
 
 WeightWidget::WeightWidget(QWidget* parent): QGroupBox(parent) {
 	scanning=false;
@@ -132,7 +136,14 @@ WeightWidget::WeightWidget(QWidget* parent): QGroupBox(parent) {
 }
 
 WeightWidget::~WeightWidget() {
-	// TODO Auto-generated destructor stub
+
+}
+
+void WeightWidget::setValue(double value){
+    stopScan();
+    weightSliderWidget->blockSignals(true);
+    weightSliderWidget->setSlider(value);
+    weightSliderWidget->blockSignals(false);
 }
 
 void WeightWidget::startStopFilm(){

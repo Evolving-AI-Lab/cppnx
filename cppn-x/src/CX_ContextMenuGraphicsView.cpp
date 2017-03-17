@@ -33,3 +33,11 @@ void ContextMenuGraphicsView::updateAll(){
 		item->update();
 	}
 }
+
+QAction* ContextMenuGraphicsView::createAction(QString name, QString statusBarTip, const char *member){
+    QAction* action = new QAction(name, this);
+    action->setStatusTip(statusBarTip);
+    connect(action, SIGNAL(triggered()), this, member);
+    addAction(action);
+    return action;
+}

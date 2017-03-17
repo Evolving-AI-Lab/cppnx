@@ -1,14 +1,24 @@
-#include "CE_Window.h"
+//Local include
+#include "CX_CppnExaminerApp.hpp"
 #include "CE_ActivationFunctions.h"
+#include "CX_ModuleColor.h"
+#include "CX_GlobalSettings.h"
+
+//Standard includes
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <limits>
+#include <time.h>
+
+//Qt Includes
 #include <QApplication>
 #include <QtPlugin>
 #include <QWidget>
 #include <QtGui>
+#include <QRegExp>
 
+//Other includes
 #include <zip.h>
 
 //Q_IMPORT_PLUGIN(qjpeg)
@@ -20,12 +30,17 @@
 
 
 int main(int argc, char **argv) {
+    time_t current_time = time(NULL);
+    qsrand ( current_time );
 	act_functions::initializeActivationFunctions();
-    QApplication app(argc, argv);
-    Window dialog;
+	cx_colors::initModuleColors();
+	glb_settings::initGlobalSettings();
 
-    dialog.show();
+	MovableObject::movableTypes.insert(Node::Type);
+	MovableObject::movableTypes.insert(Legend::Type);
 
+	CppnExaminerApp app(argc, argv);
 
+    //Start the application
     return app.exec();
 }

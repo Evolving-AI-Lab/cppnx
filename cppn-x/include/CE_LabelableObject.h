@@ -9,11 +9,11 @@
 #define CE_LABELABLEOBJECT_H_
 
 #include "CE_Label.h"
-#include "CX_SelectableObject.h"
+#include "CX_MovableObject.hpp"
 
 class Label;
 
-class LabelableObject : public SelectableObject {
+class LabelableObject : public MovableObject {
 	Q_OBJECT
 
 public:
@@ -27,6 +27,8 @@ public:
 
 	Label* getLabel();
 	void setLabel(Label* _label);
+	bool hasLabel();
+	id_t getLabelId();
 
 	QString getNote(){
 		return note;
@@ -45,6 +47,7 @@ public slots:
 
 
 protected:
+	void makeLabel(Label* _label = 0);
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
 	Label* label;

@@ -29,7 +29,6 @@ public:
 	}
 
 	void move(uint source, uint target){
-//		std::cout << "Move performed" <<std::endl;
 		objects.move(source, target);
 		setPositions();
 		emit objectsMoved();
@@ -94,7 +93,6 @@ signals:
 
 public slots:
 	void requestMove(uint source, uint target){
-//		std::cout << "Move requested" <<std::endl;
 		ComDragAndDrop* command= new ComDragAndDrop(this, source, target);
 		if(command->isOk()){
 			emit requestCommandExecution(new ComDragAndDrop(this, source, target));
@@ -128,29 +126,15 @@ protected:
 	}
 
 	void setPosition(DragAndDropObject* object, size_t index){
-
-//		std::cout << object << " index: " << index <<std::endl;
-//		std::cout << object->boundingRect().width() << " " << object->boundingRect().height() << " " << index << std::endl;
 		object->setPos(-object->boundingRect().left() + leftMargin,topMargin +-object->boundingRect().top() + index*(object->boundingRect().height() + contentsMargin));
-//		std::cout << "Set position done" << std::endl;
 	}
 
 	void setPositions(){
-//		std::cout << "Set positions" << std::endl;
 		for(int index=0; index<objects.count(); index++){
-//			std::cout << "Set position start" << std::endl;
 			setPosition(objects[index], index);
-//			std::cout << "Set index start" << std::endl;
 			objects[index]->setIndex(index);
-//			std::cout << "Set index end" << std::endl;
 		}
-//		std::cout << "Set positions done" << std::endl;
 	}
-
-//	virtual void objectsMoved(){
-//		//nix
-//	}
-
 
 	QList<DragAndDropObject*> objects;
 };

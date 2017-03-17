@@ -11,12 +11,14 @@
 
 #include <QGroupBox>
 #include <QAction>
+#include <QDoubleSpinBox>
+
 #include "CX_WeightSliderWidget.h"
 
 class QPushButton;
 class QHBoxLayout;
 class QVBoxLayout;
-class QDoubleSpinBox;
+//class QDoubleSpinBox;
 class QCheckBox;
 
 class WeightWidget: public QGroupBox {
@@ -25,45 +27,26 @@ public:
 	WeightWidget(QWidget* parent = 0);
 	virtual ~WeightWidget();
 
-	double value(){
-		return weightSliderWidget->getValue();
-	}
+	//Getters and setters
+	double getValue(){return weightSliderWidget->getValue();}
+	double getScanStartValue(){return scanStartSpinBox->value();}
+	double getScanStopValue(){return scanStopSpinBox->value();}
+	double getStepSizeValue(){return stepSizeSpinBox->value();}
 
-	void setValue(double value){
-		stopScan();
-		weightSliderWidget->blockSignals(true);
-		weightSliderWidget->setSlider(value);
-		weightSliderWidget->blockSignals(false);
-	}
-
+	void setValue(double value);
 	void setEdge(double weight, double originalWeight, QString id, double bookendStart, double bookendEnd, double bookendStep);
 	void setNode(QString id);
 
-	WeightSliderWidget* getFirstWeightSliderWidget(){
-		return weightSliderWidget;
-	}
+	WeightSliderWidget* getFirstWeightSliderWidget(){return weightSliderWidget;}
 
-    QAction* getResetAllAction(){
-    	return resetAllAction;
-    }
+    QAction* getResetAllAction(){return resetAllAction;}
+    QAction* getScanAction(){return scanAction;}
+    QAction *getScreenCaptureAction(){return screenCaptureAction;}
 
-    QAction* getScanAction(){
-    	return scanAction;
-    }
-
-    QAction *getScreenCaptureAction(){
-    	return screenCaptureAction;
-    }
+    bool isCapturing(){return capturing;}
+    bool isScanning(){return scanning;}
 
     void edgeSelected(bool selected);
-
-    bool isCapturing(){
-    	return capturing;
-    }
-
-    bool isScanning(){
-    	return scanning;
-    }
 
 public slots:
 	void startStopFilm();

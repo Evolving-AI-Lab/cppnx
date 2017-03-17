@@ -5,12 +5,28 @@
 TEMPLATE = app
 TARGET = cppn-x
 
-CONFIG += release 
 CONFIG += static 
 
+message($$QMAKE_LFLAGS)
+message($$QMAKE_LFLAGS_RELEASE)
+message($$QMAKE_LFLAGS_APP)
+message($$CONFIG)
+
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 QMAKE_CFLAGS_X86_64 -= -mmacosx-version-min=10.5
 QMAKE_CFLAGS_X86_64 += -mmacosx-version-min=10.7
 QMAKE_CXXFLAGS_X86_64 = $$QMAKE_CFLAGS_X86_64
+QMAKE_LFLAGS -= -mmacosx-version-min=10.5
+QMAKE_LFLAGS += -mmacosx-version-min=10.7
+
+macx {
+    QMAKE_MAC_SDK = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk
+}
+load(qt_config)
+message($$QMAKE_LFLAGS)
+message($$QMAKE_LFLAGS_RELEASE)
+message($$QMAKE_LFLAGS_APP)
+message($$CONFIG)
 
 #Might need to add this option to the linker
 #-headerpad_max_install_names
@@ -20,16 +36,15 @@ DEPENDPATH += . \
               cppn-x/include \
               cppn-x/src \
               JGTL/include \
-              libzip-0.11.1/lib \
-			  gsl/lib
+              libzip-0.11.1/lib
 
 INCLUDEPATH += . \
                zlib \
                cppn-x/include \
                JGTL/include \
-			   gsl/include \
                libzip-0.11.1/lib \
                libzip-0.11.1/xcode \
+               /usr/local/include \
                libzip-0.11.1/src
 
 #QTPLUGIN += qjpeg 
@@ -40,7 +55,8 @@ INCLUDEPATH += . \
 #            qtiff
 
 LIBS += -lm \ 
-        -lgsl
+        -lgsl \
+        -L/usr/local/lib
 #LIBS += -lz 
 
 # Required for some C99 defines
@@ -85,6 +101,19 @@ HEADERS += zlib/crc32.h \
            cppn-x/include/CX_ComSetBookends.h \
            cppn-x/include/CX_SortedNodesList.h \
            cppn-x/include/CX_ComAddRemoveObject.h \
+           cppn-x/include/CE_Parser.hpp \
+           cppn-x/include/CE_MainParser.h \
+           cppn-x/include/CX_ModuleColor.h \
+           cppn-x/include/CX_ArgumentParser.h \
+           cppn-x/include/CX_Debug.hpp \
+           cppn-x/include/CX_Random.hpp \
+           cppn-x/include/CX_ComChangeActivation.hpp \
+           cppn-x/include/CX_Point.hpp \
+           cppn-x/include/CX_Legend.hpp \
+           cppn-x/include/CX_CppnExaminerApp.hpp \
+           cppn-x/include/CX_MovableObject.hpp \
+           cppn-x/include/CX_PreferencesWidget.hpp \
+           cppn-x/include/CX_GlobalSettings.h \
            libzip-0.11.1/lib/zip.h \
            libzip-0.11.1/lib/zipconf.h \
            libzip-0.11.1/lib/zipint.h
@@ -114,13 +143,13 @@ SOURCES += zlib/adler32.c \
            cppn-x/src/CE_NodeView.cpp \
            cppn-x/src/CE_Window.cpp \
            cppn-x/src/CE_VerticalScrollArea.cpp \
-           cppn-x/src/CE_CommandLabelObject.cpp \
-           cppn-x/src/CE_CommandSetWeight.cpp \
-           cppn-x/src/CE_CommandAddLabel.cpp \
-           cppn-x/src/CE_CommandNodeView.cpp \
-           cppn-x/src/CE_CommandSetPos.cpp \
-           cppn-x/src/CE_CommandChangeLabelColor.cpp \
-           cppn-x/src/CE_CommandChangeLabelName.cpp \
+           cppn-x/src/CX_ComLabelObject.cpp \
+           cppn-x/src/CX_ComSetWeight.cpp \
+           cppn-x/src/CX_ComAddLabel.cpp \
+           cppn-x/src/CX_ComNodeView.cpp \
+           cppn-x/src/CX_ComSetPos.cpp \
+           cppn-x/src/CX_ComChangeLabelColor.cpp \
+           cppn-x/src/CX_ComChangeLabelName.cpp \
            cppn-x/src/CE_NodeViewWidget.cpp \
            cppn-x/src/CE_LabelWidget.cpp \
            cppn-x/src/CE_Util.cpp \
@@ -132,6 +161,17 @@ SOURCES += zlib/adler32.c \
            cppn-x/src/CX_ComDragAndDrop.cpp \
            cppn-x/src/CX_ComSetBookends.cpp \
            cppn-x/src/CX_ComAddRemoveObject.cpp \
+           cppn-x/src/CE_Parser.cpp \
+           cppn-x/src/CE_MainParser.cpp \
+           cppn-x/src/CX_ModuleColor.cpp\
+           cppn-x/src/CX_Debug.cpp \
+           cppn-x/src/CX_ComChangeActivation.cpp \
+           cppn-x/src/CX_Point.cpp \
+           cppn-x/src/CX_Legend.cpp \
+           cppn-x/src/CX_CppnExaminerApp.cpp \
+           cppn-x/src/CX_MovableObject.cpp \
+           cppn-x/src/CX_PreferencesWidget.cpp \
+           cppn-x/src/CX_GlobalSettings.cpp \
            libzip-0.11.1/lib/mkstemp.c \
            libzip-0.11.1/lib/zip_add.c \
            libzip-0.11.1/lib/zip_add_dir.c \

@@ -1,5 +1,5 @@
 This is the cppn-x implementation of the Evolving Artificial Intelligence Laboratory of the University of Wyoming.
-Current version: 0.4.2 (beta)
+Current version: 0.9 (beta)
 
 Version: 0.1
 - First version to uploaded to the git repository.
@@ -92,6 +92,7 @@ Version: 0.7.0
 - When selecting a label, all connections and nodes with that label will now be selected. Pressing the label again will cause those connections and nodes to 'blink'.
 - Cppn-x now uses the same sigmoid and gaussian tables as picbreeder, meaning that pictures like 4266 are now correctly displayed.
 - Added a 'start here' button. Checking the button causes all scans and films to start from the current position, scan to the start, scan to the end and then scan back to the initial position.
+- A pre-compiled version is now also available on Mac.
 - Added the possibility to show curved lines instead of straight lines.
 - When showing modules the image of each node is now replaced with its module color.
 - When saving a node or a film you can now select different image formats. All supported formats are listed meaning that this could provide a workaround for the fact that the jpg format is not always available on all windows machines.
@@ -103,33 +104,44 @@ Version: 0.7.0
 - Fixed a bug where, when the window was in fullscreen move, the window moved when when filming causing part of the application to go off screen.
 - Fixed a bug where the program would not ask if you want to save a modified file upon loading a different file.
 - Fixed a bug where an oddly named frame would be produced.
+- Fixed a bug where the jpg format was not available on Windows.
+
+Version: 0.8.0
+- Nodes and connections can be added, but adding edges still crashes the program.
+- The curve of edges can be adjusted, though this feature is very much buggy.
+- Networks can be loaded by number, if the Picbreeder database is present and known.
+- It is possible to switch between generations, if the Picbreeder database is present and known.
+- The entire network can now be exported at a `higher than displayed' resolution with the `snapshot' option.
+- The activation function of a node can be changed (though the implementation is not very user friendly).
+- You can import labels from a different network.
+- You can show the differences between this network and a different network.
+- You can import the positions from a different network.
+- You can automatically select an unlabeled connection.
+- You can search for a node with a particular ID.
+- The view options have changed slightly to allow for more versatility.
+- You can create labels according to the optimal modular split, so you can chose different colors for the labels.
+- You can give a particular label to a node by adding := to the name of the label. This will cause the label to show in a circle on top of the connection.
+- The program can now display a legend (only available from code).
+
+Version: 0.9.0
+- Nodes and connections can be added, and adding edges no longer crashes the program.
+- The program can now display a legend, toggled in the "view" menu.
+- Program can now zoom with menu options and shortcuts.
 
 Known issues:
 - Undoing or redoing a 'reset all' rapidly selects all nodes that were changed.
-- JPG is not supported on windows
-- Sometimes oddly named frames are created.
+- Selecting a node sometimes causes that node to move.
 
 Priority:
--
+- bug fixes
 
 Wish-list:
-- Add nodes and connections
+- Scan interaction effects.
 - Calculate and display hierarchy.
-- Support for knockout experiments. [I think by this you mean clicking on a node and saying "deactivate" which grays it out an all incoming/outgoing connections and sets them to 0]
 - Add notes to objects.
 - Create a picture for an arbitrary node.
-- Scan interaction effects.
-- Add or remove nodes and connections.
 - Copy nodes according to "node duplication".
 - Automatically calculate and display various statistics such as modularity, hierarchy, red-blue modularity (and maybe split the network into even more parts).
-- Improve connection visualization with curved or 90 degree bend lines.
 - Add other node placements.
 - Less pixelated pictures.
 - Automatic network scan where it zooms in on the output node, automatically selects a connection and scans over its weight, ask the user to give the connection a label, and then selects the next connection. At the end of this process you should have a fully annotated network.
-- Load by number (if the root folder is known).
-
-
-Category assignment pending answers to my questions: 
-- 
-
-Link: https://dl.dropboxusercontent.com/u/17367759/cppn-x-precompiled-win32.zip

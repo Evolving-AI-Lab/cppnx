@@ -5,16 +5,19 @@
  *      Author: joost
  */
 
-#include "CX_WeightSliderWidget.h"
-
+//Standard includes
 #include <math.h>
 #include <iostream>
 
+//QT includes
 #include <QLabel>
 #include <QSlider>
 #include <QDoubleSpinBox>
 #include <QHBoxLayout>
 #include <QPushButton>
+
+//Local includes
+#include "CX_WeightSliderWidget.h"
 
 #define MIN_VALUE -3.0
 #define MAX_VALUE 3.0
@@ -66,7 +69,7 @@ WeightSliderWidget::WeightSliderWidget(QWidget* object):QWidget(object) {
 }
 
 WeightSliderWidget::~WeightSliderWidget() {
-	// TODO Auto-generated destructor stub
+
 }
 
 void WeightSliderWidget::setEdge(double weight, double originalWeight, QString id){

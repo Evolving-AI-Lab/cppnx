@@ -45,6 +45,8 @@
 
 #include "CE_Node.h"
 #include "CE_LabelableObject.h"
+#include "CX_Debug.hpp"
+#include "CX_Point.hpp"
 
 class Node;
 
@@ -52,16 +54,48 @@ class Edge : public LabelableObject
 {
 	Q_OBJECT
 public:
-    enum LabelMode {onlyLabels, onlyConnectionSign, both};
+	//The label mode of this edge
+	//May show only the label (unless the edge is unlabeled),
+	//only the sign of the connection (not showing the label),
+	//or both
+    enum LabelMode {onlyLabels, onlyConnectionSign, both, showLabel, noLabel};
+
+    //Toggle showing the sign of the connection
+    enum EdgeSignMode {noSign, showSign, showSignIfNoLabel};
+
+    //Toggles between straight lines or brazier curves
     enum LineMode {straight, curved};
+
+    //Toggles between straight lines or brazier curves
+    enum EdgeLineWidthMode {fixedWidth, weightWidth};
+
+    //Toggles between showing or hiding line annotation (e. g. the "1" shown in a circle on top of the line)
+    enum EdgeLAnnotationMode {showAnnotation, hideAnnotation};
+
+    //Tracks the number of edges in memory based on calls to the constructor and destructor.
+    //Used for debugging purposes only
+    static size_t edgesInMemory;
+
+    //Color of excitatory edges
+    static QColor excitatoryEdgeColor;
+
+    //Color of inhibitory edges
+    static QColor inhibitoryEdgeColor;
+
+    //Color of zero edges
+    static QColor zeroEdgeColor;
+
+    //Color of unlabeled edges
+    static QColor unlabeledEdgeColor;
+
 
     Edge(
     		std::string branch,
     		std::string id,
-    		Node *sourceNode,
-    		Node *destNode,
-    		qreal weight,
-    		qreal original_weight,
+    		Node *sourceNode = 0,
+    		Node *destNode = 0,
+    		qreal weight = 0.0,
+    		qreal original_weight = 0.0,
     		Label* label = 0,
     		std::string note = "",
     		LabelMode* labelMode = 0,
@@ -71,14 +105,26 @@ public:
     		);
 
     Edge(std::iostream &stream, std::map<std::string, Node*> nodeMap, std::map<std::string, Label*> labelMap);
+    ~Edge();
 
     Node *sourceNode() const;
     Node *destNode() const;
+
+    void setSourceNode(Node* node);
+    void setTargetNode(Node* node);
 
     void adjust();
 
     enum { Type = UserType + EDGE_TYPE };
     int type() const { return Type; }
+
+    void increaseCurveOffset(){
+    	_curveOffset += 1.0;
+    }
+
+    void decreaseCurveOffset(){
+    	_curveOffset -= 1.0;
+    }
 
     void resetWeight(){
     	setWeight(originalWeight);
@@ -133,8 +179,21 @@ public:
     	labelMode = _labelMode;
     }
 
+    void setSignMode(EdgeSignMode* signMode){
+        _signMode = signMode;
+    }
+
+
     void setLineMode(LineMode* _lineMode){
     	lineMode = _lineMode;
+    }
+
+    void setLineWidthMode(EdgeLineWidthMode* lineWidthMode){
+        _lineWidthMode = lineWidthMode;
+    }
+
+    void setAnnotationMode(EdgeLAnnotationMode* annotationMode){
+        _annotationMode = annotationMode;
     }
 
     void setBookendStart(double bookend){
@@ -166,6 +225,17 @@ public:
     	return stepSize;
     }
 
+    void setFavourite(size_t index){
+        _favourite_index = index;
+        update();
+    }
+
+    void setCustomColor(QColor color){
+        _customColor = color;
+        _useCustomColor = QBool(true);
+        update();
+    }
+
 signals:
 	void weightChanged(Edge*, double, bool);
 	void requestUpdateAll();
@@ -187,8 +257,11 @@ private:
     	  if(*lineMode == straight){
     		  path.lineTo(_line.p2());
     	  } else {
-    		  int offsetY = abs(_line.p1().y() - _line.p2().y()) / 2;
-    		  path.cubicTo(_line.p1().x(), _line.p1().y() - offsetY, _line.p2().x(), _line.p2().y() + offsetY, _line.p2().x(), _line.p2().y());
+//    		  std::cout << _curveOffset << std::endl;
+//    		  qreal offsetY = (abs(_line.p1().y() - _line.p2().y()) / 2);
+    		  path.cubicTo(_curvePoint1, _curvePoint2, _line.p2());
+
+//    		  path.cubicTo(_line.p1().x(), _line.p1().y() - offsetY + _curveOffset, _line.p2().x(), _line.p2().y() + offsetY + _curveOffset, _line.p2().x(), _line.p2().y());
     	  }
 
     	  return path;
@@ -197,6 +270,9 @@ private:
 
     LabelMode* labelMode;
     LineMode* lineMode;
+    EdgeSignMode* _signMode;
+    EdgeLineWidthMode* _lineWidthMode;
+    EdgeLAnnotationMode* _annotationMode;
 
     std::string branch;
     std::string id;
@@ -206,9 +282,14 @@ private:
     QPointF sourcePoint;
     QPointF destPoint;
 
+    QPointF _curvePoint1;
+    QPointF _curvePoint2;
+
     qreal currentWeight;
     qreal originalWeight;
     size_t index;
+
+    size_t _favourite_index;
 
     int _flash;
     QLineF _line;
@@ -217,6 +298,14 @@ private:
     double bookendEnd;
     double stepSize;
 
+    qreal _curveOffset;
+
+    QBool _useCustomColor;
+    QColor _customColor;
+//    Point* _point;
+
 };
+
+std::ostream& operator<< (std::ostream& os, const Edge& obj);
 
 #endif

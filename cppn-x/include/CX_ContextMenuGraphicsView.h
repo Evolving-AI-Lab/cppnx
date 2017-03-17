@@ -9,8 +9,11 @@
 #define CX_CONTEXTMENUGRAPHICSVIEW_H_
 
 #include <QGraphicsView>
+#include <QAction>
+
 #include "CX_ComBase.h"
 #include "CX_SelectableObject.h"
+#include "CX_Debug.hpp"
 
 class ContextMenuGraphicsView: public QGraphicsView {
 	Q_OBJECT
@@ -30,6 +33,15 @@ public:
 		return this->hasFocus() || partOfContextMenuEvent;
 	}
 
+	void clear(){
+	    foreach(SelectableObject* object, _selectableObjects){
+	        removeContextMenuObject(object);
+	    }
+	    scene()->clear();
+	}
+
+	QAction* createAction(QString name, QString statusBarTip, const char *member);
+
 	bool thisHasFocus;
 	bool partOfContextMenuEvent;
 
@@ -43,19 +55,27 @@ signals:
 	void focusChanged();
 
 protected:
+	/**
+	 * Adds an object to the graphics view and connects it to the local context menu.
+	 *
+	 * @param object The object to be added to the graphics view.
+	 */
 	void addContextMenuObject(SelectableObject* object){
+	    dbg::out(dbg::info, "menu") << "Adding object: " << object << " to scene: " << scene() << std::endl;
 		connect(object, SIGNAL(contextMenuEvent(SelectableObject*, bool)), this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
 		object->setHasFocus(&thisHasFocus);
+		_selectableObjects.push_back(object);
 		scene()->addItem(object);
 	}
 
 	void removeContextMenuObject(SelectableObject* object){
 		disconnect(object, SIGNAL(contextMenuEvent(SelectableObject*, bool)), this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
+		_selectableObjects.removeAll(object);
 		scene()->removeItem(object);
 	}
 
 	void focusInEvent(QFocusEvent * event){
-		thisHasFocus= true;
+		thisHasFocus = true;
 		update();
 		updateAll();
 		emit focusChanged();
@@ -63,12 +83,14 @@ protected:
 	}
 
 	void focusOutEvent(QFocusEvent * event){
-		thisHasFocus= false;
+		thisHasFocus = false;
 		update();
 		updateAll();
 		emit focusChanged();
 		QGraphicsView::focusOutEvent(event);
 	}
+
+	QList<SelectableObject*> _selectableObjects;
 };
 
 #endif /* CX_CONTEXTMENUGRAPHICSVIEW_H_ */

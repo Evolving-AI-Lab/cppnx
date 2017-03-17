@@ -11,34 +11,105 @@
 #include <algorithm>
 
 #include "CE_Cppn.h"
+#include "CX_Debug.hpp"
 #include "opt_placement.hpp"
+
 
 
 static const double Pi = 3.14159265358979323846264338327950288419717;
 
+typedef QList<Edge*> path_t;
+typedef QSet<path_t> stream_t;
+
+void Cppn::copy(Cppn* other){
+    dbg::out(dbg::info, "cppn") << "Copying " << other->getNrOfNodes() << " nodes." << std::endl;
+    for(size_t i=0; i<other->getNrOfNodes(); ++i){
+        Node* otherNode = other->getNode(i);
+        Node* node = new Node(
+                otherNode->getBranch(),
+                otherNode->getId(),
+                otherNode->getType(),
+                otherNode->getXmlActivationFunction(),
+                otherNode->getXmlLabel(),
+                otherNode->getAffinity(),
+                otherNode->getBias(),
+                otherNode->getLabel());
+        addNode(node);
+    }
+    dbg::out(dbg::info, "cppn") << "Added " << getNrOfNodes() << " nodes." << std::endl;
+
+    for(size_t i=0; i<other->getNrOfNodes(); ++i){
+        for(size_t j=0; j<other->getNrOfNodes(); ++j){
+            dbg::out(dbg::info, "cppn") << "Testing nodes " << i << " and " << j << std::endl;
+            if(other->connected(i, j)){
+                dbg::out(dbg::info, "cppn") << "Connected" << std::endl;
+                Edge* otherEdge = other->getEdge(i,j);
+                Edge* thisEdge = new Edge(
+                        otherEdge->getBranch(),
+                        otherEdge->getId(),
+                        getNode(i),
+                        getNode(j),
+                        otherEdge->getWeight(),
+                        otherEdge->getOriginalWeight());
+                dbg::out(dbg::info, "cppn") <<
+                        "Adding connection: " << thisEdge->sourceNode() <<
+                        " " << thisEdge->destNode() << std::endl;
+                addConnection(thisEdge);
+            }
+        }
+    }
+}
+
+void Cppn::swap(int index1, int index2){
+    nodes.swap(index1, index2);
+    nodes[index1]->setIndex(index1);
+    nodes[index2]->setIndex(index2);
+}
+
 void Cppn::addNode(Node* node){
 	removedNodes.removeAll(node);
+	node->setIndex(nodes.size());
+	nodes.push_back(node);
 
-	if(node->getXmlLabel() == INPUT_X){
-		nodes[input_x]=node;
-		node->setIndex(input_x);
-	} else if(node->getXmlLabel() == INPUT_Y){
-		nodes[input_y]=node;
-		node->setIndex(input_y);
-	} else if(node->getXmlLabel() == INPUT_D){
-		nodes[input_d]=node;
-		node->setIndex(input_d);
-	} else if(node->getXmlLabel() == INPUT_BIAS){
-		nodes[input_b]=node;
-		node->setIndex(input_b);
-	} else {
-		nodes.push_back(node);
-	}
 
+
+	//See if node is an input or output
 	if(node->getType() == XML_TYPE_INPUT){
 		inputs.push_back(node);
 	} else if(node->getType() == XML_TYPE_OUTPUT){
 		outputs.push_back(node);
+	}
+
+	if(inputs.size() == 4 && !_inputsOrdered){
+	    foreach(Node* inputNode, inputs){
+	        //Determine the type of input, if this node is an input
+	        if(inputNode->getXmlLabel() == INPUT_X){
+	            swap(inputNode->getIndex(), input_x);
+//	            nodes.swap(inputNode->getIndex(), input_x);
+//	            nodes[]
+//	            nodes[input_x]=node;
+//	            node->setIndex(input_x);
+	        } else if(inputNode->getXmlLabel() == INPUT_Y){
+	            swap(inputNode->getIndex(), input_y);
+//	            nodes[input_y]=node;
+//	            node->setIndex(input_y);
+	        } else if(inputNode->getXmlLabel() == INPUT_D){
+	            swap(inputNode->getIndex(), input_d);
+//	            nodes[input_d]=node;
+//	            node->setIndex(input_d);
+	        } else if(inputNode->getXmlLabel() == INPUT_BIAS){
+	            swap(inputNode->getIndex(), input_b);
+//	            nodes[input_b]=node;
+//	            node->setIndex(input_b);
+	        }
+	    }
+	    _inputsOrdered = true;
+	}
+
+	//Get id
+	id_t id = util::numericCast<id_t>(node->getId());
+	if(id > _maxId){
+	    _maxId = id;
 	}
 
 	nodeMap[node->getBranch() + "_" + node->getId()]=node;
@@ -57,6 +128,13 @@ void Cppn::addConnection(Edge* edge){
 //	std::cout << "Adding connection: " << edge << " from: " << edge->sourceNode() << " to " << edge->destNode() << std::endl;
 	edge->sourceNode()->addOutgoingEdge(edge);
 	edge->destNode()->addIncommingEdge(edge);
+	_connectivityMap[QPair<Node*, Node*>(edge->sourceNode(), edge->destNode())] = edge;
+
+    id_t id = util::numericCast<id_t>(edge->getId());
+    if(id > _maxId){
+        _maxId = id;
+    }
+
 	removedEdges.removeAll(edge);
 	edges.push_back(edge);
 	validPhenotype=false;
@@ -69,12 +147,129 @@ void Cppn::addConnection(Edge* edge){
 void Cppn::removeConnection(Edge* edge){
 	edge->sourceNode()->removeOutgoingEdge(edge);
 	edge->destNode()->removeIncommingEdge(edge);
+	_connectivityMap.erase(_connectivityMap.find(QPair<Node*, Node*>(edge->sourceNode(), edge->destNode())));
 	edges.removeAll(edge);
 	removedEdges.push_back(edge);
 	validPhenotype=false;
 	numberOfEdges--;
+
 //	buildPhenotype();
 }
+
+void Cppn::setActivationFunction(Node* node, const std::string& activationFunction){
+    node->setActivationFunction(activationFunction);
+    validPhenotype=false;
+}
+
+void Cppn::rewireConnection(Edge* edge, Node* newSource, Node* newTarget){
+    dbg::check_ptr(dbg::error, edge, DBG_HERE);
+    dbg::check_ptr(dbg::error, newSource, DBG_HERE);
+    dbg::check_ptr(dbg::error, newTarget, DBG_HERE);
+    _connectivityMap.erase(_connectivityMap.find(QPair<Node*, Node*>(edge->sourceNode(), edge->destNode())));
+    if(edge->sourceNode() != newSource){
+        edge->sourceNode()->removeOutgoingEdge(edge);
+        edge->setSourceNode(newSource);
+        newSource->addOutgoingEdge(edge);
+    }
+    if(edge->destNode() != newTarget){
+        edge->destNode()->removeIncommingEdge(edge);
+        edge->setTargetNode(newTarget);
+        newTarget->addIncommingEdge(edge);
+    }
+    _connectivityMap[QPair<Node*, Node*>(edge->sourceNode(), edge->destNode())] = edge;
+    validPhenotype=false;
+}
+
+bool Cppn::connected(Node* source, Node* target){
+    dbg::check_ptr(dbg::error, source, DBG_HERE);
+    dbg::check_ptr(dbg::error, target, DBG_HERE);
+    return _connectivityMap.count(QPair<Node*, Node*>(source, target)) > 0;
+}
+
+bool Cppn::connected(size_t sourceIndex, size_t targetIndex){
+    dbg::out(dbg::info, "cppn") << "Nodes size: " << nodes.size() << std::endl;
+    return connected(getNode(sourceIndex), getNode(targetIndex));
+}
+
+bool Cppn::connectionCausesCycle(Edge* thisEdge){
+        QList<Node*> frontier;
+        QSet<Node*> visited;
+
+        frontier.push_back(thisEdge->destNode());
+        while(frontier.size() > 0){
+            Node* current = frontier.back();
+            frontier.pop_back();
+            if(visited.contains(current)){
+                continue;
+            }
+            visited.insert(current);
+            if(current  == thisEdge->sourceNode()){
+                return true;
+            }
+            foreach(Edge* edge, current->outgoingEdges()){
+                if(thisEdge != edge){
+                    frontier.push_back(edge->destNode());
+                }
+            }
+        }
+        return false;
+}
+
+bool Cppn::connectionIsOkay(Edge* edge){
+    if(connectionCausesCycle(edge)) return false;
+    if(edge->destNode()->getType() == XML_TYPE_INPUT) return false;
+    if(connected(edge->sourceNode(), edge->destNode())) return false;
+    return true;
+}
+
+QSet<Node*> Cppn::getPredecessors(Node* node){
+    dbg::trace trace("cppn", DBG_HERE);
+    QList<Node*> frontier;
+    QSet<Node*> visited;
+
+    frontier.push_back(node);
+    while(frontier.size() > 0){
+        Node* current = frontier.back();
+        frontier.pop_back();
+        if(visited.contains(current)){
+            continue;
+        }
+        visited.insert(current);
+        foreach(Edge* edge, current->outgoingEdges()){
+            frontier.push_back(edge->sourceNode());
+        }
+    }
+    return visited;
+}
+
+Edge* Cppn::getEdge(Node* source, Node* target){
+    return _connectivityMap[QPair<Node*, Node*>(source, target)];
+}
+
+Edge* Cppn::getEdge(size_t sourceIndex, size_t targetIndex){
+    return getEdge(getNode(sourceIndex), getNode(targetIndex));
+}
+
+//bool Cppn::valid(){
+//    QList<Node*> frontier;
+//    QSet<Node*> visited;
+//    foreach(Node* input, inputs){
+//        frontier.push_back(input);
+//    }
+//
+//    while(frontier.size() > 0){
+//        Node* current = frontier.back();
+//        frontier.pop_back();
+//        if(visited.contains(current)){
+//            return false;
+//        }
+//        visited.insert(current);
+//        foreach(Edge* edge, current->outgoingEdges()){
+//            frontier.push_back(edge->destNode());
+//        }
+//    }
+//    return true;
+//}
 
 void Cppn::setWeight(Edge* edge, double weight, bool update){
 //	std::cout << "Set weight" <<std::endl;
@@ -88,7 +283,7 @@ void Cppn::setWeight(Edge* edge, double weight, bool update){
 void Cppn::updateNodes(){
 	if(!validPhenotype) buildPhenotype();
 
-//	std::cout << "Setting input values... " << std::flush;
+	dbg::out(dbg::info, "cppn") << "Setting input values... " << std::endl;
 	//Set input values
 	for(int x=0; x<width; x++){
 		for(int y=0; y<height; y++){
@@ -102,10 +297,10 @@ void Cppn::updateNodes(){
 			updateNode(input_b, index, 1.0);
 		}
 	}
-//	std::cout << "done" << std::endl;
+	dbg::out(dbg::info, "cppn") << "Setting input values... done" << std::endl;
 
 	//Update the rest
-//	std::cout << "Updating other nodes... " << std::flush;
+	dbg::out(dbg::info, "cppn") << "Updating other nodes... " << std::endl;
 	for(size_t currentNode=nr_of_inputs; currentNode<numberOfNodes; currentNode++){
 //		std::cout << "Current node: " << currentNode << std::endl;
 		for(size_t xy_index=0; xy_index < width*height;  xy_index++){
@@ -114,7 +309,7 @@ void Cppn::updateNodes(){
 		}
 		phenotypeNodes[currentNode]->updateAll();
 	}
-//	std::cout << "done" << std::endl;
+	dbg::out(dbg::info, "cppn") << "Updating other nodes... done" << std::endl;
 
 }
 
@@ -127,7 +322,7 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 
 	for(int i=0; i<nodes.size(); i++){
 		incommingEdges[nodes[i]]= nodes[i]->incomingEdges().size();
-		//std::cout << nodes[i]->incomingEdges().size() << std::endl;
+		dbg::assertion(DBG_ASSERTION((nodes[i]->getType() != XML_TYPE_INPUT) || incommingEdges[nodes[i]] == 0));
 	}
 
 	int depth = 0;
@@ -159,35 +354,45 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 
 
 void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastSource){
-//	std::cout << "Placing node: " << node << " index:" << index << " ... " << std::flush;
+    dbg::out(dbg::info, "cppn") << "Placing node: " << node << " index: " << index << "... " << std::endl;
+    dbg::check_ptr(dbg::error, node, DBG_HERE);
+    dbg::check_bounds(dbg::error, 0, index, nodes.size(), DBG_HERE);
 	activationFunctions[index]=node->getActivationFunction();
 
 	node->setIndex(index);
+	dbg::check_bounds(dbg::error, 0, index, nodes.size(), DBG_HERE);
 	phenotypeNodes[index]=node;
 
 	QList<Edge *> outgoingEdges = node->outgoingEdges();
 	foreach(Edge* outgoing_edge, outgoingEdges){
+	    dbg::check_bounds(dbg::error, 0, lastTarget, edges.size(), DBG_HERE);
 		linkWeights[lastTarget] = outgoing_edge->getWeight();
-//		std::cout << "Outgoing edge: " << outgoing_edge << " index:" << lastTarget << " ... " << std::endl;
+		dbg::out(dbg::info, "cppn") << "Outgoing edge: " << outgoing_edge << " index:" << lastTarget << " ... " << std::endl;
 		outgoing_edge->setIndex(lastTarget);
 		lastTarget++;
 	}
 
 	QList<Edge *> incommingEdges = node->incomingEdges();
 	foreach(Edge* incommingEdge, incommingEdges){
-//		std::cout << "Incomming edge: " << incommingEdge << " index:" << lastSource << " ... " << std::endl;
+	    dbg::out(dbg::info, "cppn") << "Incomming edge: " << incommingEdge << " index:" << lastSource << " ... " << std::endl;
+	    dbg::check_bounds(dbg::error, 0, lastSource, edges.size(), DBG_HERE);
 		nodeSources[lastSource] = incommingEdge->getIndex()*width*height;
 		lastSource++;
 	}
 
+//	std::cout << "size: " << dbg::array_size(lastTargets) << std::endl;
+//	std::cout << "size: " << sizeof(*lastTargets) << std::endl;
+//	std::cout << "size: " << nodes.size() + 1 << std::endl;
+	dbg::check_bounds(dbg::error, 0, index+1, nodes.size() + 1, DBG_HERE);
+	dbg::check_bounds(dbg::error, 0, index+1, nodes.size() + 1, DBG_HERE);
 	lastTargets[index+1]=lastTarget;
 	lastSources[index+1]=lastSource;
-//	std::cout << "done" << std::endl;
+	dbg::out(dbg::info, "cppn") << "done" << std::endl;
 }
 
 void Cppn::buildPhenotype(){
-//	std::cout << "Building phenotype" <<std::endl;
 	deletePhenotype();
+	dbg::out(dbg::info, "cppn") << "Building phenotype" << std::endl;
 //	std::cout << "New nodes size: " << nodes.size() <<std::endl;
 //	std::cout << "New edges size: " << edges.size() <<std::endl;
 	activationFunctions = new ActivationFunctionPt[nodes.size()];
@@ -218,12 +423,21 @@ void Cppn::buildPhenotype(){
 
 //	std::cout << "Ordering input nodes... " << std::flush;
 	//Put the input nodes in the right order
-	Node* inputs[4];
+	size_t assigned_inputs = 0;
+	std::vector<Node*> inputs(4, (Node*) 0);
+	dbg::assertion(DBG_ASSERTION(layers[0].size() >= inputs.size()));
+	dbg::out(dbg::info, "cppn") << "Nodes in layer 1: " << layers[0].size() << std::endl;
 	for(size_t i=0; i<layers[0].size(); i++ ){
 		if(layers[0][i]->getType() == XML_TYPE_INPUT){
-			inputs[layers[0][i]->getIndex()] = layers[0][i];
+		    size_t input_index = layers[0][i]->getIndex();
+		    dbg::check_bounds(dbg::error, 0, input_index, inputs.size(), DBG_HERE);
+		    dbg::assertion(DBG_ASSERTION(inputs[input_index] == 0));
+		    dbg::out(dbg::info, "cppn") << "Found input: " << layers[0][i]->getXmlLabel() << std::endl;
+			inputs[input_index] = layers[0][i];
+			++assigned_inputs;
 		}
 	}
+	dbg::assertion(DBG_ASSERTION(assigned_inputs == 4));
 //	std::cout << "done " << std::endl;
 
 	std::queue<Node*> test2;
@@ -301,6 +515,7 @@ void Cppn::buildPhenotype(){
 	}
 //	std::cout << "done " << std::endl;
 
+	dbg::out(dbg::info, "cppn") << "Calculating modularity" << std::endl;
 	calculateModularity();
 
 	validPhenotype=true;
@@ -509,7 +724,327 @@ double Cppn::calculateModularity(){
 	}
 
 	emit newModularity(qscore);
+	_numberOfModules = mods.size();
 
 	return qscore;
+}
+
+
+size_t countOverlap(QList<Edge*> path_1, QList<Edge*> path_2){
+    size_t result = 0;
+    foreach(Edge* edge_1, path_1){
+        foreach(Edge* edge_2, path_2){
+            if(edge_1 == edge_2){
+                ++result;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+QSet<path_t> splitPaths(QList<path_t> paths, size_t threshold){
+    QSet<path_t> primary_stream_set;
+    QList<path_t> primary_stream;
+    size_t overlap = 0;
+
+    primary_stream.push_back(paths.front());
+    primary_stream_set.insert(paths.front());
+
+    for(int i=0; i<primary_stream.size(); ++i){
+        dbg::out(dbg::info, "colorpath") << "    Primary path: " << i << std::endl;
+        path_t path1 = primary_stream[i];
+        for(int j=0; j<paths.size(); ++j){
+            dbg::out(dbg::info, "colorpath") << "        All paths: " << j << std::endl;
+            if(primary_stream_set.contains(paths[j])) continue;
+            overlap = countOverlap(path1, paths[j]);
+            dbg::out(dbg::info, "colorpath") << "        Overlap between: "  << i << " and "<< j  << ":" << overlap << std::endl;
+            if(overlap > threshold){
+                dbg::out(dbg::info, "colorpath") << "        Path "<< j  << " added."<< std::endl;
+                primary_stream.push_back(paths[j]);
+                primary_stream_set.insert(paths[j]);
+            }
+        }
+    }
+    return primary_stream_set;
+}
+
+float countOverlapPercent(QList<Edge*> path_1, QList<Edge*> path_2){
+    float result = 0;
+    foreach(Edge* edge_1, path_1){
+        foreach(Edge* edge_2, path_2){
+            if(edge_1 == edge_2){
+                result+=1.0;
+                break;
+            }
+        }
+    }
+    return result / ((float(path_1.size()) + float(path_2.size()))/2.0f);
+}
+
+QSet<path_t> splitPathsPercent(QList<path_t> paths, float threshold){
+    QSet<path_t> primary_stream_set;
+    QList<path_t> primary_stream;
+    float overlap = 0;
+
+    primary_stream.push_back(paths.front());
+    primary_stream_set.insert(paths.front());
+
+    for(int i=0; i<primary_stream.size(); ++i){
+        dbg::out(dbg::info, "colorpath") << "    Primary path: " << i << std::endl;
+        path_t path1 = primary_stream[i];
+        for(int j=0; j<paths.size(); ++j){
+            dbg::out(dbg::info, "colorpath") << "        All paths: " << j << std::endl;
+            if(primary_stream_set.contains(paths[j])) continue;
+            overlap = countOverlapPercent(path1, paths[j]);
+            dbg::out(dbg::info, "colorpath") << "        Overlap between: "  << i << " and "<< j  << ": " << overlap << std::endl;
+            if(overlap > threshold){
+                dbg::out(dbg::info, "colorpath") << "        Path "<< j  << " added."<< std::endl;
+                primary_stream.push_back(paths[j]);
+                primary_stream_set.insert(paths[j]);
+            }
+        }
+    }
+    return primary_stream_set;
+}
+
+//inline bool operator==(const path_t &e1, const path_t &e2)
+//{
+//    if(e1.size() != e2.size()) return false;
+//    for(int i=0; i<e1.size(); ++i){
+//        if(e1[i]->getName() != e2[i]->getName()) return false;
+//    }
+//    return true;
+//}
+
+inline uint qHash(const path_t &key)
+{
+    uint hash = 0;
+    for(int i=0; i<key.size(); ++i){
+        hash += 10^i + qHash(QString(key[i]->getName().c_str()));
+    }
+    return hash;
+}
+
+
+void Cppn::colorPaths(int threshold, float thresholdf){
+
+    std::cout << "Gathering paths" << std::endl;
+    // Gather paths
+    QStack<Edge*> stack;
+    path_t path;
+    QList<path_t> paths;
+    foreach(Node* node, inputs){
+        // Push all outgoing edges of our input node into the stack
+        dbg::out(dbg::info, "colorpath") << "For input: " << node->getName() << std::endl;
+        foreach(Edge* edge, node->outgoingEdges()){
+            dbg::out(dbg::info, "colorpath") << "    Pushing edge into stack: " << edge->getName() << std::endl;
+            stack.push(edge);
+        }
+        dbg::out(dbg::info, "colorpath") << "    Current stack: " << util::qPointerStackToString(stack) << std::endl;
+
+
+        // Initialize an empty path
+        path.clear();
+
+        // Until the stack is empty, do:
+        while(!stack.empty()){
+            // Pop the edge from the stack
+            Edge* currentEdge  = stack.pop();
+            dbg::out(dbg::info, "colorpath") << "    Popped edge: " << currentEdge->getName() << std::endl;
+
+            // Push the edge into the current path
+            dbg::out(dbg::info, "colorpath") << "        Added edge to path: " << currentEdge->getName() << std::endl;
+            path.push_back(currentEdge);
+            dbg::out(dbg::info, "colorpath") << "        Current path: " << util::qPointerListToString(path) << std::endl;
+
+            // If our target node, has no successor, we need to record the current path
+            if(currentEdge->destNode()->outgoingEdges().empty()){
+                dbg::out(dbg::info, "colorpath") << "        Edge: " << currentEdge->getName() << " is terminal. Adding path." << std::endl;
+                paths.push_back(path);
+
+                // If the stack is empty at this point, we have finished our exploration, so break
+                if(stack.empty()){
+                    dbg::out(dbg::info, "colorpath") << "        Stack is empty, moving on to next input."<< std::endl;
+                    break;
+                }
+
+                // Backtrack until the last edge in the path is connected to the edge on top of the stack
+                // That is, until the target of the last edge in the path is the same as the source of
+                // the node on top of the stack, or until the path is empty.
+                while(!path.empty() and path.back()->destNode() != stack.top()->sourceNode()){
+                    dbg::out(dbg::info, "colorpath") << "        Popping edge: " << path.back()->getName() << std::endl;
+                    path.pop_back();
+                }
+
+            } else {
+
+                // Push back all edges originating from the target edge.
+                foreach(Edge* edge, currentEdge->destNode()->outgoingEdges()){
+                    dbg::out(dbg::info, "colorpath") << "        Pushing edge: " << edge->getName() << std::endl;
+                    stack.push(edge);
+                }
+                dbg::out(dbg::info, "colorpath") << "        Current stack: " << util::qPointerStackToString(stack) << std::endl;
+            }
+        }
+    }
+    std::cout <<  "paths found: " << paths.size() << std::endl;
+
+    dbg::out(dbg::info, "colorpath") << "DFS done" << std::endl;
+
+//    foreach(QList<Edge*> path, paths){
+//        std::cout << "Path: ";
+//        foreach(Edge* edge, path){
+//            std::cout << edge->getName() << " -> ";
+//        }
+//        std::cout << "end" << std::endl;
+//    }
+
+    std::cout << "Dividing paths into streams..." << std::endl;
+    QList<path_t> unassignedPaths = paths;
+    QList<stream_t> streams;
+    stream_t primary_stream_set;
+//    size_t threshold = 1;
+//    while(true){
+    int i=0;
+    while(unassignedPaths.size() > 0){
+        if(threshold >= 0){
+            primary_stream_set = splitPaths(unassignedPaths, threshold);
+        } else {
+            primary_stream_set = splitPathsPercent(unassignedPaths, thresholdf);
+        }
+        dbg::out(dbg::info, "colorpath") << "Stream " << ++i << ": " << primary_stream_set.size() << std::endl;
+        foreach(path_t path, primary_stream_set){
+            unassignedPaths.removeOne(path);
+        }
+        streams.push_back(primary_stream_set);
+    }
+    std::cout << "Streams found: " << streams.size() << std::endl;
+
+    dbg::out(dbg::info, "colorpath") << "Number of streams split: " << streams.size() << std::endl;
+
+
+    std::cout << "Coloring edges..." << std::endl;
+    QList<QColor> streamColors;
+    for(int i=0; i<streams.size(); ++i){
+        QColor color;
+        color.setHsv((255.0/float(streams.size())) * float(i), 255, 255);
+        streamColors.push_back(color);
+        dbg::out(dbg::info, "colorpath") << "Stream: " << i << " color: " << color.red() << ", " << color.green() << ", " << color.blue() << std::endl;
+    }
+//        if(primary_stream_set.size() < paths.size()) break;
+//        ++threshold;
+//    }
+    //std::cout << "Final threshold: " << threshold << std::endl;
+
+//    // Classify edges
+//    QSet<Edge*> edge_primary_set;
+//    QSet<Edge*> edge_remainder_set;
+//    for(int i=0; i<paths.size(); ++i){
+//        if(primary_stream_set.contains(i)){
+//            foreach(Edge* edge, paths[i]){
+//                edge_primary_set.insert(edge);
+//            }
+//        } else {
+//            foreach(Edge* edge, paths[i]){
+//                edge_remainder_set.insert(edge);
+//            }
+//        }
+//    }
+//
+//    // Split the remainder with the same threshold
+////    QList<path_t> remainder_paths = edge_remainder_set.toList();
+//
+//    // Paint edges according to class
+//    bool primary;
+//    bool remainder;
+    foreach(Edge* edge, edges){
+        QColor color(255,255,255);
+        bool colorAssigned = false;
+        for(int i=0; i<streams.size(); ++i){
+            bool contains = false;
+
+            // Is the edge a member of stream i
+            foreach(path_t path, streams[i]){
+                foreach(Edge* stream_edge, path){
+                    if(edge == stream_edge) {
+                        contains = true;
+                        break;
+                    }
+                }
+                if(contains) break;
+            }
+
+            // If so, color it according to stream i.
+            if(contains){
+                if (!colorAssigned){
+                    color = streamColors[i];
+                    colorAssigned=true;
+                } else {
+                    dbg::out(dbg::info, "colorpath") << "Edge: " << edge->getName() << " assigned to stream: " << i << std::endl;
+                    int r = (color.red() + streamColors[i].red())/3;
+                    if(r<0) r=0;
+                    int g = (color.green() + streamColors[i].green())/3;
+                    if(g<0) g=0;
+                    int b = (color.blue() + streamColors[i].blue())/3;
+                    if(b<0) b=0;
+                    dbg::out(dbg::info, "colorpath") << "Edge color: " << r << ", " << g << ", " << b << std::endl;
+                    color.setRgb(r,g,b);
+                }
+            }
+        }
+        edge->setCustomColor(color);
+    }
+
+
+    foreach(Node* node, nodes){
+        QColor color(255,255,255);
+        bool colorAssigned = false;
+        for(int i=0; i<streams.size(); ++i){
+            bool contains = false;
+
+            // Is the edge a member of stream i
+            foreach(path_t path, streams[i]){
+                foreach(Edge* stream_edge, path){
+                    foreach(Edge* in_edge, node->incomingEdges()){
+                        if(in_edge == stream_edge) {
+                            contains = true;
+                            break;
+                        }
+                    }
+                    if(contains) break;
+                    foreach(Edge* in_edge, node->outgoingEdges()){
+                        if(in_edge == stream_edge) {
+                            contains = true;
+                            break;
+                        }
+                    }
+                    if(contains) break;
+                }
+                if(contains) break;
+            }
+
+            // If so, color it according to stream i.
+            if(contains){
+                if (!colorAssigned){
+                    color = streamColors[i];
+                    colorAssigned=true;
+                } else {
+//                    dbg::out(dbg::info, "colorpath") << "Edge: " << edge->getName() << " assigned to stream: " << i << std::endl;
+                    int r = (color.red() + streamColors[i].red())/3;
+                    if(r<0) r=0;
+                    int g = (color.green() + streamColors[i].green())/3;
+                    if(g<0) g=0;
+                    int b = (color.blue() + streamColors[i].blue())/3;
+                    if(b<0) b=0;
+//                    dbg::out(dbg::info, "colorpath") << "Edge color: " << r << ", " << g << ", " << b << std::endl;
+                    color.setRgb(r,g,b);
+                }
+            }
+        }
+        node->setCustomColor(color);
+    }
+
+    std::cout << "Coloring edges: done." << std::endl;
 }
 

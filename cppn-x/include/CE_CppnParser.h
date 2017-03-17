@@ -11,54 +11,41 @@
 #define CPPNPARSER_H_
 
 #include "CE_Defines.h"
-//#include <boost/regex.hpp>
-//#include <boost/lexical_cast.hpp>
-//#include <boost/shared_ptr.hpp>
 #include <fstream>
-//#include <JGTL_LocatedException.h>
 #include <map>
 #include <stdio.h>
 #include <string>
 #include <sstream>
 
+#include "CE_Parser.hpp"
 #include "CE_Cppn.h"
 #include "CE_CppnWidget.h"
 #include "CE_Label.h"
 #include "CX_FileInformation.h"
 
-class CeParseException : public std::exception
-{
-	std::string text;
-//	char text[4096];
+//class CeParseException : public std::exception
+//{
+//	std::string text;
+//
+//public:
+//
+//	CeParseException(const std::string &_reason){
+//		text = _reason;
+//	}
+//
+//	~CeParseException() throw (){
+//
+//	}
+//
+//	virtual const char* what() const throw(){
+//		return text.c_str();
+//	}
+//};
 
-public:
 
-	CeParseException(const std::string &_reason){
-		text = _reason;
-//		sprintf(text,"%s",_reason.c_str());
-	}
-
-	~CeParseException() throw (){
-
-	}
-
-	virtual const char* what() const throw(){
-		return text.c_str();
-	}
-};
-
-//#include <errno.h>
-//#include <boost/exception/all.hpp>
-
-//typedef boost::error_info<struct tag_errno,std::string> err_msg; //(1)
-
-//class ParseException: public boost::exception, public std::exception { }; //(2)
 
 typedef std::map<std::string, std::string> io_map_t;
-//typedef std::map<std::string, std::string> io_map_t;
 
-//class Cppn;
-//class CppnWidget;
 
 class CppnParser
 {
@@ -66,31 +53,107 @@ public:
 	CppnParser(std::string fileName);
 	virtual ~CppnParser();
 
-	void parse();
+	void parse(int generation = -1);
 
 //	Cppn* getCppn(){
 //		return cppn;
 //	}
 
+	/**
+	 * Returns a list of pointers to labels.
+	 */
 	QList<Label*> getLabels(){
 		return labels;
 	}
 
+    /**
+     * Returns a list of pointers to nodes.
+     *
+     * Does not transfer ownership, as soon as the parser gets deleted,
+     * all pointers will be invalidated.
+     */
 	QList<Node*> getNodes(){
 		return nodes;
 	}
 
+    /**
+     * Returns a list of pointers to edges.
+     *
+     * Does not transfer ownership, as soon as the parser gets deleted,
+     * all pointers will be invalidated.
+     */
 	QList<Edge*> getEdges(){
 		return edges;
 	}
 
+    /**
+     * Returns a list of pointers to node views.
+     *
+     * Does not transfer ownership, as soon as the parser gets deleted,
+     * all pointers will be invalidated.
+     */
 	QList<NodeView*> getNodeviews(){
 		return nodeviews;
 	}
 
+    /**
+     * Returns pointer to the file information.
+     *
+     * Does not transfer ownership, as soon as the parser gets deleted,
+     * all pointers will be invalidated.
+     */
 	FileInformation* getFileInformation(){
 		return fileInformation;
 	}
+
+    /**
+     * Returns a list of pointers to nodes, and clears the list.
+     *
+     * Transfers ownership of the pointers to the caller,
+     * all objects retrieved this way will not be destroyed by the parser.
+     */
+    QList<Node*> takeNodes(){
+        QList<Node*> temp = nodes;
+        nodes.clear();
+        return temp;
+    }
+
+    /**
+     * Returns a list of pointers to edges, and clears the list.
+     *
+     * Transfers ownership of the pointers to the caller,
+     * all objects retrieved this way will not be destroyed by the parser.
+     */
+    QList<Edge*> takeEdges(){
+        QList<Edge*> temp = edges;
+        edges.clear();
+        return temp;
+    }
+
+    /**
+     * Returns a list of pointers to nodeviews, and clears the list.
+     *
+     * Transfers ownership of the pointers to the caller,
+     * all objects retrieved this way will not be destroyed by the parser.
+     */
+    QList<NodeView*> takeNodeviews(){
+        QList<NodeView*> temp = nodeviews;
+        nodeviews.clear();
+        return temp;
+    }
+
+    /**
+     * Returns a pointer to file information and sets the pointer to 0.
+     *
+     * Transfers ownership of the pointer to the caller,
+     * the object retrieved this way will not be destroyed by the parser.
+     */
+    FileInformation* takeFileInformation(){
+        FileInformation* temp = fileInformation;
+        fileInformation = 0;
+        return temp;
+    }
+
 
 private:
 	bool parseLine(std::string line, std::string expected);
@@ -102,6 +165,7 @@ private:
 
 //	void parseLine(std::string regex);
 	bool parseLine(std::string regex, bool stopOnFail = true);
+	bool parseLine(std::vector<std::string> regex, bool stopOnFail = true);
 //	bool tryParseLine(std::string regex);
 	void parseLine(std::string regex, bool stopOnFail, std::vector<std::string> &tokens, size_t index, std::string defaultValue = "", std::string separetor = " ", std::string minVersion = "0.0", std::string maxVersion = "1.2");
 	void copyTo(std::vector<std::string> &tokens, size_t from, size_t to, std::string fromSeparetor = " ", std::string toSeparetor = " ", std::string minVersion = "0.0", std::string maxVersion = "1.2");

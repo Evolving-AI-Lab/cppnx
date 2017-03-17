@@ -51,6 +51,13 @@ const std::string	bookends= ("bookends start end step");
 const std::string	nodeview= ("nodeview");
 const std::string	nodeviews_count= ("nodeviews count");
 
+//main.zip
+const std::string	parameters= ("parameters");
+const std::string	series= ("series branch");
+const std::string	branchFrom= ("branchFrom branch id");
+const std::string	branchFromEmpty= ("branchFrom");
+const std::string	generation_storage= ("generation number storage");
+
 inline std::queue<std::string> split(std::string str){
 	std::queue<std::string> result;
 	std::size_t found = 0;

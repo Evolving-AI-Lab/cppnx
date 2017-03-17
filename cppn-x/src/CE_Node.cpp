@@ -38,6 +38,7 @@
 **
 ****************************************************************************/
 
+#include <CX_ComSetPos.h>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
@@ -47,9 +48,9 @@
 
 #include "CE_Node.h"
 #include "CE_FinalNodeView.h"
-#include "CE_CommandSetPos.h"
 #include "CE_CppnParser.h"
 #include "CE_LabelWidget.h"
+#include "CX_Debug.hpp"
 
 //! [0]
 Node::Node(
@@ -70,44 +71,56 @@ Node::Node(
       activationFunction_str(activationFunction_str),
       xml_label(xml_label),
       affinity(affinity),
-      bias(bias)
+      bias(bias),
+      _useCustomColor(false)
 
 {
+    dbg::trace trace("node", DBG_HERE);
 	init();
+	nodes_in_memory++;
+	dbg::out(dbg::info, "node") << "Node created: Nodes in memory: " << nodes_in_memory << std::endl;
 }
 
-Node::Node(std::iostream &stream, std::map<std::string, Label*> labelMap):LabelableObject(stream, labelMap){
+Node::Node(std::iostream &stream, std::map<std::string, Label*> labelMap):
+        LabelableObject(stream, labelMap),
+        _useCustomColor(false){
+    dbg::trace trace("node", DBG_HERE);
 	double x, y;
 
 	stream >> affinity;
-//	std::cout << "Affinity: " << affinity << std::endl;
+	dbg::out(dbg::info, "node") << "Affinity: " << affinity << std::endl;
 	stream >> bias;
-//	std::cout << "bias: " << bias << std::endl;
+    dbg::out(dbg::info, "node") << "bias: " << bias << std::endl;
 	xml_label = util::readString(stream);
-//	stream >> xml_label;
-//	std::cout << "xml_label: " << xml_label << std::endl;
+    dbg::out(dbg::info, "node") << "xml_label: " << xml_label << std::endl;
 	stream >> nodetype;
-//	std::cout << "nodetype: " << nodetype << std::endl;
+    dbg::out(dbg::info, "node") << "nodetype: " << nodetype << std::endl;
 	stream >> branch;
-//	std::cout << "branch: " << branch << std::endl;
+    dbg::out(dbg::info, "node") << "branch: " << branch << std::endl;
 	stream >> id;
-//	std::cout << "id: " << id << std::endl;
+    dbg::out(dbg::info, "node") << "id: " << id << std::endl;
 	stream >> activationFunction_str;
-//	std::cout << "activationFunction_str: " << activationFunction_str << std::endl;
+    dbg::out(dbg::info, "node") << "activationFunction_str: " << activationFunction_str << std::endl;
 	stream >> x;
-//	std::cout << "x: " << x << std::endl;
+    dbg::out(dbg::info, "node") << "x: " << x << std::endl;
 	stream >> y;
-//	std::cout << "y: " << y << std::endl;
+    dbg::out(dbg::info, "node") << "y: " << y << std::endl;
 
 	setPos(x, y);
 	init();
+	nodes_in_memory++;
+	dbg::out(dbg::info, "node") << "Node created: Nodes in memory: " << nodes_in_memory << std::endl;
 }
 
 Node::~Node(){
+    dbg::trace trace("node", DBG_HERE);
+    nodes_in_memory--;
+    dbg::out(dbg::info, "node") << "Node deleted: Nodes in memory: " << nodes_in_memory << std::endl;
 	delete (pixels);
 }
 
 void Node::init(){
+    dbg::trace trace("node", DBG_HERE);
 	depth = 0;
 	index = 0;
 
@@ -117,24 +130,17 @@ void Node::init(){
     setCacheMode(DeviceCoordinateCache);
     setZValue(1);
 
-	if(activationFunction_str == XML_GAUSSIAN){
-		activationFunction = act_functions::gaussian;
-		activationFunction_short = "gau()";
-	} else if(activationFunction_str == XML_LINEAR){
-		activationFunction = act_functions::identity;
-		activationFunction_short = "lin()";
-	} else if(activationFunction_str == XML_SIN){
-		activationFunction = act_functions::sin;
-		activationFunction_short = "sin()";
-	} else if(activationFunction_str == XML_SIGMOID){
-		activationFunction = act_functions::sigmoid;
-		activationFunction_short = "sig()";
-	} else if(activationFunction_str == XML_COS){
-		activationFunction = act_functions::cos;
-		activationFunction_short = "cos()";
-	} else {
-		throw CeParseException("File contains unknown activation function: '" + activationFunction_str + "'");
-	}
+    //Determine activation function
+    setActivationFunction(activationFunction_str);
+
+	//Determine type
+    if(nodetype == XML_TYPE_INPUT){
+        setNodeType(input);
+    } else if(nodetype == XML_TYPE_OUTPUT){
+        setNodeType(output);
+    } else {
+        setNodeType(hidden);
+    }
 
     pixels = new QImage(256, 256, QImage::Format_RGB32);
     pixels->fill(0);
@@ -143,44 +149,91 @@ void Node::init(){
 
 }
 
+void Node::setActivationFunction(const std::string& xmlActivationFunction){
+    dbg::trace trace("node", DBG_HERE);
+    activationFunction_str = xmlActivationFunction;
+    act_functions::ActivationFunctionInfo actInfo = act_functions::getActivationFunction(xmlActivationFunction);
+    activationFunction = actInfo.activationFunction;
+    activationFunction_short = actInfo.shortName;
+
+//    if(activationFunction_str == XML_GAUSSIAN){
+//        activationFunction = act_functions::gaussian;
+//        activationFunction_short = "gau()";
+//    } else if(activationFunction_str == XML_LINEAR){
+//        activationFunction = act_functions::identity;
+//        activationFunction_short = "lin()";
+//    } else if(activationFunction_str == XML_SIN){
+//        activationFunction = act_functions::sin;
+//        activationFunction_short = "sin()";
+//    } else if(activationFunction_str == XML_SIGMOID){
+//        activationFunction = act_functions::sigmoid;
+//        activationFunction_short = "sig()";
+//    } else if(activationFunction_str == XML_COS){
+//        activationFunction = act_functions::cos;
+//        activationFunction_short = "cos()";
+//    } else if(activationFunction_str == XML_STEP){
+//        activationFunction = act_functions::ustep;
+//        activationFunction_short = "ustep()";
+//    } else if(activationFunction_str == XML_U_SIGMOID){
+//        activationFunction = act_functions::uSigmoid;
+//        activationFunction_short = "usig()";
+//    } else if(activationFunction_str == XML_U_GUASSIAN){
+//        activationFunction = act_functions::uGaussian;
+//        activationFunction_short = "ugau()";
+//    } else {
+//        throw CeParseException("File contains unknown activation function: '" + activationFunction_str + "'");
+//    }
+}
+
 void Node::addIncommingEdge(Edge *edge)
 {
+    dbg::trace trace("node", DBG_HERE);
 	incomingEdgeList << edge;
     edge->adjust();
 }
 void Node::addOutgoingEdge(Edge *edge)
 {
+    dbg::trace trace("node", DBG_HERE);
 	outgoingEdgeList << edge;
     edge->adjust();
 }
 
 void Node::removeIncommingEdge(Edge *edge){
+    dbg::trace trace("node", DBG_HERE);
 	incomingEdgeList.removeAll(edge);
 }
 
 void Node::removeOutgoingEdge(Edge *edge){
+    dbg::trace trace("node", DBG_HERE);
 	outgoingEdgeList.removeAll(edge);
 }
 
 
-QList<Edge *> Node::incomingEdges() const
+const QList<Edge *>& Node::incomingEdges() const
 {
+    dbg::trace trace("node", DBG_HERE);
     return incomingEdgeList;
 }
-QList<Edge *> Node::outgoingEdges() const
+const QList<Edge *>& Node::outgoingEdges() const
 {
+    dbg::trace trace("node", DBG_HERE);
     return outgoingEdgeList;
 }
 
 
 QRectF Node::boundingRect() const
 {
-    qreal adjust = 10;
-    return QRectF( -half_width - adjust, (-half_height - adjust) - footerBarSize, node_width + 2*adjust, node_height + 2*adjust + footerBarSize*2);
+    dbg::trace trace("node", DBG_HERE);
+    qreal adjust = 0;
+    return QRectF( -half_width - adjust,
+            (-half_height - adjust) - footerBarSize,
+            node_width + 2*adjust,
+            node_height + 2*adjust + footerBarSize*2);
 }
 
 QPainterPath Node::shape() const
 {
+    dbg::trace trace("node", DBG_HERE);
     QPainterPath path;
 
     path.addRect(-half_width, -half_height, node_width, node_height);
@@ -192,6 +245,7 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 {
 	Q_UNUSED(option);
 
+	dbg::trace trace("node", DBG_HERE);
 	QColor labelColor;
 //	std::cout << "Label address: " << (void*) label << std::endl;
 
@@ -199,14 +253,18 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 		if((*labelMode) == modules){
 			labelColor = QColor();
 			labelColor.setHsv(module*100+100, 255, 255);
-		}else if(label->isDeleted()){
-			labelColor= Qt::white;
+		}else if(hasLabel()){
+		    labelColor = label->getColor();
 		} else {
-			labelColor = label->getColor();
+		    labelColor= Qt::white;
 		}
 	} else {
 		labelColor= Qt::white;
 	}
+
+    if(_useCustomColor){
+        labelColor = _customColor;
+    }
 
 	QColor normalBorderColor;
 
@@ -216,10 +274,23 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     	normalBorderColor = QColor(Qt::black);
     }
 
-    if((*labelMode) == modules){
-    	painter->fillRect(QRect(-half_width, -half_height, node_width, node_height), labelColor);
+    if(labelMode){
+        switch((*labelMode)){
+        case labels:
+            painter->drawImage(QRect(-half_width, -half_height, node_width, node_height), *pixels);
+            break;
+        case labelsNoImage:
+            painter->fillRect(QRect(-half_width, -half_height, node_width, node_height), labelColor);
+            break;
+        case modules:
+            painter->fillRect(QRect(-half_width, -half_height, node_width, node_height), labelColor);
+            break;
+        default:
+            throw LabelModeException("Unknown mode: " + util::toString(*labelMode));
+            break;
+        }
     } else {
-    	painter->drawImage(QRect(-half_width, -half_height, node_width, node_height), *pixels);
+        painter->fillRect(QRect(-half_width, -half_height, node_width, node_height), labelColor);
     }
 
 
@@ -244,7 +315,6 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     	}
     }else{
     	painter->setPen(QPen(normalBorderColor, 0));
-
     }
 
     painter->drawRect(border);
@@ -262,21 +332,26 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     font.setStyleHint(QFont::SansSerif);
 
     painter->setFont(font);
-    painter->drawText (header, Qt::TextSingleLine | Qt::AlignCenter | Qt::NoClip, util::toQString(branch + "_" + id), &rect);
-    painter->drawText (footer.adjusted(2, 0, 0, 0) , Qt::TextSingleLine | Qt::AlignLeft| Qt::NoClip, QString("d:") + util::toQString(depth), &rect);
-    painter->drawText (footer.adjusted(0, 0, -2, 0), Qt::TextSingleLine | Qt::AlignRight| Qt::NoClip, util::toQString(activationFunction_short), &rect);
-    painter->drawText (footer.adjusted(18, 0, 0, 0), Qt::TextSingleLine | Qt::AlignLeft| Qt::NoClip, util::toQString(xml_label.substr(0,1)).toUpper() , &rect);
+    painter->drawText(header, Qt::TextSingleLine | Qt::AlignCenter | Qt::NoClip, util::toQString(branch + "_" + id), &rect);
+    painter->drawText(footer.adjusted(2, 0, 0, 0) , Qt::TextSingleLine | Qt::AlignLeft| Qt::NoClip,
+            QString("d:") + util::toQString(depth), &rect);
+    painter->drawText(footer.adjusted(0, 0, -2, 0), Qt::TextSingleLine | Qt::AlignRight| Qt::NoClip,
+            util::toQString(activationFunction_short), &rect);
+    painter->drawText(footer.adjusted(18, 0, 0, 0), Qt::TextSingleLine | Qt::AlignLeft| Qt::NoClip,
+            util::toQString(xml_label.substr(0,1)).toUpper() , &rect);
 
 }
 
 
 void Node::updateAll(){
+    dbg::trace trace("node", DBG_HERE);
 	update();
 	emit imageChanged();
 }
 
 QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
 {
+    dbg::trace trace("node", DBG_HERE);
     switch (change) {
     case ItemPositionHasChanged:
         foreach (Edge *edge, incomingEdgeList) edge->adjust();
@@ -289,47 +364,41 @@ QVariant Node::itemChange(GraphicsItemChange change, const QVariant &value)
     return LabelableObject::itemChange(change, value);
 }
 
-void Node::updatePosition(){
-	previousPosition = pos();
-	emit positionChanged(this);
-}
 
-void Node::setPrevPos(QPointF point){
-	previousPosition = point;
-}
 
-QPointF Node::getPrevPos(){
-	return previousPosition;
-}
+//void Node::mousePressEvent(QGraphicsSceneMouseEvent *event)
+//{
+//    update();
+//    QGraphicsItem::mousePressEvent(event);
+//}
 
-void Node::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    update();
-    QGraphicsItem::mousePressEvent(event);
-}
-
-void Node::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
-{
-    update();
-    if(pos() != previousPosition) emit updatePositionsRequest();
-
-    QGraphicsItem::mouseReleaseEvent(event);
-}
 
 void Node::setPixel(size_t index, const double& value){
+    dbg::trace trace("node", DBG_HERE);
 	size_t localindex = index*4;
 	//Grey does not use the min() function to prevent a bug on windows.
-	unsigned char grey = 255;
-	if(std::abs(value) < 1.0) grey = std::abs(value)*255;
-	unsigned char alt(std::min(std::max(value, 0.0), 1.0)*255);
-	pixels->bits()[localindex]=alt;
-	pixels->bits()[localindex+1]=alt;
-	pixels->bits()[localindex+2]=grey;
+	unsigned char red = 255;
+	if(std::abs(value) < 1.0) red = std::abs(value)*255;
+	unsigned char green(std::min(std::max(value, 0.0), 1.0)*255);
+	unsigned char blue(std::min(std::max(value, 0.0), 1.0)*255);
+	if(value > 1.0) blue = (1-std::min(std::max(((std::abs(value)-1)/5), 0.0), 1.0))*255;
+	if(value < -1.0) blue = std::min(std::max(((std::abs(value)-1)/5), 0.0), 1.0)*255;
+	pixels->bits()[localindex]=blue;
+	pixels->bits()[localindex+1]=green;
+	pixels->bits()[localindex+2]=red;
 }
 
 
 void Node::redraw(){
+    dbg::trace trace("node", DBG_HERE);
 	emit updateRequest(this);
 }
 
+std::ostream& operator<< (std::ostream& os, const Node& obj){
+    os << obj.getName();
+    return os;
+}
+
+
+size_t Node::nodes_in_memory = 0;
 

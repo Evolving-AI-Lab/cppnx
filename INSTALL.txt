@@ -21,6 +21,10 @@ For UNIX:
 For both:
 - Execute the installer and follow the instructions.
 
+*** Install GSL-1.16 ***
+- Download GSL-1.16 from http://www.gnu.org/software/gsl/
+- Follow the installation instruction provided in the README and INSTALL files.
+
 *** (optional) Install FFmpeg 1.2 ***
 - Download the FFmpeg 1.2.1 "Magic" release from: http://www.ffmpeg.org/download.html (Make sure it is the source code and not a precompiled binary)
 - Install the libraries according the the instruction found in INSTALL. These instructions are usually: 

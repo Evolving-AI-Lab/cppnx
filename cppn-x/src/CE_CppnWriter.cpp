@@ -116,7 +116,7 @@ void CppnWriter::writeNode(Node* node){
 	open(ce_xml::iocolornode, node->getAffinity(), node->getBias(), node->getXmlLabel(), node->getType());
 	write(ce_xml::marking, node->getBranch(), node->getId());
 	openClose(ce_xml::activation, node->getXmlActivationFunction());
-	write(ce_xml::color_label, node->getLabel()->getId());
+	write(ce_xml::color_label, node->getLabelId());
 	write(ce_xml::position, node->pos().x(), node->pos().y());
 	openClose(ce_xml::text, node->getNote().toStdString());
 	close(ce_xml::colornode);
@@ -129,7 +129,7 @@ void CppnWriter::writeEdge(Edge* edge){
 	write(ce_xml::target, edge->destNode()->getBranch(), edge->destNode()->getId());
 	openClose(ce_xml::weight, util::toString(edge->getWeight()));
 	openClose(ce_xml::original_weight, util::toString(edge->getOriginalWeight()));
-	write(ce_xml::color_label, edge->getLabel()->getId());
+	write(ce_xml::color_label, edge->getLabelId());
 	openClose(ce_xml::text, edge->getNote().toStdString());
 	write(ce_xml::bookends, edge->getBookendStart(), edge->getBookendEnd(), edge->getStepsize());
 	close(ce_xml::link);

@@ -8,10 +8,10 @@
 #ifndef CE_LABELWIDGET_H_
 #define CE_LABELWIDGET_H_
 
+#include <CX_ComAddLabel.h>
+#include <CX_ComLabelObject.h>
 #include <QWidget>
 #include "CE_Label.h"
-#include "CE_CommandLabelObject.h"
-#include "CE_CommandAddLabel.h"
 #include "CX_DragAndDropGraphicsView.h"
 
 //class VerticalScrollArea;
@@ -86,10 +86,30 @@ public:
 	}
 
 signals:
+
+    /**
+     * The LabelWidget will emit this signal when a command is executed
+     */
 	void requestCommandExecution(ComBase*);
+
+	/**
+	 * The LabelWidget will emit this signal when a label is applied
+	 */
 	void applyLabel(Label*);
+
+	/**
+	 * The LabelWidget will emit this signal when:
+	 * - a label is added
+	 * - a label is removed
+	 * - the color of a label is changed
+	 */
 	void labelsChanged();
-	void sceneModified();
+//	void sceneModified();
+
+	/**
+	 * The LabelWidget will emit this signal when:
+	 * - any of the labels is selected or deselected
+	 */
 	void selectionChanged();
 
 

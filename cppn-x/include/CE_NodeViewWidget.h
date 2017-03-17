@@ -20,38 +20,16 @@ public:
 	NodeViewWidget(QWidget* widget = 0);
 	virtual ~NodeViewWidget();
 
+	//Getters and setters
+    QList<NodeView*> getNodeviews();
+    void setNodeviews(QList<NodeView*> nodeviews);
+    QMenu* getNodeviewMenu(){dbg::trace trace("nodeviewwidget", DBG_HERE); return nodeviewMenu;}
+    FinalNodeView* getFinalNodeView(){dbg::trace trace("nodeviewwidget", DBG_HERE); return _finalNodeView;}
+
 	void clearNodeViews();
 	void addNodeView(NodeView* node);
 
-
-	void setNodeviews(QList<NodeView*> nodeviews){
-		clearNodeViews();
-		foreach(NodeView* nodeview, nodeviews){
-			addNodeView(nodeview);
-		}
-	}
-
-	QList<NodeView*> getNodeviews(){
-		QList<NodeView*> result;
-		foreach(QGraphicsItem* item, objects){
-			NodeView* nodeview = util::multiCast<NodeView*, FinalNodeView*>(item);
-			if(nodeview) result.append(nodeview);
-		}
-
-		return result;
-	}
-
-    QMenu* getNodeviewMenu(){
-    	return nodeviewMenu;
-    }
-
-    bool deletableNodeviewSelected(){
-		foreach(QGraphicsItem* item, scene()->selectedItems()){
-			NodeView* nodeview = qgraphicsitem_cast<NodeView*>(item);
-			if(nodeview) return true;
-		}
-		return false;
-    }
+    bool deletableNodeviewSelected();
 
 	static const int sidebarMargin = 20;
     static const int betweenNodeMargin = 20;
@@ -68,6 +46,7 @@ public slots:
 
 private:
     QMenu* nodeviewMenu;
+    FinalNodeView* _finalNodeView;
 };
 
 #endif /* CE_NODEVIEWWIDGET_H_ */

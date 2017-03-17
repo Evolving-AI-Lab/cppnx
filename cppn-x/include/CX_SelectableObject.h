@@ -8,12 +8,17 @@
 #ifndef CX_SELECTABLEOBJECT_H_
 #define CX_SELECTABLEOBJECT_H_
 
+//QT includes
 #include <QGraphicsWidget>
+#include <QPen>
+
+//Local includes
 #include "CE_Defines.h"
 
 class SelectableObject: public QGraphicsWidget {
 	Q_OBJECT
 public:
+	SelectableObject(QGraphicsItem * parent);
 	SelectableObject();
 	virtual ~SelectableObject();
 
@@ -36,7 +41,9 @@ public:
 		parentHasFocus = _parentHasFocus;
 	}
 
-	signals:
+    QPen getSelectedPen(const QColor& defaultColor = QColor(Qt::black));
+
+signals:
 	void contextMenuEvent(SelectableObject*, bool);
 	void selectedHasChanged();
 	void onSelected();

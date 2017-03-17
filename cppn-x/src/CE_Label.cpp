@@ -12,12 +12,15 @@
 #include <QContextMenuEvent>
 #include <QGraphicsProxyWidget>
 
+size_t Label::labelsInMemory = 0;
 
 Label::Label(QString text, QColor color, bool isDeleted):
 color(color){
 	deleted = isDeleted;
 	labelName = text;
 	init();
+	++labelsInMemory;
+	dbg::out(dbg::info, "label") << "Label created. Labels in memory: " << labelsInMemory << std::endl;
 }
 
 Label::Label(std::iostream &stream){
@@ -37,11 +40,14 @@ Label::Label(std::iostream &stream){
 	deleted = false;
 
 	init();
+	++labelsInMemory;
+    dbg::out(dbg::info, "label") << "Label created. Labels in memory: " << labelsInMemory << std::endl;
 }
 
 void Label::init(){
-	highlight=false;
-	id=0;
+    setHighlightOff();
+//	highlight=false;
+//	id=0;
 	registerdObjects=0;
 
 
@@ -87,6 +93,15 @@ void Label::init(){
 
 Label::~Label() {
 	delete(colorButton);
+	--labelsInMemory;
+	dbg::out(dbg::info, "label") << "Label deleted. Labels in memory: " << labelsInMemory << std::endl;
+//	std::cout << "Label deleted: " << labelDeleted++ << std::endl;
+}
+
+void Label::copy(Label* otherLabel){
+    setColor(otherLabel->getColor());
+    setText(otherLabel->getText());
+    deleted = otherLabel->deleted;
 }
 
 
@@ -106,11 +121,19 @@ void Label::changeLabelName(){
 }
 
 void Label::setHighlightOn(){
+    dbg::out(dbg::info, "label") <<
+            "Highlight of label: "  << getText().toStdString() <<
+            " address: "<< this <<
+            " turned on." << std::endl;
 	highlight = true;
 	update();
 }
 
 void Label::setHighlightOff(){
+    dbg::out(dbg::info, "label") <<
+            "Highlight of label: " << getText().toStdString() <<
+            " address: "<< this <<
+            " turned off." << std::endl;
 	highlight = false;
 	update();
 }
@@ -189,8 +212,12 @@ void Label::deleteLabel(){
 
 
 void Label::mousePressEvent( QGraphicsSceneMouseEvent * event ){
+    //Deselects the object when pressed, causing the 'blinking' of all selected nodes and edges
+    //This makes it easier to locate those edges.
 	Q_UNUSED(event);
 	if(this->isSelected()){
 		this->setSelected(false);
 	}
 }
+
+
