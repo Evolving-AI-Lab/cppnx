@@ -76,8 +76,8 @@ void Legend::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 {
 //    std::cout << "paint " << _width << " " << _height << std::endl;
     Q_UNUSED(option);
-    qreal margin = 5;
-    qreal textVerticalOffset = 4;
+//    qreal margin = 5;
+//    qreal textVerticalOffset = 4;
 //    qreal size = 25;
 //    qreal maxWidth = 2000;
 //    QFont font;

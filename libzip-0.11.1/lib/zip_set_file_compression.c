@@ -41,6 +41,9 @@ ZIP_EXTERN int
 zip_set_file_compression(struct zip *za, zip_uint64_t idx,
 			 zip_int32_t method, zip_uint32_t flags)
 {
+    // JH: Flags are currently not supported, and they are not necessary for CPPN-X,
+    // thus no need to throw compiler warnings about it.
+    (void) flags;
     struct zip_entry *e;
 
     if (idx >= za->nentry) {

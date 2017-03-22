@@ -729,6 +729,10 @@ std::ostream &dbg::operator<<(std::ostream &s, const prefix &p)
 std::ostream &dbg::operator<<(std::ostream &s, const indent &i)
 {
     s << indent_prefix.c_str();
+    // JH: For reasons unknow to me, we don't "do_prefix" in this function, 
+    // but I am confident that it works well without, so no need to send
+    // compiler warnings.
+    (void) i;
     //do_prefix(i.l, s);
     for (unsigned int n = 0; n < indent_depth; n++) s << INDENT;
     return s;
@@ -777,6 +781,10 @@ void dbg::set_assertion_period(dbgclock_t p)
 
     period = p;
 
+    // This comparison is only relevant if clock() is not supported, in which 
+    // case clock will return an int (rather than unsigned long)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-compare"
     if (p && STDCLK::clock() == -1)
     {
         period = p;
@@ -785,6 +793,7 @@ void dbg::set_assertion_period(dbgclock_t p)
 		         << "Platform does not support std::clock, and so\n"
 		         << "dbg::set_assertion_period is not supported.\n";
     }
+#pragma clang diagnostic pop
 }
 
 
