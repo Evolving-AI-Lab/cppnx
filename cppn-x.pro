@@ -7,29 +7,38 @@ TARGET = cppn-x
 
 CONFIG += static 
 
-message($$QMAKE_LFLAGS)
-message($$QMAKE_LFLAGS_RELEASE)
-message($$QMAKE_LFLAGS_APP)
-message($$CONFIG)
-
-QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
+# Remove default deployment target
 QMAKE_CFLAGS_X86_64 -= -mmacosx-version-min=10.5
-QMAKE_CFLAGS_X86_64 += -mmacosx-version-min=10.7
-QMAKE_CXXFLAGS_X86_64 = $$QMAKE_CFLAGS_X86_64
-QMAKE_LFLAGS -= -mmacosx-version-min=10.5
-QMAKE_LFLAGS += -mmacosx-version-min=10.7
+QMAKE_CXXFLAGS_X86_64 -= -mmacosx-version-min=10.5
+QMAKE_LFLAGS_X86_64 -= -mmacosx-version-min=10.5
 
-macx {
-    QMAKE_MAC_SDK = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk
-}
+# Set deployment target (edit line to choose your target)
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.9
+#QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
+#QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.5
+
+# Add deployment target
+QMAKE_CFLAGS_X86_64 += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
+QMAKE_CXXFLAGS_X86_64 += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
+QMAKE_LFLAGS_X86_64 += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
+
+# Uncomment and edit to set a different SDK
+#macx {
+#    QMAKE_MAC_SDK = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk
+#}
+
+# Load the qt configuration
 load(qt_config)
-message($$QMAKE_LFLAGS)
-message($$QMAKE_LFLAGS_RELEASE)
-message($$QMAKE_LFLAGS_APP)
-message($$CONFIG)
 
-#Might need to add this option to the linker
-#-headerpad_max_install_names
+# Uncomment to verify compiler settings 
+#message("Deployment target:" $$QMAKE_MACOSX_DEPLOYMENT_TARGET)
+#message("C-Flags:" $$QMAKE_CFLAGS)
+#message("C-Flags X86_64:" $$QMAKE_CFLAGS_X86_64)
+#message("CXX-Flags:" $$QMAKE_CXXFLAGS)
+#message("CXX-Flags X86_64:" $$QMAKE_CXXFLAGS_X86_64)
+#message("Link-Flags:" $$QMAKE_LFLAGS)
+#message("Link-Flags X86_64:" $$QMAKE_LFLAGS_X86_64)
+#message("Config:" $$CONFIG)
 
 DEPENDPATH += . \
               zlib \
@@ -47,22 +56,14 @@ INCLUDEPATH += . \
                /usr/local/include \
                libzip-0.11.1/src
 
-#QTPLUGIN += qjpeg 
-#            qgif \
-#            qmng \
-#            qico \
-#            qsvg \
-#            qtiff
-
 LIBS += -lm \ 
         -lgsl \
         -L/usr/local/lib
-#LIBS += -lz 
 
 # Required for some C99 defines
 DEFINES += __STDC_CONSTANT_MACROS        
 
-# Input
+# Header files
 HEADERS += zlib/crc32.h \
            zlib/deflate.h \
            zlib/inffast.h \
@@ -119,6 +120,8 @@ HEADERS += zlib/crc32.h \
            libzip-0.11.1/lib/zip.h \
            libzip-0.11.1/lib/zipconf.h \
            libzip-0.11.1/lib/zipint.h
+
+# Source files           
 SOURCES += zlib/adler32.c \
            zlib/compress.c \
            zlib/crc32.c \

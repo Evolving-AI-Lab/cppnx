@@ -41,7 +41,8 @@ The following site lists the commands to install most of ffmpegs dependencies, b
 
 
 #### Compile cppn-x
-* Open compile.sh and check that all paths are correct. The compile.sh will have additional comments for setting. 
+* Open compile.sh and check that all paths are correct. The compile.sh will have additional comments for setting.
+* Open cppnx.pro to set or change deployment target for OSX 
 * Run compile.sh
 
 For UNIX:
