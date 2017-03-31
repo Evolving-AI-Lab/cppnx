@@ -50,13 +50,6 @@ public slots:
 	void addImage();
 	virtual void resizeNode();
 
-//	void remove(){dbg::trace trace("nodeview", DBG_HERE); emit requestRemove(this);}
-//	void add(){dbg::trace trace("nodeview", DBG_HERE); emit requestAdd(this);}
-
-//signals:
-//	void requestRemove(NodeView*);
-//	void requestAdd(NodeView*);
-
 protected:
 	void init();
 

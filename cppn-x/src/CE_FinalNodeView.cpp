@@ -9,18 +9,21 @@
 #include "CE_FinalNodeView.h"
 #include "CE_Cppn.h"
 
-FinalNodeView::FinalNodeView():NodeView(0) {
-	_pixels = 0;
+FinalNodeView::FinalNodeView():
+	NodeView(0),
+	_hueOrRedNode(0),
+	_satOrGreenNode(0),
+	_valOrBlueNode(0),
+	hueImage(0),
+	saturationImage(0),
+	valueImage(0),
+	colorMode(hsv_mode)
+{
 	reinitImage();
-	hueImage=0;
-	saturationImage=0;
-	valueImage=0;
-	compatibillityId = 1;
-	colorMode = hsv_mode;
 }
 
 FinalNodeView::~FinalNodeView() {
-	delete _pixels;
+	if(_pixels) delete _pixels;
 }
 
 void FinalNodeView::reinitImage(){
@@ -45,12 +48,9 @@ void FinalNodeView::update(){
 				value = valueImage->bits()[index+2];
 				if(hueImage->bits()[index] > 0){
 					hue = (tempHue*(360.0/255.0)+360);
-					//				std::cout << "alt>0 from: " << (unsigned int) tempHue << " to: " << hue <<std::endl;
 				} else {
 					hue = (-(tempHue*(360.0/255.0))+360);
-					//				std::cout << "alt<=0 from: " << (unsigned int) tempHue << " to: " << hue <<std::endl;
 				}
-
 				color.setHsv(hue, sat, value);
 			} else if(colorMode == rgb_mode){
 				unsigned char red = hueImage->bits()[index+2];
@@ -66,7 +66,6 @@ void FinalNodeView::update(){
 	}else{
 		for(size_t index=0; index < _node_x_res*_node_y_res*4; index+=4){
 			value = (valueImage->bits()[index+2]);
-//			std::cout << "Value: "<< (int) value << std::endl;
 			color.setHsv(0, 0, value);
 			_pixels->bits()[index]=color.blue();
 			_pixels->bits()[index+1]=color.green();
@@ -85,13 +84,8 @@ void FinalNodeView::resizeNode(){
     	_node_x_res = IMAGE_WIDTH;
     	_node_y_res = IMAGE_HEIGHT;
     }
-
-//    _half_width = _node_width/2;
-//	_half_height = _node_height/2;
-//    setIconSize(QSize(_node_width, _node_height));
-//    setIconTranslate(QPoint(_half_width, _half_height));
 	reinitImage();
-	saturationImage = _satOrGreenNode->getImage();
-	hueImage = _hueOrRedNode->getImage();
-	valueImage = _valOrBlueNode->getImage();
+	if(_satOrGreenNode) saturationImage = _satOrGreenNode->getImage();
+	if(_hueOrRedNode) hueImage = _hueOrRedNode->getImage();
+	if(_valOrBlueNode) valueImage = _valOrBlueNode->getImage();
 }

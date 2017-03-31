@@ -44,7 +44,6 @@ void NodeView::init(){
 		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
 		connect(node, SIGNAL(removed()), this, SLOT(removeImage()));
 		connect(node, SIGNAL(added()), this, SLOT(addImage()));
-//		connect(node, SIGNAL(imageResized()), this, SLOT(resizeNode()));
     } else {
     	_pixels = 0;
     }
@@ -53,14 +52,8 @@ void NodeView::init(){
 }
 
 void NodeView::resizeNode(){
-//	if(node && node->getCppn()){
-//		_node_width = node->getCppn()->width;
-//		_node_height = node->getCppn()->height;
-//    } else {
 	_node_width = IMAGE_WIDTH;
 	_node_height = IMAGE_HEIGHT;
-//    }
-
     _half_width = _node_width/2;
 	_half_height = _node_height/2;
     setIconSize(QSize(_node_width, _node_height));

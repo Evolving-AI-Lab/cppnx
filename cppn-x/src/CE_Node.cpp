@@ -87,7 +87,8 @@ Node::Node(
 Node::Node(std::iostream &stream, std::map<std::string, Label*> labelMap):
         LabelableObject(stream, labelMap),
 		pixels(0),
-        _useCustomColor(false){
+        _useCustomColor(false),
+		_cppn(0){
     dbg::trace trace("node", DBG_HERE);
 	double x, y;
 
@@ -114,7 +115,6 @@ Node::Node(std::iostream &stream, std::map<std::string, Label*> labelMap):
 	init();
 	nodes_in_memory++;
 	dbg::out(dbg::info, "node") << "Node created: Nodes in memory: " << nodes_in_memory << std::endl;
-	_cppn = 0;
 }
 
 Node::~Node(){
