@@ -7,6 +7,7 @@
 
 #include "CE_NodeView.h"
 #include "CE_Node.h"
+#include "CE_Cppn.h"
 #include <QPainter>
 #include <cmath>
 
@@ -39,29 +40,43 @@ void NodeView::init(){
     setCacheMode(DeviceCoordinateCache);
 
     if(node){
-    	pixels = node->getImage();
+    	_pixels = node->getImage();
 		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
 		connect(node, SIGNAL(removed()), this, SLOT(removeImage()));
 		connect(node, SIGNAL(added()), this, SLOT(addImage()));
+//		connect(node, SIGNAL(imageResized()), this, SLOT(resizeNode()));
     } else {
-        pixels = 0;
+    	_pixels = 0;
     }
     compatibillityId = 1;
+    resizeNode();
+}
 
-    setIconSize(QSize(node_width, node_height));
-    setIconTranslate(QPoint(half_width, half_height));
+void NodeView::resizeNode(){
+//	if(node && node->getCppn()){
+//		_node_width = node->getCppn()->width;
+//		_node_height = node->getCppn()->height;
+//    } else {
+	_node_width = IMAGE_WIDTH;
+	_node_height = IMAGE_HEIGHT;
+//    }
+
+    _half_width = _node_width/2;
+	_half_height = _node_height/2;
+    setIconSize(QSize(_node_width, _node_height));
+    setIconTranslate(QPoint(_half_width, _half_height));
 }
 
 QRectF NodeView::boundingRect() const {
     dbg::trace trace("nodeview", DBG_HERE);
     qreal adjust = 2;
-    return QRectF( -half_width - adjust, (-half_height - adjust) , node_width + 2*adjust, node_height + 2*adjust);
+    return QRectF( -_half_width - adjust, (-_half_height - adjust) , _node_width + 2*adjust, _node_height + 2*adjust);
 }
 
 QPainterPath NodeView::shape() const {
     dbg::trace trace("nodeview", DBG_HERE);
     QPainterPath path;
-    path.addRect(-half_width, -half_height, node_width, node_height);
+    path.addRect(-_half_width, -_half_height, _node_width, _node_height);
     return path;
 }
 
@@ -69,15 +84,15 @@ void NodeView::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     dbg::trace trace("nodeview", DBG_HERE);
 	Q_UNUSED(option);
 
-	if(pixels){
-	    painter->drawImage(QRect(-half_width, -half_height, node_width, node_height), *pixels);
+	if(_pixels){
+	    painter->drawImage(QRect(-_half_width, -_half_height, _node_width, _node_height), *_pixels);
 	} else {
-	    painter->fillRect(QRect(-half_width, -half_height, node_width, node_height), Qt::black);
+	    painter->fillRect(QRect(-_half_width, -_half_height, _node_width, _node_height), Qt::black);
 	}
 
     if (partOfContextMenuEvent){
     	painter->setPen(QPen(CONTEXT_EVENT_COLOR, 2));
-    	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height ));
+    	painter->drawRect(QRect(-_half_width, -_half_height, _node_width, _node_height ));
     } else if (this->isSelected()){
     	QColor highlightColor;
 		if(*parentHasFocus){
@@ -86,10 +101,10 @@ void NodeView::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 			highlightColor = QColor(NO_FOCUS_SELECTED_COLOR);
 		}
     	painter->setPen(QPen(highlightColor, 2));
-    	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height ));
+    	painter->drawRect(QRect(-_half_width, -_half_height, _node_width, _node_height ));
     }else{
     	painter->setPen(QPen(Qt::black, 0));
-    	painter->drawRect(QRect(-half_width, -half_height, node_width, node_height ));
+    	painter->drawRect(QRect(-_half_width, -_half_height, _node_width, _node_height ));
     }
 
 }
@@ -127,11 +142,11 @@ std::string NodeView::getName() const{
 }
 
 void NodeView::removeImage(){
-    pixels = 0;
+	_pixels = 0;
 }
 
 void NodeView::addImage(){
     if(node){
-        pixels = node->getImage();
+    	_pixels = node->getImage();
     }
 }

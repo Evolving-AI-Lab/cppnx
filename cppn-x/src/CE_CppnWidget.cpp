@@ -398,13 +398,20 @@ void CppnWidget::deleteCppn(){
     }
 }
 
-void CppnWidget::setCppn(QList<Node*> nodes, QList<Edge*> edges){
+void CppnWidget::setCppn(QList<Node*> nodes, QList<Edge*> edges, CppnInformation* cppnInformation){
     dbg::trace trace("cppnwidget", DBG_HERE);
 	//Clean previous objects
     deleteCppn();
 
 	cppn = new Cppn;
-
+	if(cppnInformation){
+		cppn->setMinX(cppnInformation->min_x);
+		cppn->setMaxX(cppnInformation->max_x);
+		cppn->setMinY(cppnInformation->min_y);
+		cppn->setMaxY(cppnInformation->max_y);
+		cppn->setResX(cppnInformation->x_res);
+		cppn->setResY(cppnInformation->y_res);
+	}
 	foreach(Node* node, nodes){
 		addNode(node);
 	}

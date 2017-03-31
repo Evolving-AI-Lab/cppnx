@@ -16,6 +16,7 @@
 #include "CX_Hierarchy.hpp"
 #include "CX_Debug.hpp"
 #include "CX_PreferencesWidget.hpp"
+#include "CX_CsvParser.hpp"
 
 //Standard includes
 #include <cmath>
@@ -446,7 +447,7 @@ void Window::load(){
 
 	QString newFileName = QFileDialog::getOpenFileName(this,
 	         tr("Open Genome File"), "",
-	         tr("Genome file (*.xml;*.zip);;All Files (*)"));
+	         tr("Genome file (*.xml;*.zip;*.csv);;All Files (*)"));
 	if(newFileName.isEmpty()) return;
 
 	loadFile(newFileName);
@@ -460,24 +461,46 @@ void Window::load(){
 void Window::loadFile(QString filename, int generation){
     dbg::trace trace("window", DBG_HERE);
 	try{
-		CppnParser parser(filename.toStdString());
-		parser.parse(generation);
+	    QFileInfo fileInfo(filename);
+	    if(fileInfo.suffix() == QString("csv")){
+	    	CsvParser parser(filename);
+	    	parser.parse(generation);
 
-		dbg::out(dbg::info, "window") << "Loading cppn" << std::endl;
-		if(cppnWidget->getLegend()){
-		    cppnWidget->removeLegend();
-		    _toggleLegendAction->setChecked(false);
-		}
-		cppnWidget->setCppn(parser.takeNodes(), parser.takeEdges());
+	    	dbg::out(dbg::info, "window") << "Loading cppn" << std::endl;
+	    	if(cppnWidget->getLegend()){
+	    		cppnWidget->removeLegend();
+	    		_toggleLegendAction->setChecked(false);
+	    	}
+	    	cppnWidget->setCppn(parser.takeNodes(), parser.takeEdges(), parser.takeCppnInformation());
 
-		dbg::out(dbg::info, "window") << "Loading labels" << std::endl;
-		labelWidget->setLabels(parser.getLabels());
+	    	dbg::out(dbg::info, "window") << "Loading labels" << std::endl;
+	    	labelWidget->setLabels(parser.getLabels());
 
-		dbg::out(dbg::info, "window") << "Loading nodeviews" << std::endl;
-		nodeviewWidget->setNodeviews(parser.takeNodeviews());
+	    	dbg::out(dbg::info, "window") << "Loading nodeviews" << std::endl;
+	    	nodeviewWidget->setNodeviews(parser.takeNodeviews());
 
-		dbg::out(dbg::info, "window") << "Loading file-information" << std::endl;
-		fileInformation = parser.takeFileInformation();
+	    	dbg::out(dbg::info, "window") << "Loading file-information" << std::endl;
+	    	fileInformation = parser.takeFileInformation();
+	    } else {
+	    	CppnParser parser(filename.toStdString());
+	    	parser.parse(generation);
+
+	    	dbg::out(dbg::info, "window") << "Loading cppn" << std::endl;
+	    	if(cppnWidget->getLegend()){
+	    		cppnWidget->removeLegend();
+	    		_toggleLegendAction->setChecked(false);
+	    	}
+	    	cppnWidget->setCppn(parser.takeNodes(), parser.takeEdges());
+
+	    	dbg::out(dbg::info, "window") << "Loading labels" << std::endl;
+	    	labelWidget->setLabels(parser.getLabels());
+
+	    	dbg::out(dbg::info, "window") << "Loading nodeviews" << std::endl;
+	    	nodeviewWidget->setNodeviews(parser.takeNodeviews());
+
+	    	dbg::out(dbg::info, "window") << "Loading file-information" << std::endl;
+	    	fileInformation = parser.takeFileInformation();
+	    }
 
 		dbg::out(dbg::info, "window") << "Positioning nodes" << std::endl;
 		if(fileInformation->newFile) cppnWidget->positionNodesLayers();

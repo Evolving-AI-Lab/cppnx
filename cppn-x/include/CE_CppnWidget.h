@@ -56,6 +56,7 @@
 #include "CX_SortedNodesList.h"
 #include "CX_Legend.hpp"
 #include "CX_Debug.hpp"
+#include "CX_CppnInformation.hpp"
 
 class Node;
 class Edge;
@@ -82,7 +83,7 @@ public:
     CppnWidget(QWidget* widget = 0);
 
     void deleteCppn();
-    void setCppn(QList<Node*> nodes, QList<Edge*> edges);
+    void setCppn(QList<Node*> nodes, QList<Edge*> edges, CppnInformation* cppnInformation = 0);
     Cppn* getCppn(){return cppn;}
 
     QAction* getAddNodeviewAction(){return addNodeviewAction;}

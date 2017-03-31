@@ -57,6 +57,7 @@ class Label;
 class Edge;
 class NodeView;
 class FinalNodeView;
+class Cppn;
 QT_BEGIN_NAMESPACE
 class QGraphicsSceneMouseEvent;
 QT_END_NAMESPACE
@@ -162,6 +163,7 @@ public:
     ~Node();
 
     void init();
+    void reinitImage();
 
     void addIncommingEdge(Edge *edge);
     void addOutgoingEdge(Edge *edge);
@@ -201,6 +203,9 @@ public:
     ActivationFunctionPt getActivationFunction(){
     	return activationFunction;
     }
+
+    void setCppn(Cppn* cppn){_cppn = cppn;}
+    Cppn* getCppn(){return _cppn;}
 
     void setIndex(size_t _index){
     	index =_index;
@@ -300,6 +305,7 @@ signals:
 	void imageChanged();
 	void removed();
 	void added();
+	void imageResized();
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -336,6 +342,7 @@ private:
     QBool _useCustomColor;
     QColor _customColor;
 
+    Cppn* _cppn;
 };
 
 std::ostream& operator<< (std::ostream& os, const Node& obj);

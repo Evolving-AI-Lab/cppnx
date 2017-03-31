@@ -35,22 +35,20 @@ public:
     QPainterPath shape() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    QImage* getImage(){dbg::trace trace("nodeview", DBG_HERE); return pixels;}
+    QImage* getImage(){dbg::trace trace("nodeview", DBG_HERE); return _pixels;}
     Node* getNode(){dbg::trace trace("nodeview", DBG_HERE); return node;}
 
     std::string getNodeBranch() const;
     std::string getNodeId() const;
     std::string getName() const;
 
-    static const int node_width = 256;
-    static const int node_height = 256;
-    static const int half_width = 128;
-    static const int half_height = 128;
+
 
 public slots:
 	void update();
 	void removeImage();
 	void addImage();
+	virtual void resizeNode();
 
 //	void remove(){dbg::trace trace("nodeview", DBG_HERE); emit requestRemove(this);}
 //	void add(){dbg::trace trace("nodeview", DBG_HERE); emit requestAdd(this);}
@@ -62,8 +60,13 @@ public slots:
 protected:
 	void init();
 
-    QImage* pixels;
+    QImage* _pixels;
     Node* node;
+
+    int _node_width;
+    int _node_height;
+    int _half_width;
+    int _half_height;
 };
 
 #endif /* CE_NODEVIEW_H_ */

@@ -43,6 +43,9 @@
 #define OUTPUT_SATURATION "saturation"
 #define OUTPUT_HUE "hue"
 #define OUTPUT_BRIGTHNESS "brightness"
+#define OUTPUT_RED "red"
+#define OUTPUT_GREEN "green"
+#define OUTPUT_BLUE "blue"
 
 #define NODE_TYPE 1
 #define EDGE_TYPE 2

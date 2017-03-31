@@ -77,6 +77,9 @@ namespace act_functions{
         } else if(xmlActivationFunction == XML_U_BOUNDED_LINEAR){
             result.activationFunction = act_functions::uBoundedLinear;
             result.shortName = "ublin()";
+        } else if(xmlActivationFunction == XML_TANH){
+            result.activationFunction = act_functions::tanh;
+            result.shortName = "tanh()";
 	    } else {
 	        throw InvalidCaseException("Unknown activation function: '" + xmlActivationFunction + "'");
 	    }
@@ -172,6 +175,10 @@ namespace act_functions{
 
 	double cos ( double input ) {
 		return std::cos(input);
+	}
+
+	double tanh ( double input ) {
+		return std::tanh(input);
 	}
 
 	double gaussian ( double input ) {

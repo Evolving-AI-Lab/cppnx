@@ -46,7 +46,13 @@ public:
 		validPhenotype(false),
 		_numberOfModules(0),
 		_maxId(0),
-	    _inputsOrdered(false)
+	    _inputsOrdered(false),
+		_min_x(-1),
+		_max_x(1),
+		_min_y(-1),
+		_max_y(1),
+		width(IMAGE_WIDTH),
+		height(IMAGE_HEIGHT)
 	{
 	    //Reserve space for the inputs
 	    //Exactly four inputs have to be provided through the addNode function
@@ -86,6 +92,19 @@ public:
 
 	void removeNode(Node* node);
 	void removeConnection(Edge* edge);
+
+	void setMinX(int min_x){_min_x = min_x;}
+	int getMinX(){ return _min_x;}
+	void setMaxX(int max_x){_max_x = max_x;}
+	int getMaxX(){ return _max_x;}
+	void setMinY(int min_y){_min_y = min_y;}
+	int getMinY(){ return _min_y;}
+	void setMaxY(int max_y){_max_y = max_y;}
+	int getMaxY(){ return _max_y;}
+	void setResX(int res_x){width = res_x;}
+	int getResX(){ return width;}
+	void setResY(int res_y){height = res_y;}
+	int getResY(){ return height;}
 
 	void rewireConnection(Edge* edge, Node* newSource, Node* newTarget);
 	bool connected(Node* source, Node* target);
@@ -137,8 +156,12 @@ public:
 	id_t getMaxId() const{return _maxId;}
 	std::string getNextId() const{return util::toString(getMaxId()+1);}
 
-    static const int width = 256;
-    static const int height = 256;
+	// Picbreeder settings
+    //static const int width = IMAGE_WIDTH;
+    //static const int height = IMAGE_HEIGHT;
+
+    // Anhs Settings
+
 
 
 
@@ -204,6 +227,13 @@ private:
 
     id_t _maxId;
     bool _inputsOrdered;
+
+    int _min_x;
+    int _max_x;
+    int _min_y;
+    int _max_y;
+    int width;
+    int height;
 };
 
 

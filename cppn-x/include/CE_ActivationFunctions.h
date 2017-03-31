@@ -20,6 +20,7 @@
 #define XML_U_GUASSIAN "ugaussian(x)"
 #define XML_U_SIGMOID "usigmoid(x)"
 #define XML_U_BOUNDED_LINEAR "ublin(x)"
+#define XML_TANH "tanh(x)"
 
 typedef double (*ActivationFunctionPt)(double);
 
@@ -37,6 +38,7 @@ namespace act_functions{
 	double sin ( double input);
 	double cos ( double input);
 	double gaussian ( double input);
+	double tanh ( double input);
 
     double ustep ( double input);
     double uSigmoid ( double input);

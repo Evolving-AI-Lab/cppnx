@@ -17,10 +17,10 @@ NodeViewWidget::NodeViewWidget(QWidget* widget): DragAndDropGraphicsView(widget)
 
 	//Create scene
 	scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
-	scene()->setSceneRect(0, 0, NodeView::node_width, NodeView::node_height);
+	scene()->setSceneRect(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
 
 	//Widget settings
-	setMinimumSize(NodeView::node_width + sidebarMargin, NodeView::node_height + sidebarMargin);
+	setMinimumSize(IMAGE_WIDTH + sidebarMargin, IMAGE_HEIGHT + sidebarMargin);
 	setAlignment(Qt::AlignTop);
     setDragMode(ScrollHandDrag);
 

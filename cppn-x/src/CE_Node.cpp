@@ -51,6 +51,7 @@
 #include "CE_CppnParser.h"
 #include "CE_LabelWidget.h"
 #include "CX_Debug.hpp"
+#include "CE_Cppn.h"
 
 //! [0]
 Node::Node(
@@ -65,6 +66,7 @@ Node::Node(
 		std::string note
 		)
     : LabelableObject(label, note.c_str()),
+	  pixels(0),
       branch(branch),
       id(id),
       nodetype(type),
@@ -72,7 +74,8 @@ Node::Node(
       xml_label(xml_label),
       affinity(affinity),
       bias(bias),
-      _useCustomColor(false)
+      _useCustomColor(false),
+	  _cppn(0)
 
 {
     dbg::trace trace("node", DBG_HERE);
@@ -83,6 +86,7 @@ Node::Node(
 
 Node::Node(std::iostream &stream, std::map<std::string, Label*> labelMap):
         LabelableObject(stream, labelMap),
+		pixels(0),
         _useCustomColor(false){
     dbg::trace trace("node", DBG_HERE);
 	double x, y;
@@ -110,6 +114,7 @@ Node::Node(std::iostream &stream, std::map<std::string, Label*> labelMap):
 	init();
 	nodes_in_memory++;
 	dbg::out(dbg::info, "node") << "Node created: Nodes in memory: " << nodes_in_memory << std::endl;
+	_cppn = 0;
 }
 
 Node::~Node(){
@@ -141,12 +146,25 @@ void Node::init(){
     } else {
         setNodeType(hidden);
     }
-
-    pixels = new QImage(256, 256, QImage::Format_RGB32);
-    pixels->fill(0);
+    reinitImage();
     labelMode = 0;
     module = 0;
+}
 
+void Node::reinitImage(){
+	dbg::trace trace("node", DBG_HERE);
+	if(pixels) delete pixels;
+	pixels = 0;
+    int width = IMAGE_WIDTH;
+    int height = IMAGE_HEIGHT;
+    if(_cppn){
+    	width = _cppn->getResX();
+    	height = _cppn->getResY();
+    }
+
+    pixels = new QImage(width, height, QImage::Format_RGB32);
+    pixels->fill(0);
+    emit imageResized();
 }
 
 void Node::setActivationFunction(const std::string& xmlActivationFunction){

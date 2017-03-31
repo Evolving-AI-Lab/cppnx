@@ -22,6 +22,7 @@ typedef QList<Edge*> path_t;
 typedef QSet<path_t> stream_t;
 
 void Cppn::copy(Cppn* other){
+	dbg::trace trace("cppn", DBG_HERE);
     dbg::out(dbg::info, "cppn") << "Copying " << other->getNrOfNodes() << " nodes." << std::endl;
     for(size_t i=0; i<other->getNrOfNodes(); ++i){
         Node* otherNode = other->getNode(i);
@@ -61,15 +62,19 @@ void Cppn::copy(Cppn* other){
 }
 
 void Cppn::swap(int index1, int index2){
+	dbg::trace trace("cppn", DBG_HERE);
     nodes.swap(index1, index2);
     nodes[index1]->setIndex(index1);
     nodes[index2]->setIndex(index2);
 }
 
 void Cppn::addNode(Node* node){
+	dbg::trace trace("cppn", DBG_HERE);
 	removedNodes.removeAll(node);
 	node->setIndex(nodes.size());
 	nodes.push_back(node);
+	node->setCppn(this);
+	node->reinitImage();
 
 
 
@@ -118,6 +123,7 @@ void Cppn::addNode(Node* node){
 }
 
 void Cppn::removeNode(Node* node){
+	dbg::trace trace("cppn", DBG_HERE);
 	nodes.removeAll(node);
 	removedNodes.append(node);
 	numberOfNodes--;
@@ -125,6 +131,7 @@ void Cppn::removeNode(Node* node){
 }
 
 void Cppn::addConnection(Edge* edge){
+	dbg::trace trace("cppn", DBG_HERE);
 //	std::cout << "Adding connection: " << edge << " from: " << edge->sourceNode() << " to " << edge->destNode() << std::endl;
 	edge->sourceNode()->addOutgoingEdge(edge);
 	edge->destNode()->addIncommingEdge(edge);
@@ -145,6 +152,7 @@ void Cppn::addConnection(Edge* edge){
 
 
 void Cppn::removeConnection(Edge* edge){
+	dbg::trace trace("cppn", DBG_HERE);
 	edge->sourceNode()->removeOutgoingEdge(edge);
 	edge->destNode()->removeIncommingEdge(edge);
 	_connectivityMap.erase(_connectivityMap.find(QPair<Node*, Node*>(edge->sourceNode(), edge->destNode())));
@@ -157,11 +165,13 @@ void Cppn::removeConnection(Edge* edge){
 }
 
 void Cppn::setActivationFunction(Node* node, const std::string& activationFunction){
+	dbg::trace trace("cppn", DBG_HERE);
     node->setActivationFunction(activationFunction);
     validPhenotype=false;
 }
 
 void Cppn::rewireConnection(Edge* edge, Node* newSource, Node* newTarget){
+	dbg::trace trace("cppn", DBG_HERE);
     dbg::check_ptr(dbg::error, edge, DBG_HERE);
     dbg::check_ptr(dbg::error, newSource, DBG_HERE);
     dbg::check_ptr(dbg::error, newTarget, DBG_HERE);
@@ -181,41 +191,45 @@ void Cppn::rewireConnection(Edge* edge, Node* newSource, Node* newTarget){
 }
 
 bool Cppn::connected(Node* source, Node* target){
+	dbg::trace trace("cppn", DBG_HERE);
     dbg::check_ptr(dbg::error, source, DBG_HERE);
     dbg::check_ptr(dbg::error, target, DBG_HERE);
     return _connectivityMap.count(QPair<Node*, Node*>(source, target)) > 0;
 }
 
 bool Cppn::connected(size_t sourceIndex, size_t targetIndex){
+	dbg::trace trace("cppn", DBG_HERE);
     dbg::out(dbg::info, "cppn") << "Nodes size: " << nodes.size() << std::endl;
     return connected(getNode(sourceIndex), getNode(targetIndex));
 }
 
 bool Cppn::connectionCausesCycle(Edge* thisEdge){
-        QList<Node*> frontier;
-        QSet<Node*> visited;
+	dbg::trace trace("cppn", DBG_HERE);
+	QList<Node*> frontier;
+	QSet<Node*> visited;
 
-        frontier.push_back(thisEdge->destNode());
-        while(frontier.size() > 0){
-            Node* current = frontier.back();
-            frontier.pop_back();
-            if(visited.contains(current)){
-                continue;
-            }
-            visited.insert(current);
-            if(current  == thisEdge->sourceNode()){
-                return true;
-            }
-            foreach(Edge* edge, current->outgoingEdges()){
-                if(thisEdge != edge){
-                    frontier.push_back(edge->destNode());
-                }
-            }
-        }
-        return false;
+	frontier.push_back(thisEdge->destNode());
+	while(frontier.size() > 0){
+		Node* current = frontier.back();
+		frontier.pop_back();
+		if(visited.contains(current)){
+			continue;
+		}
+		visited.insert(current);
+		if(current  == thisEdge->sourceNode()){
+			return true;
+		}
+		foreach(Edge* edge, current->outgoingEdges()){
+			if(thisEdge != edge){
+				frontier.push_back(edge->destNode());
+			}
+		}
+	}
+	return false;
 }
 
 bool Cppn::connectionIsOkay(Edge* edge){
+	dbg::trace trace("cppn", DBG_HERE);
     if(connectionCausesCycle(edge)) return false;
     if(edge->destNode()->getType() == XML_TYPE_INPUT) return false;
     if(connected(edge->sourceNode(), edge->destNode())) return false;
@@ -243,10 +257,12 @@ QSet<Node*> Cppn::getPredecessors(Node* node){
 }
 
 Edge* Cppn::getEdge(Node* source, Node* target){
+	dbg::trace trace("cppn", DBG_HERE);
     return _connectivityMap[QPair<Node*, Node*>(source, target)];
 }
 
 Edge* Cppn::getEdge(size_t sourceIndex, size_t targetIndex){
+	dbg::trace trace("cppn", DBG_HERE);
     return getEdge(getNode(sourceIndex), getNode(targetIndex));
 }
 
@@ -272,6 +288,7 @@ Edge* Cppn::getEdge(size_t sourceIndex, size_t targetIndex){
 //}
 
 void Cppn::setWeight(Edge* edge, double weight, bool update){
+	dbg::trace trace("cppn", DBG_HERE);
 //	std::cout << "Set weight" <<std::endl;
 	if(!validPhenotype) buildPhenotype();
 	linkWeights[edge->getIndex()]=weight;
@@ -281,14 +298,17 @@ void Cppn::setWeight(Edge* edge, double weight, bool update){
 
 
 void Cppn::updateNodes(){
+	dbg::trace trace("cppn", DBG_HERE);
 	if(!validPhenotype) buildPhenotype();
 
 	dbg::out(dbg::info, "cppn") << "Setting input values... " << std::endl;
 	//Set input values
 	for(int x=0; x<width; x++){
 		for(int y=0; y<height; y++){
-			double xv = (double(x)/(double(width)/2) - 1);
-			double yv = (double(y)/(double(height)/2) - 1);
+			int x_diff = _max_x - _min_x;
+			int y_diff = _max_y - _min_y;
+			double xv = (double(x)/(double(width)/x_diff) + _min_x);
+			double yv = (double(y)/(double(height)/y_diff) + _min_y);
 			size_t index = x + y*width;
 
 			updateNode(input_x, index, xv);
@@ -303,7 +323,7 @@ void Cppn::updateNodes(){
 	dbg::out(dbg::info, "cppn") << "Updating other nodes... " << std::endl;
 	for(size_t currentNode=nr_of_inputs; currentNode<numberOfNodes; currentNode++){
 //		std::cout << "Current node: " << currentNode << std::endl;
-		for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+		for(int xy_index=0; xy_index < width*height;  xy_index++){
 //			std::cout << "Index: " << xy_index << std::endl;
 			updateNode(currentNode, xy_index);
 		}
@@ -314,6 +334,7 @@ void Cppn::updateNodes(){
 }
 
 std::vector< std::vector <Node*> > Cppn::buildLayers(){
+	dbg::trace trace("cppn", DBG_HERE);
 	std::vector< std::vector <Node*> > layers;
 	layers.push_back(std::vector <Node*>());
 	QList <Node*> notPlaced = nodes;
@@ -354,6 +375,7 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 
 
 void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastSource){
+	dbg::trace trace("cppn", DBG_HERE);
     dbg::out(dbg::info, "cppn") << "Placing node: " << node << " index: " << index << "... " << std::endl;
     dbg::check_ptr(dbg::error, node, DBG_HERE);
     dbg::check_bounds(dbg::error, 0, index, nodes.size(), DBG_HERE);
@@ -391,6 +413,7 @@ void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastS
 }
 
 void Cppn::buildPhenotype(){
+	dbg::trace trace("cppn", DBG_HERE);
 	deletePhenotype();
 	dbg::out(dbg::info, "cppn") << "Building phenotype" << std::endl;
 //	std::cout << "New nodes size: " << nodes.size() <<std::endl;
@@ -543,6 +566,7 @@ bool compareIds(std::vector<Node*> layer1, std::vector<Node*> layer2){
 }
 
 void Cppn::positionNodesCircle(){
+	dbg::trace trace("cppn", DBG_HERE);
 	std::vector< std::vector <Node*> > layers = buildLayers();
 
 
@@ -595,6 +619,7 @@ void Cppn::positionNodesCircle(){
 }
 
 void Cppn::positionNodes(){
+	dbg::trace trace("cppn", DBG_HERE);
 	std::vector< std::vector <Node*> > layers = buildLayers();
 
 	QPointF position;
@@ -620,17 +645,18 @@ void Cppn::positionNodes(){
 }
 
 void Cppn::updateFromLink(Edge* edge){
+	dbg::trace trace("cppn", DBG_HERE);
 	if(!validPhenotype) updateNodes();
 	size_t source_node_index = edge->sourceNode()->getIndex();
 	size_t target_node_index = edge->destNode()->getIndex();
 	size_t link_index = edge->getIndex();
 
-	for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+	for(int xy_index=0; xy_index < width*height;  xy_index++){
 		linkChache[xy_index+link_index*width*height]=nodeChache[xy_index+source_node_index*width*height]*linkWeights[link_index];
 	}
 
 	for(size_t i=toUpdateStart[target_node_index]; i<toUpdateStart[target_node_index+1]; i++){
-		for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+		for(int xy_index=0; xy_index < width*height;  xy_index++){
 			updateNode(toUpdate[i], xy_index);
 		}
 
@@ -641,6 +667,7 @@ void Cppn::updateFromLink(Edge* edge){
 
 
 inline void Cppn::updateNode(const size_t& node, const size_t& xy_index, const double& initialValue){
+	dbg::trace trace("cppn", DBG_HERE);
 	size_t index = xy_index+node*width*height;
 
 	nodeChache[index]=initialValue;
@@ -664,12 +691,13 @@ inline void Cppn::updateNode(const size_t& node, const size_t& xy_index, const d
 }
 
 inline void Cppn::updateNode(const size_t& node){
+	dbg::trace trace("cppn", DBG_HERE);
 	if(node <nr_of_inputs){
-		for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+		for(int xy_index=0; xy_index < width*height;  xy_index++){
 			updateNode(node, xy_index, nodeChache[xy_index+node*width*height]);
 		}
 	} else {
-		for(size_t xy_index=0; xy_index < width*height;  xy_index++){
+		for(int xy_index=0; xy_index < width*height;  xy_index++){
 			updateNode(node, xy_index);
 		}
 	}
@@ -677,10 +705,12 @@ inline void Cppn::updateNode(const size_t& node){
 }
 
 void Cppn::updateNode(Node* node){
+	dbg::trace trace("cppn", DBG_HERE);
 	updateNode(node->getIndex());
 }
 
 void Cppn::positionNodesONP(){
+	dbg::trace trace("cppn", DBG_HERE);
 //    std::vector<std::vector<Node*> > mods;
 //    double qscore =  mod::modules(this, mods);
 //
@@ -714,6 +744,7 @@ void Cppn::positionNodesONP(){
 }
 
 double Cppn::calculateModularity(){
+	dbg::trace trace("cppn", DBG_HERE);
     std::vector<std::vector<Node*> > mods;
     double qscore =  mod::modules(this, mods);
 
@@ -828,7 +859,7 @@ inline uint qHash(const path_t &key)
 
 
 void Cppn::colorPaths(int threshold, float thresholdf){
-
+	dbg::trace trace("cppn", DBG_HERE);
     std::cout << "Gathering paths" << std::endl;
     // Gather paths
     QStack<Edge*> stack;

@@ -114,6 +114,8 @@ HEADERS += zlib/crc32.h \
            cppn-x/include/CX_MovableObject.hpp \
            cppn-x/include/CX_PreferencesWidget.hpp \
            cppn-x/include/CX_GlobalSettings.h \
+           cppn-x/include/CX_CsvParser.hpp \
+           cppn-x/include/CX_CppnInformation.hpp \
            libzip-0.11.1/lib/zip.h \
            libzip-0.11.1/lib/zipconf.h \
            libzip-0.11.1/lib/zipint.h
@@ -172,6 +174,7 @@ SOURCES += zlib/adler32.c \
            cppn-x/src/CX_MovableObject.cpp \
            cppn-x/src/CX_PreferencesWidget.cpp \
            cppn-x/src/CX_GlobalSettings.cpp \
+           cppn-x/src/CX_CsvParser.cpp \
            libzip-0.11.1/lib/mkstemp.c \
            libzip-0.11.1/lib/zip_add.c \
            libzip-0.11.1/lib/zip_add_dir.c \
