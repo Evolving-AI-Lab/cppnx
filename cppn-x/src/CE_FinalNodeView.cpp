@@ -19,7 +19,7 @@ FinalNodeView::FinalNodeView():
 	valueImage(0),
 	colorMode(hsv_mode)
 {
-	reinitImage();
+	resizeNode();
 }
 
 FinalNodeView::~FinalNodeView() {

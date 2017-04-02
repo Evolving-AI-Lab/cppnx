@@ -77,25 +77,36 @@ CppnWidget::CppnWidget(QWidget* widget)
     setRenderHint(QPainter::Antialiasing);
     setTransformationAnchor(AnchorUnderMouse);
 
+    // Add to side bar action
     addNodeviewAction = new QAction(tr("&Add to sidebar"), this);
     addNodeviewAction->setShortcut(tr("Alt+A"));
     addNodeviewAction->setStatusTip(tr("Add the selected node to the sidebar"));
+    connect(addNodeviewAction, SIGNAL(triggered()), this, SLOT(addNodeView()));
+    addAction(addNodeviewAction);
+    _nodeActions.append(addNodeviewAction);
 
 
+    // Node view actions
     nodeLabelAction = new QAction(tr("Show node labels"), this);
-    nodeLabelAction->setShortcut(tr("Ctrl+4"));
+    nodeLabelAction->setShortcut(tr("Shift+1"));
     nodeLabelAction->setStatusTip(tr("Shows the label of each node"));
-    nodeLabelAction->setCheckable(true);;
+    nodeLabelAction->setCheckable(true);
+    connect(nodeLabelAction,SIGNAL(triggered()), this, SLOT(setNodeLabelView()));
+    addAction(nodeLabelAction);
 
     nodeModuleAction = new QAction(tr("Show node modules"), this);
-    nodeModuleAction->setShortcut(tr("Ctrl+5"));
+    nodeModuleAction->setShortcut(tr("Shift+2"));
     nodeModuleAction->setStatusTip(tr("Shows the module of each node"));
     nodeModuleAction->setCheckable(true);
+    connect(nodeModuleAction,SIGNAL(triggered()), this, SLOT(setNodeModuleView()));
+    addAction(nodeModuleAction);
 
     nodeLabelNoImageAction = new QAction(tr("Show labels without image"), this);
-    nodeLabelNoImageAction->setShortcut(tr("Ctrl+6"));
+    nodeLabelNoImageAction->setShortcut(tr("Shift+3"));
     nodeLabelNoImageAction->setStatusTip(tr("Shows the label of each node without showing the image"));
     nodeLabelNoImageAction->setCheckable(true);
+    connect(nodeLabelNoImageAction,SIGNAL(triggered()), this, SLOT(setNodeLabelNoImageView()));
+    addAction(nodeLabelNoImageAction);
 
     nodeViewGroup = new QActionGroup(this);
     nodeViewGroup->addAction(nodeLabelAction);
@@ -103,47 +114,34 @@ CppnWidget::CppnWidget(QWidget* widget)
     nodeViewGroup->addAction(nodeLabelNoImageAction);
     nodeLabelAction->setChecked(true);
 
+
     // Zoom actions
     _zoomInAction = new QAction(tr("Zoom In"), this);
     _zoomInAction->setShortcut(QKeySequence::ZoomIn);
     _zoomInAction->setStatusTip(tr("Increase the size of the representation of the network"));
     connect(_zoomInAction, SIGNAL(triggered()), this, SLOT(zoomIn()));
+    addAction(_zoomInAction);
 
     _zoomOutAction = new QAction(tr("Zoom Out"), this);
     _zoomOutAction->setShortcut(QKeySequence::ZoomOut);
     _zoomOutAction->setStatusTip(tr("Decrease the size of the representation of the network"));
     connect(_zoomOutAction, SIGNAL(triggered()), this, SLOT(zoomOut()));
+    addAction(_zoomOutAction);
 
     _setZoomAction = new QAction(tr("Set zoom..."), this);
     _setZoomAction->setShortcut(tr("Alt+z"));
     _setZoomAction->setStatusTip(tr("Decrease the size of the representation of the network"));
     connect(_setZoomAction, SIGNAL(triggered()), this, SLOT(setZoom()));
+    addAction(_setZoomAction);
 
-//    labelOnlyAction = new QAction(tr("Label only"), this);
-//    labelOnlyAction->setShortcut(tr("Ctrl+1"));
-//    labelOnlyAction->setStatusTip(tr("If an edge is labeled, show only the label color"));
-//    labelOnlyAction->setCheckable(true);
-//
-//    signOnlyAction = new QAction(tr("Sign only"), this);
-//    signOnlyAction->setShortcut(tr("Ctrl+2"));
-//    signOnlyAction->setStatusTip(tr("Regardless of whether an edge is labeled, show only the color corresponding to its sign"));
-//    signOnlyAction->setCheckable(true);
-//
-//    labelAndSignAction = new QAction(tr("Sign and label"), this);
-//    labelAndSignAction->setShortcut(tr("Ctrl+3"));
-//    labelAndSignAction->setStatusTip(tr("Show both the sign (color of the connection), and the label (color of the background) of the edge"));
-//    labelAndSignAction->setCheckable(true);
 
     //Create edge label actions
-    _edgeShowLabelGroup = new QActionGroup(this);
-
     _showLabelAction = new QAction(tr("Show edge label"), this);
     _showLabelAction->setShortcut(tr("Ctrl+1"));
     _showLabelAction->setStatusTip(tr("Show label color on all nodes and edges"));
     _showLabelAction->setCheckable(true);
     connect(_showLabelAction, SIGNAL(triggered()), this, SLOT(setEdgeShowLabel()));
     addAction(_showLabelAction);
-    _edgeShowLabelGroup->addAction(_showLabelAction);
     _showLabelAction->setChecked(true);
 
     _noLabelAction = new QAction(tr("Hide edge label"), this);
@@ -152,98 +150,160 @@ CppnWidget::CppnWidget(QWidget* widget)
     _noLabelAction->setCheckable(true);
     connect(_noLabelAction, SIGNAL(triggered()), this, SLOT(setEdgeNoLabel()));
     addAction(_noLabelAction);
+
+    _edgeShowLabelGroup = new QActionGroup(this);
+    _edgeShowLabelGroup->addAction(_showLabelAction);
     _edgeShowLabelGroup->addAction(_noLabelAction);
 
 
     //Create edge sign actions
-    _edgeShowSignGroup = new QActionGroup(this);
-
     _showSignAction = new QAction(tr("Show edge sign"), this);
-//    _showSignAction->setShortcut(tr("Ctrl+3"));
+    _showSignAction->setShortcut(tr("Ctrl+3"));
     _showSignAction->setStatusTip(tr("Show the sign of the connection (positive as green, negative as red) on all connections"));
     _showSignAction->setCheckable(true);
     connect(_showSignAction, SIGNAL(triggered()), this, SLOT(setEdgeShowSign()));
     addAction(_showSignAction);
-    _edgeShowSignGroup->addAction(_showSignAction);
-
-    _noSignAction = new QAction(tr("Hide edge sign"), this);
-//    _noSignAction->setShortcut(tr("Ctrl+4"));
-    _noSignAction->setStatusTip(tr("Do not show the sign on any of the connections"));
-    _noSignAction->setCheckable(true);
-    connect(_noSignAction, SIGNAL(triggered()), this, SLOT(setEdgeNoSign()));
-    addAction(_noSignAction);
-    _edgeShowSignGroup->addAction(_noSignAction);
 
     _showSignIfNoLabelAction = new QAction(tr("Show edge sign if unlabeled"), this);
-//    _showSignIfNoLabelAction->setShortcut(tr("Ctrl+5"));
+    _showSignIfNoLabelAction->setShortcut(tr("Ctrl+4"));
     _showSignIfNoLabelAction->setStatusTip(tr("Show the sign of a connection only if the connection is unlabeled"));
     _showSignIfNoLabelAction->setCheckable(true);
     _showSignIfNoLabelAction->setChecked(true);
     connect(_showSignIfNoLabelAction, SIGNAL(triggered()), this, SLOT(setEdgeShowSignIfNoLabel()));
     addAction(_showSignIfNoLabelAction);
+
+    _noSignAction = new QAction(tr("Hide edge sign"), this);
+    _noSignAction->setShortcut(tr("Ctrl+5"));
+    _noSignAction->setStatusTip(tr("Do not show the sign on any of the connections"));
+    _noSignAction->setCheckable(true);
+    connect(_noSignAction, SIGNAL(triggered()), this, SLOT(setEdgeNoSign()));
+    addAction(_noSignAction);
+
+    _edgeShowSignGroup = new QActionGroup(this);
+    _edgeShowSignGroup->addAction(_showSignAction);
+    _edgeShowSignGroup->addAction(_noSignAction);
     _edgeShowSignGroup->addAction(_showSignIfNoLabelAction);
 
-    //Create edge width actions
-    _edgeWidthGroup = new QActionGroup(this);
 
+    //Create edge width actions
     _weightEdgeWidthAction = new QAction(tr("Weight dependent edge width"), this);
-//    _weightEdgeWidthAction->setShortcut(tr("Ctrl+5"));
+    _weightEdgeWidthAction->setShortcut(tr("Ctrl+8"));
     _weightEdgeWidthAction->setStatusTip(tr("The width of all edges will depend on their weight, were stronger edges will be wider"));
     _weightEdgeWidthAction->setCheckable(true);
     _weightEdgeWidthAction->setChecked(true);
     connect(_weightEdgeWidthAction, SIGNAL(triggered()), this, SLOT(setEdgeWeightWidth()));
     addAction(_weightEdgeWidthAction);
-    _edgeWidthGroup->addAction(_weightEdgeWidthAction);
+
 
     _fixedEdgeWidthAction = new QAction(tr("Fixed edge width"), this);
-//    _weightEdgeWidthAction->setShortcut(tr("Ctrl+5"));
+    _fixedEdgeWidthAction->setShortcut(tr("Ctrl+9"));
     _fixedEdgeWidthAction->setStatusTip(tr("The width of all edges will be the same, regardless of their weight"));
     _fixedEdgeWidthAction->setCheckable(true);
     connect(_fixedEdgeWidthAction, SIGNAL(triggered()), this, SLOT(setEdgeFixedWidth()));
     addAction(_fixedEdgeWidthAction);
-    _edgeWidthGroup->addAction(_fixedEdgeWidthAction);
 
+
+    // Create action group
+    _edgeWidthGroup = new QActionGroup(this);
+    _edgeWidthGroup->addAction(_weightEdgeWidthAction);
+    _edgeWidthGroup->addAction(_fixedEdgeWidthAction);
 
     //Create find unlabeled edge action
     _findUnlabeledEdgeAction = new QAction(tr("Unlabeled edge"), this);
     _findUnlabeledEdgeAction->setShortcut(tr("Alt+a"));
     _findUnlabeledEdgeAction->setStatusTip(tr("Selects an unlabeled edge, if there are any"));
-//    _findUnlabeledEdgeAction->setCheckable(false);
-//    _findUnlabeledEdgeAction->setChecked(false);
     connect(_findUnlabeledEdgeAction, SIGNAL(triggered()), this, SLOT(findUnlabeledEdge()));
     addAction(_findUnlabeledEdgeAction);
 
-//    _findUnlabeledEdgeAction = new QAction(tr("Unlabeled edge"), this);
-//    _findUnlabeledEdgeAction->setStatusTip(tr("Selects an unlabeled edge, if there are any"));
-//    connect(_findUnlabeledEdgeAction, SIGNAL(triggered()), this, SLOT(findUnlabeledEdge()));
-//    addAction(_findUnlabeledEdgeAction);
 
+    _findEdgeByIdAction = createAction(tr("Find edge by ID"),
+    		tr("Finds an edge by its ID"),
+			SLOT(findEdgeById()));
+    _findEdgeByIdAction->setShortcut(QKeySequence::Find);
 
-    _findEdgeByIdAction = createAction(tr("Find edge by ID"), tr("Finds an edge by its ID"), SLOT(findEdgeById()));
-
-    _setSin = createAction(tr("Sine"), tr("Set the sine activation function"), SLOT(setSin()));
-    _setCos = createAction(tr("Cosine"), tr("Set the cosine activation function"), SLOT(setCos()));
-    _setGaus = createAction(tr("Gaussian"), tr("Set the Guassian activation function"), SLOT(setGaus()));
-    _setSigmoid = createAction(tr("Sigmoid"), tr("Set the sigmoid activation function"), SLOT(setSigmoid()));
-    _setLin = createAction(tr("Linear"), tr("Set the linear activation function"), SLOT(setLin()));
-    _setStep = createAction(tr("Step"), tr("Set the step activation function"), SLOT(setStep()));
-    _setUSigmoid = createAction(tr("Unsigned Sigmoid"), tr("Set the unsigned sigmoid activation function"), SLOT(setUSigmoid()));
-    _setUGuas = createAction(tr("Unsigned Gaussian"), tr("Set the unsigned Guassian activation function"), SLOT(setUGuas()));
-    _setUBoundedLinear = createAction(tr("Unsigned Bounded Linear"), tr("Set the unsigned bounded linear activation function"), SLOT(setUBoundedLinear()));
+    // Activation function actions
+    _setSin = createAction(tr("Sine"),
+    		tr("Set the sine activation function"),
+			SLOT(setSin()));
+    _setSin->setShortcut(tr("Ctrl+Shift+n"));
+    _nodeActions.append(_setSin);
+    _setCos = createAction(tr("Cosine"),
+    		tr("Set the cosine activation function"),
+			SLOT(setCos()));
+    _setCos->setShortcut(tr("Ctrl+Shift+c"));
+    _nodeActions.append(_setCos);
+    _setGaus = createAction(tr("Gaussian"),
+    		tr("Set the Guassian activation function"),
+			SLOT(setGaus()));
+    _setGaus->setShortcut(tr("Ctrl+Shift+g"));
+    _nodeActions.append(_setGaus);
+    _setSigmoid = createAction(tr("Sigmoid"),
+    		tr("Set the sigmoid activation function"),
+			SLOT(setSigmoid()));
+    _setSigmoid->setShortcut(tr("Ctrl+Shift+s"));
+    _nodeActions.append(_setSigmoid);
+    _setLin = createAction(tr("Linear"),
+    		tr("Set the linear activation function"),
+			SLOT(setLin()));
+    _setLin->setShortcut(tr("Ctrl+Shift+l"));
+    _nodeActions.append(_setLin);
+    _setStep = createAction(tr("Step"),
+    		tr("Set the step activation function"),
+			SLOT(setStep()));
+    _setStep->setShortcut(tr("Ctrl+Shift+t"));
+    _nodeActions.append(_setStep);
+    _setUSigmoid = createAction(tr("Unsigned Sigmoid"),
+    		tr("Set the unsigned sigmoid activation function"),
+			SLOT(setUSigmoid()));
+    _setUSigmoid->setShortcut(tr("Alt+Shift+s"));
+    _nodeActions.append(_setUSigmoid);
+    _setUGuas = createAction(tr("Unsigned Gaussian"),
+    		tr("Set the unsigned Guassian activation function"),
+			SLOT(setUGuas()));
+    _setUGuas->setShortcut(tr("Alt+Shift+g"));
+    _nodeActions.append(_setUGuas);
+    _setUBoundedLinear = createAction(tr("Unsigned Bounded Linear"),
+    		tr("Set the unsigned bounded linear activation function"),
+			SLOT(setUBoundedLinear()));
+    _setUBoundedLinear->setShortcut(tr("Alt+Shift+l"));
+    _nodeActions.append(_setUBoundedLinear);
 
 
     //Add actions
-    _addNode = createAction(tr("Add node"), tr("Adds a node to the cppn"), SLOT(addNode()));
-    _addNodeOnConnection = createAction(tr("Add node on edge"), tr("Adds a node splicing the selected edge"), SLOT(addNodeOnConnection()));
-    _addEdge = createAction(tr("Add edge"), tr("Adds an edge between two selected nodes"), SLOT(addEdge()));
+    _addNode = createAction(tr("Add node"),
+    		tr("Adds a node to the cppn"),
+			SLOT(addNode()));
+    _addNode->setShortcut(tr("n"));
+    _addNodeOnConnection = createAction(tr("Add node on edge"),
+    		tr("Adds a node splicing the selected edge"),
+			SLOT(addNodeOnConnection()));
+    _addEdge = createAction(tr("Add edge"),
+    		tr("Adds an edge between two selected nodes"),
+			SLOT(addEdge()));
+    _addEdge->setShortcut(tr("e"));
+    _twoNodeActions.append(_addEdge);
 
     //Arrange actions
-    _alignHorizontal = createAction(tr("Align horizontal"), tr("Aligns selected nodes horizontally with the first node selected."), SLOT(alignHorizontal()));
-    _alignVertical = createAction(tr("Align vertical"), tr("Aligns selected nodes vertically with the first node selected."), SLOT(alignVertical()));
-    _spaceHorizontal = createAction(tr("Space horizontal"), tr("Equally distributes the selected nodes between the first and last node selected, horizontally."), SLOT(spaceHorizontal()));
-    _spaceVertical = createAction(tr("Space vertical"), tr("Equally distributes the selected nodes between the first and last node selected, vertically."), SLOT(spaceVertical()));
+    _alignHorizontal = createAction(tr("Align horizontal"),
+    		tr("Aligns selected nodes horizontally with the first node selected."),
+			SLOT(alignHorizontal()));
+    _nodeActions.append(_alignHorizontal);
+    _alignVertical = createAction(tr("Align vertical"),
+    		tr("Aligns selected nodes vertically with the first node selected."),
+			SLOT(alignVertical()));
+    _nodeActions.append(_alignVertical);
+    _spaceHorizontal = createAction(tr("Space horizontal"),
+    		tr("Equally distributes the selected nodes between the first and last node selected, horizontally."),
+			SLOT(spaceHorizontal()));
+    _nodeActions.append(_spaceHorizontal);
+    _spaceVertical = createAction(tr("Space vertical"),
+    		tr("Equally distributes the selected nodes between the first and last node selected, vertically."),
+			SLOT(spaceVertical()));
+    _nodeActions.append(_spaceVertical);
 
-    _scaleLegend = createAction(tr("Scale legend"), tr("Change the size of the legend."), SLOT(scaleLegend()));
+    _scaleLegend = createAction(tr("Scale legend"),
+    		tr("Change the size of the legend."),
+			SLOT(scaleLegend()));
 
 //    _setFavorite = createAction(tr("Favorite"), tr("Marks edge as favorite"), SLOT(setFavourite()));
 
@@ -255,28 +315,44 @@ CppnWidget::CppnWidget(QWidget* widget)
 
 
     curvedLineAction = new QAction(tr("Curved line"), this);;
-    curvedLineAction->setShortcut(tr("Ctrl+7"));
+    curvedLineAction->setShortcut(tr("Ctrl+6"));
     curvedLineAction->setStatusTip(tr("Show all lines as curved lines"));
     curvedLineAction->setCheckable(true);
+    connect(curvedLineAction, SIGNAL(triggered()), this, SLOT(setCurvedLines()));
+    addAction(curvedLineAction);
 
     straightLineAction = new QAction(tr("Straight line"), this);
-    straightLineAction->setShortcut(tr("Ctrl+8"));
+    straightLineAction->setShortcut(tr("Ctrl+7"));
     straightLineAction->setStatusTip(tr("Show all lines as straight lines"));
     straightLineAction->setCheckable(true);
+    connect(straightLineAction, SIGNAL(triggered()), this, SLOT(setStraightLines()));
+    addAction(straightLineAction);
 
     _toggleAnnotationsAction = new QAction(tr("Toggle annotations"), this);
+    _toggleAnnotationsAction->setShortcut(tr("Shift+5"));
     _toggleAnnotationsAction->setStatusTip(tr("Shows or hides annotations. Add an annotation to an edge by adding :=\"<annotation>\" to the label of that edge."));
     _toggleAnnotationsAction->setCheckable(true);
     _toggleAnnotationsAction->setChecked(true);
+    connect(_toggleAnnotationsAction,SIGNAL(triggered()), this, SLOT(toggleAnnotations()));
+    addAction(_toggleAnnotationsAction);
 
     _increaseCurveOffset = new QAction(tr("Increase curve"), this);
+    _increaseCurveOffset->setStatusTip(tr("Increase the curve of this line"));
     _increaseCurveOffset->setShortcut(tr("Ctrl+M"));
+    connect(_increaseCurveOffset,SIGNAL(triggered()), this, SLOT(increaseCurveOffset()));
+    addAction(_increaseCurveOffset);
 
     _decreaseCurveOffset = new QAction(tr("Decrease curve"), this);
+    _decreaseCurveOffset->setStatusTip(tr("Decrease the curve of this line"));
     _decreaseCurveOffset->setShortcut(tr("Ctrl+N"));
+    connect(_decreaseCurveOffset,SIGNAL(triggered()), this, SLOT(decreaseCurveOffset()));
+    addAction(_decreaseCurveOffset);
 
-    _snapshotAction = new QAction(tr("Snapshot"), this);
+    _snapshotAction = new QAction(tr("Export..."), this);
     _snapshotAction->setStatusTip(tr("Export the CPPN as an image"));
+    _snapshotAction->setShortcut(tr("Ctrl+E"));
+    connect(_snapshotAction,SIGNAL(triggered()), this, SLOT(snapShot()));
+    addAction(_snapshotAction);
 
     lineModeGroup = new QActionGroup(this);;
     lineModeGroup->addAction(curvedLineAction);
@@ -285,6 +361,8 @@ CppnWidget::CppnWidget(QWidget* widget)
 
     _colorPathAction = new QAction(tr("Color path"), this);
     _colorPathAction->setStatusTip(tr("Colors different paths in the network according to overlap"));
+    connect(_colorPathAction,SIGNAL(triggered()), this, SLOT(colorPaths()));
+    addAction(_colorPathAction);
 
 //    viewGroup = new QActionGroup(this);
 //    viewGroup->addAction(labelOnlyAction);
@@ -295,16 +373,22 @@ CppnWidget::CppnWidget(QWidget* widget)
     circleAction = new QAction(tr("&Layers"), this);
     circleAction->setShortcut(tr("Alt+I"));
     circleAction->setStatusTip(tr("Arrange nodes in layers"));
+    connect(circleAction, SIGNAL(triggered()), this, SLOT(positionNodesLayers()));
+    addAction(circleAction);
 
     ONPAction = new QAction(tr("&ONP"), this);
     ONPAction->setShortcut(tr("Alt+O"));
     ONPAction->setStatusTip(tr("Use the Optimal Neuron Placement to arrange nodes"));
+    connect(ONPAction, SIGNAL(triggered()), this, SLOT(positionNodesONP()));
+    addAction(ONPAction);
 
     layerAction = new QAction(tr("&Circle"), this);
     layerAction->setShortcut(tr("Alt+P"));
     layerAction->setStatusTip(tr("Arrange nodes in a circle"));
+    connect(layerAction, SIGNAL(triggered()), this, SLOT(positionNodesCircle()));
+    addAction(layerAction);
 
-    connect(addNodeviewAction, SIGNAL(triggered()), this, SLOT(addNodeView()));
+
 
 //    connect(labelOnlyAction, SIGNAL(triggered()), this, SLOT(setLabelView()));
 //    connect(signOnlyAction, SIGNAL(triggered()), this, SLOT(setSignView()));
@@ -325,58 +409,55 @@ CppnWidget::CppnWidget(QWidget* widget)
 //    QAction* _noSignAction;
 
 
-    connect(circleAction, SIGNAL(triggered()), this, SLOT(positionNodesLayers()));
-    connect(layerAction, SIGNAL(triggered()), this, SLOT(positionNodesCircle()));
-    connect(ONPAction, SIGNAL(triggered()), this, SLOT(positionNodesONP()));
-
-    connect(curvedLineAction, SIGNAL(triggered()), this, SLOT(setCurvedLines()));
-    connect(straightLineAction, SIGNAL(triggered()), this, SLOT(setStraightLines()));
-
-    connect(nodeLabelAction,SIGNAL(triggered()), this, SLOT(setNodeLabelView()));
-    connect(nodeModuleAction,SIGNAL(triggered()), this, SLOT(setNodeModuleView()));
-    connect(nodeLabelNoImageAction,SIGNAL(triggered()), this, SLOT(setNodeLabelNoImageView()));
-    connect(_toggleAnnotationsAction,SIGNAL(triggered()), this, SLOT(toggleAnnotations()));
-
-
-    connect(_increaseCurveOffset,SIGNAL(triggered()), this, SLOT(increaseCurveOffset()));
-    connect(_decreaseCurveOffset,SIGNAL(triggered()), this, SLOT(decreaseCurveOffset()));
-    connect(_snapshotAction,SIGNAL(triggered()), this, SLOT(snapShot()));
-
-    connect(_colorPathAction,SIGNAL(triggered()), this, SLOT(colorPaths()));
 
     // By adding actions to the widget they will automatically be enabled or disabled
     // when the widget itself gets enabled or disabled.
-    addAction(straightLineAction);
-    addAction(curvedLineAction);
 
-    addAction(addNodeviewAction);
-
-//    addAction(labelOnlyAction);
-//    addAction(signOnlyAction);
-//    addAction(labelAndSignAction);
-    addAction(circleAction);
-    addAction(layerAction);
-//    addAction(deleteAction);
-    addAction(nodeLabelAction);
-    addAction(nodeModuleAction);
-    addAction(nodeLabelNoImageAction);
-    addAction(_toggleAnnotationsAction);
-    addAction(_snapshotAction);
-    addAction(_colorPathAction);
-
-    addAction(ONPAction);
-
-    addAction(_increaseCurveOffset);
-    addAction(_decreaseCurveOffset);
+//    addAction(curvedLineAction);
+//
+//    addAction(addNodeviewAction);
+//
+////    addAction(labelOnlyAction);
+////    addAction(signOnlyAction);
+////    addAction(labelAndSignAction);
+//    addAction(circleAction);
+//    addAction(layerAction);
+////    addAction(deleteAction);
+//    addAction(nodeLabelAction);
+//    addAction(nodeModuleAction);
+//    addAction(nodeLabelNoImageAction);
+//    addAction(_toggleAnnotationsAction);
+//    addAction(_snapshotAction);
+//    addAction(_colorPathAction);
+//
+//    addAction(ONPAction);
+//
+//    addAction(_increaseCurveOffset);
+//    addAction(_decreaseCurveOffset);
 
     setNodeSelected(false);
+    setTwoNodesSelected(false);
 
+    // Activation functions sub-menu
+    _afMenu = new QMenu(tr("Activation Functions"), this);
+    _afMenu->addAction(_setSin);
+    _afMenu->addAction(_setCos);
+    _afMenu->addAction(_setGaus);
+    _afMenu->addAction(_setSigmoid);
+    _afMenu->addAction(_setLin);
+    _afMenu->addAction(_setStep);
+    _afMenu->addAction(_setUSigmoid);
+    _afMenu->addAction(_setUGuas);
+    _afMenu->addAction(_setUBoundedLinear);
+
+    // Create node menu
     nodeMenu = new QMenu(tr("Node"), this);
-//    nodeMenu->addAction(deleteAction);
     nodeMenu->addAction(addNodeviewAction);
+    nodeMenu->addMenu(_afMenu);
 
+    // Create Edge menu
     edgeMenu = new QMenu(tr("Edge"), this);
-//    edgeMenu->addAction(deleteAction);
+
 }
 
 void CppnWidget::rebuildPhenotype(){
@@ -755,17 +836,22 @@ void CppnWidget::updateSelection(){
 	nodeSelected = false;
 	edgeSelected = false;
 
-	foreach(QGraphicsItem* item, scene()->selectedItems()){
-		if(qgraphicsitem_cast<Node*>(item)) nodeSelected = true;
+	const QList<QGraphicsItem *>& selected = scene()->selectedItems();
+	int nodeCount = 0;
+	foreach(QGraphicsItem* item, selected){
+		if(qgraphicsitem_cast<Node*>(item)){
+			nodeSelected = true;
+			nodeCount += 1;
+		}
 		if(qgraphicsitem_cast<Edge*>(item)) edgeSelected = true;
 		if(edgeSelected && nodeSelected) break;
 	}
-//	std::cout << edgeSelected << " " << scene()->selectedItems().count() << std::endl;
+	_twoNodesSelected = (nodeCount == 2 && selected.size() == 2);
 
 	if(scene()->selectedItems().count() == 1){
-		if(edgeSelected) emit edgeUpdated(qgraphicsitem_cast<Edge*>(scene()->selectedItems().front()));
+		if(edgeSelected) emit edgeUpdated(qgraphicsitem_cast<Edge*>(selected.front()));
 		if(nodeSelected){
-		    _firstNodeSelected = qgraphicsitem_cast<Node*>(scene()->selectedItems().front());
+		    _firstNodeSelected = qgraphicsitem_cast<Node*>(selected.front());
 		    emit nodeUpdated(_firstNodeSelected);
 		}
 	} else {
@@ -779,6 +865,7 @@ void CppnWidget::updateSelection(){
 	emit labelableObjectSelected(edgeSelected || nodeSelected);
 
 	setNodeSelected(nodeSelected);
+	setTwoNodesSelected(_twoNodesSelected);
 	setEdgeSelected(edgeSelected);
 }
 
@@ -911,6 +998,7 @@ void CppnWidget::changeEvent(QEvent* event){
 		}
 		if(isEnabled()){
 			setNodeSelected(nodeSelected);
+			setTwoNodesSelected(_twoNodesSelected);
 			setEdgeSelected(edgeSelected);
 		}
 	break;
@@ -923,7 +1011,17 @@ void CppnWidget::changeEvent(QEvent* event){
 void CppnWidget::setNodeSelected(bool selected){
     dbg::trace trace("cppnwidget", DBG_HERE);
 	nodeSelected = selected;
-	addNodeviewAction->setEnabled(selected);
+	foreach(QAction* action, _nodeActions){
+		action->setEnabled(selected);
+	}
+}
+
+void CppnWidget::setTwoNodesSelected(bool selected){
+    dbg::trace trace("cppnwidget", DBG_HERE);
+    _twoNodesSelected = selected;
+	foreach(QAction* action, _twoNodeActions){
+		action->setEnabled(selected);
+	}
 }
 
 void CppnWidget::setEdgeSelected(bool selected){
@@ -1049,16 +1147,23 @@ void CppnWidget::setActivationFunction(std::string activationFunction){
  *************************/
 void CppnWidget::addNode(){
     dbg::trace trace("cppnwidget", DBG_HERE);
-    std::string branch = "0";
-    std::string id = cppn->getNextId();
-    std::string type = XML_TYPE_HIDDEN;
-    std::string activation = XML_LINEAR;
-    Node* node = new Node(branch, id, type, activation);
-    ComAddRemoveObject* command = new ComAddRemoveObject();
-    command->init(this);
-    command->addObject(node);
-    command->setText("Add node");
-    if(command->isOk()) emit requestCommandExecution(command);
+    if(edgeSelected && scene()->selectedItems().size() == 1){
+    	addNodeOnConnection();
+    } else {
+    	QPoint rawPos = this->mapFromGlobal(QCursor::pos());
+    	QPointF mousePosition = this->mapToScene(rawPos);
+    	std::string branch = "0";
+    	std::string id = cppn->getNextId();
+    	std::string type = XML_TYPE_HIDDEN;
+    	std::string activation = XML_LINEAR;
+    	Node* node = new Node(branch, id, type, activation);
+    	node->setPos(mousePosition);
+    	ComAddRemoveObject* command = new ComAddRemoveObject();
+    	command->init(this);
+    	command->addObject(node);
+    	command->setText("Add node");
+    	if(command->isOk()) emit requestCommandExecution(command);
+    }
 }
 
 void CppnWidget::addNodeOnConnection(){

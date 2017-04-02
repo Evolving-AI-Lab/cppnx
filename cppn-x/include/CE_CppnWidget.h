@@ -151,6 +151,8 @@ public:
     QActionGroup* getNodeViewGroup(){return nodeViewGroup;}
     QMenu* getEdgeMenu(){return edgeMenu;}
     QMenu* getNodeMenu(){return nodeMenu;}
+    QMenu* getAfMenu(){return _afMenu;}
+
     bool getNodeSelected(){return nodeSelected;}
     bool getEdgeSelected(){return edgeSelected;}
 
@@ -198,7 +200,7 @@ public slots:
     //Apply label function
     void applyLabel(Label* label);
 
-    //Add nodeview function
+    //Add node view function
     void addNodeView();
 
     //Set view functions
@@ -227,15 +229,12 @@ public slots:
     void setNodeModuleView();
     void setNodeLabelNoImageView();
 
-//    void setFavourite();
-
     //Search functions
     void findUnlabeledEdge();
     void findEdgeById();
 
     //Update functions
     void updateSelection();
-//    void updateAll();
     void updatePreviousPositions();
     void rebuildPhenotype();
 
@@ -248,7 +247,6 @@ public slots:
     void deselectItems();
 
     void flash(bool flashOn);
-//    void ContextMenuEvent(SelectableObject* object, bool begin);
 
     //Experimental
     void snapShot();
@@ -279,7 +277,6 @@ public slots:
 
 
 signals:
-//	void requestCommandExecution(QUndoCommand*);
 	void requestAddNodeview(QList<QGraphicsItem*>);
 	void edgeUpdated(Edge*);
 	void nodeUpdated(Node*);
@@ -297,6 +294,7 @@ protected:
 
 private:
     void setNodeSelected(bool selected);
+    void setTwoNodesSelected(bool selected);
     void setEdgeSelected(bool selected);
     void setSceneRect();
 
@@ -310,11 +308,6 @@ private:
     QAction* _zoomInAction;
     QAction* _zoomOutAction;
     QAction* _setZoomAction;
-
-//    QAction *labelOnlyAction;
-//    QAction *signOnlyAction;
-//    QAction *labelAndSignAction;
-//    QActionGroup* viewGroup;
 
     QAction* _noLabelAction;
     QAction* _showLabelAction;
@@ -379,11 +372,16 @@ private:
 
 
     QAction* _scaleLegend;
+
+    QList<QAction*> _nodeActions;
+    QList<QAction*> _twoNodeActions;
     //
 //    QAction* _setFavorite;
 
+    // Menus
     QMenu* edgeMenu;
     QMenu* nodeMenu;
+    QMenu* _afMenu;
 
     //Sorted vectors for modifying scene
     SortedNodesList left_sorted;
@@ -400,6 +398,7 @@ private:
     Edge::EdgeLAnnotationMode _annotationMode;
     Node::NodeLabelMode nodeLabelMode;
 	bool nodeSelected;
+	bool _twoNodesSelected;
 	bool edgeSelected;
 	bool firstClick;
 

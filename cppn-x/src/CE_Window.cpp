@@ -62,14 +62,13 @@ Window::Window(){
     connect(labelWidget, SIGNAL(labelsChanged()), cppnWidget, SLOT(updateAll()));
     connect(labelWidget, SIGNAL(selectionChanged()), cppnWidget, SLOT(deselectItems()));
     connect(labelWidget, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
-//    connect(labelWidget, SIGNAL(sceneModified()), this, SLOT(onSceneModified()));
 
 
     //Connect nodeview widget
     connect(nodeviewWidget, SIGNAL(requestCommandExecution(ComBase*)), this, SLOT(executeCommand(ComBase*)));
     connect(nodeviewWidget->scene(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
     connect(nodeviewWidget, SIGNAL(focusChanged()), this, SLOT(onSelectionChanged()));
-//    connect(nodeviewWidget, SIGNAL(sceneModified()), this, SLOT(onSceneModified()));
+
 
     //Connect weight widget
     connect(weightWidget->getResetAllAction(), SIGNAL(triggered()), cppnWidget, SLOT(resetAllWeights()));
@@ -187,6 +186,7 @@ Window::Window(){
     connect(_createModuleLabelsAction, SIGNAL(triggered()), this, SLOT(createModuleLabels()));
 
     _toggleLegendAction = _createAction(tr("Toggle legend"), tr("Toggles whether a legend is shown."), SLOT(toggleLegend()));
+    _toggleLegendAction->setShortcut(tr("Shift+4"));
     _toggleLegendAction->setCheckable(true);
     cppnWidget->addAction(_toggleLegendAction);
 
@@ -210,45 +210,61 @@ Window::Window(){
      ***********************************/
     //File menu
     fileMenu = new QMenu(tr("&File"), this);
-    fileMenu->addAction(exitAction);
     fileMenu->addAction(_newAction);
     fileMenu->addAction(loadAction);
     fileMenu->addAction(loadIDAction);
-    fileMenu->addAction(_nextGeneration);
-    fileMenu->addAction(_previousGeneration);
+    fileMenu->addSeparator();
+    fileMenu->addAction(exitAction);
+    fileMenu->addSeparator();
     fileMenu->addAction(saveAction);
     fileMenu->addAction(saveAsAction);
+    fileMenu->addAction(cppnWidget->getSnapshotAction());
+    fileMenu->addSeparator();
+    fileMenu->addAction(_compareGenomesAction);
+    fileMenu->addAction(_importPositionsAction);
+    fileMenu->addAction(_importLabelsAction);
+    fileMenu->addSeparator();
+    fileMenu->addAction(_nextGeneration);
+    fileMenu->addAction(_previousGeneration);
+    fileMenu->addSeparator();
     fileMenu->addAction(_preferencesAction);
+
 
     //Position menu
     posMenu = new QMenu(tr("&Position"), this);
     posMenu->addAction(cppnWidget->getCircleAction());
     posMenu->addAction(cppnWidget->getONPAction());
     posMenu->addAction(cppnWidget->getLayerAction());
+    posMenu->addSeparator();
+    posMenu->addAction(cppnWidget->getAlignHorizontalAction());
+    posMenu->addAction(cppnWidget->getAlignVerticalAction());
+    posMenu->addAction(cppnWidget->getSpaceHorizontalAction());
+    posMenu->addAction(cppnWidget->getSpaceVerticalAction());
+
 
     //Edit menu
     editMenu = new QMenu(tr("&Edit"), this);
     editMenu->addAction(undoAction);
     editMenu->addAction(redoAction);
     editMenu->addSeparator();
-
     editMenu->addAction(removeAction);
     editMenu->addAction(selectAllAction);
     editMenu->addSeparator();
-
     editMenu->addAction(weightWidget->getFirstWeightSliderWidget()->getResetAction());
     editMenu->addAction(weightWidget->getResetAllAction());
     editMenu->addSeparator();
-
     editMenu->addAction(weightWidget->getScanAction());
     editMenu->addAction(weightWidget->getScreenCaptureAction());
     editMenu->addSeparator();
-
     editMenu->addAction(exportImageAction);
     editMenu->addAction(cppnWidget->getAddNodeviewAction());
-
     editMenu->addSeparator();
     editMenu->addMenu(labelWidget->getLabelMenu());
+    editMenu->addAction(_createModuleLabelsAction);
+    editMenu->addSeparator();
+    editMenu->addAction(cppnWidget->getAddNodeAction());
+    editMenu->addAction(cppnWidget->getAddEdgeAction());
+    editMenu->addMenu(cppnWidget->getAfMenu());
 
     //View menu
     viewMenu= new QMenu(tr("&View"), this);
@@ -270,6 +286,8 @@ Window::Window(){
     viewMenu->addAction(cppnWidget->getNodeLabelNoImageAction());
     viewMenu->addSeparator();
     viewMenu->addAction(_toggleLegendAction);
+    viewMenu->addAction(cppnWidget->getScaleLegendAction());
+    viewMenu->addSeparator();
     viewMenu->addAction(cppnWidget->getToggleAnnotationsAction());
     viewMenu->addSeparator();
     viewMenu->addAction(cppnWidget->getZoomInAction());
@@ -285,43 +303,18 @@ Window::Window(){
 
     //Experimental menu
     _experimentalMenu= new QMenu(tr("&Experimental"), this);
-    _experimentalMenu->addAction(cppnWidget->getIncreaseCurveOffsetAction());
-    _experimentalMenu->addAction(cppnWidget->getDecreaseCurveOffsetAction());
-    _experimentalMenu->addAction(cppnWidget->getSnapshotAction());
-    _experimentalMenu->addAction(_startAnalysisAction);
-    _experimentalMenu->addAction(_compareGenomesAction);
-    _experimentalMenu->addAction(_importPositionsAction);
-    _experimentalMenu->addAction(_importLabelsAction);
-    _experimentalMenu->addAction(_createModuleLabelsAction);
-    _experimentalMenu->addAction(cppnWidget->getSetSinAction());
-    _experimentalMenu->addAction(cppnWidget->getSetCosAction());
-    _experimentalMenu->addAction(cppnWidget->getSetGausAction());
-    _experimentalMenu->addAction(cppnWidget->getSetSigmoidAction());
-    _experimentalMenu->addAction(cppnWidget->getSetLinAction());
-    _experimentalMenu->addAction(cppnWidget->getSetStepAction());
-    _experimentalMenu->addAction(cppnWidget->getSetUGaussianAction());
-    _experimentalMenu->addAction(cppnWidget->getSetUSigmoidAction());
-    _experimentalMenu->addAction(cppnWidget->getSetUBoundedLinearAction());
-    _experimentalMenu->addAction(cppnWidget->getSetStepAction());
-    _experimentalMenu->addAction(cppnWidget->getAddNodeAction());
-    _experimentalMenu->addAction(cppnWidget->getAddNodeOnConnectionAction());
-    _experimentalMenu->addAction(cppnWidget->getAddEdgeAction());
 
+    // While being able to adjust curves, I currently have no interface for it,
+    // nor is this information saved when writing to file, so disabled
+//    _experimentalMenu->addAction(cppnWidget->getIncreaseCurveOffsetAction());
+//    _experimentalMenu->addAction(cppnWidget->getDecreaseCurveOffsetAction());
 
-    _experimentalMenu->addAction(cppnWidget->getAlignHorizontalAction());
-    _experimentalMenu->addAction(cppnWidget->getAlignVerticalAction());
-    _experimentalMenu->addAction(cppnWidget->getSpaceHorizontalAction());
-    _experimentalMenu->addAction(cppnWidget->getSpaceVerticalAction());
+    // I doubt any user would have much use for this particular action
+//    _experimentalMenu->addAction(_startAnalysisAction);
 
-
-
-    _experimentalMenu->addAction(cppnWidget->getScaleLegendAction());
 
     _experimentalMenu->addAction(_exportToImageSeriesAction);
     _experimentalMenu->addAction(cppnWidget->getColorPathAction());
-
-//    _experimentalMenu->addAction(cppnWidget->getSetFavoriteAction());
-
 
     //Menu bar
     menuBar = new QMenuBar;
@@ -331,7 +324,6 @@ Window::Window(){
     menuBar->addMenu(posMenu);
     menuBar->addMenu(_searchMenu);
     menuBar->addMenu(_experimentalMenu);
-//    menuBar->addAction(preferences);
 
     //cppn widget node menu
     cppnWidget->getNodeMenu()->addSeparator();
