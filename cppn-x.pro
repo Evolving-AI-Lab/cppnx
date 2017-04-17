@@ -7,6 +7,9 @@ TARGET = cppn-x
 
 CONFIG += static 
 
+# Add support for writing svg files
+QT += svg
+
 # Remove default deployment target
 QMAKE_CFLAGS_X86_64 -= -mmacosx-version-min=10.5
 QMAKE_CXXFLAGS_X86_64 -= -mmacosx-version-min=10.5

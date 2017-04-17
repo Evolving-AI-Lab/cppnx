@@ -38,6 +38,7 @@ void NodeView::init(){
     dbg::trace trace("nodeview", DBG_HERE);
     setFlag(ItemIsSelectable);
     setCacheMode(DeviceCoordinateCache);
+    resizeNode();
 
     if(node){
     	_pixels = node->getImage();
@@ -48,7 +49,6 @@ void NodeView::init(){
     	_pixels = 0;
     }
     compatibillityId = 1;
-    resizeNode();
 }
 
 void NodeView::resizeNode(){

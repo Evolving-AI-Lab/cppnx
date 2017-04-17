@@ -3,6 +3,8 @@
 
 //QT includes
 #include <QtGui>
+//#include <QGraphicsSvgItem>
+#include <QSvgGenerator>
 
 //Local includes
 #include "CE_CppnWidget.h"
@@ -1046,7 +1048,13 @@ void CppnWidget::saveImage(){
 void CppnWidget::snapShot(){
     dbg::trace trace("cppnwidget", DBG_HERE);
     //Ask filename
-    QString newFileName = util::getSupportedFilename(this, tr("Save network snapshot"));
+	QString ext = util::getSupportedExtentions();
+	ext = QString("svg file (*.svg);;") + ext;
+	ext = QString("pdf file (*.pdf);;") + ext;
+	//std::cout << ext.toStdString() << std::endl;
+	QString txt = tr("Save network snapshot");
+	QString newFileName = QFileDialog::getSaveFileName(this, txt, "",ext);
+    //QString newFileName = util::getSupportedFilename(this, tr("Save network snapshot"));
     if(newFileName.isEmpty()) return;
 
     //Calculate network dimensions
@@ -1063,7 +1071,8 @@ void CppnWidget::snapShot(){
             QString::number(rect.height(), 'f', 1) +
             tr(".");
     bool ok = true;
-    double resolutionMultiplier =  QInputDialog::getDouble(this, title, Label, 2.0, 0.0001, 10000.0, 4, &ok);
+    double resolutionMultiplier =  QInputDialog::getDouble(this, title, Label,
+    		2.0, 0.0001, 10000.0, 4, &ok);
     if(!ok) return;
 
     //Update every item to ensure painting the most recent iteration of each item
@@ -1071,18 +1080,57 @@ void CppnWidget::snapShot(){
         item->update();
     }
 
-    //Create the snapshot
-    QPixmap pixmap(rect.width()*resolutionMultiplier, rect.height()*resolutionMultiplier);
-    QPainter painter(&pixmap);
-    painter.fillRect (0, 0, rect.width()*resolutionMultiplier, rect.height()*resolutionMultiplier, QColor(255,255,255));
-//    QBrush brush(QColor(255,255,255));
-//    painter.setBackground(brush);
-//    painter.setBackgroundMode(Qt::OpaqueMode);
-    painter.setRenderHint( QPainter::Antialiasing );
-    this->scene()->setBackgroundBrush(Qt::white);
-    this->scene()->render(&painter);
+    qreal w = rect.width()*resolutionMultiplier;
+    qreal h = rect.height()*resolutionMultiplier;
 
-    pixmap.save(newFileName);
+    QFileInfo fileI(newFileName);
+    //Create the snapshot
+    if(fileI.suffix() == QString("svg")){
+        QSvgGenerator generator;
+        generator.setFileName(newFileName);
+        generator.setSize(QSize(w, h));
+        generator.setViewBox(QRect(0, 0, w, h));
+        generator.setTitle(tr("CPPN Snapshot"));
+        generator.setDescription(tr("Snapshot by CPPN-X"));
+        QPainter painter2;
+        painter2.begin(&generator);
+        painter2.fillRect (0, 0, w, h, QColor(255,255,255));
+        painter2.setRenderHint( QPainter::Antialiasing );
+        this->scene()->setBackgroundBrush(Qt::white);
+        this->scene()->render(&painter2);
+        painter2.end();
+    } else if(fileI.suffix() == QString("pdf")){
+        QSvgGenerator generator;
+        generator.setFileName(newFileName + tr(".svg"));
+        generator.setSize(QSize(w, h));
+        generator.setViewBox(QRect(0, 0, w, h));
+        generator.setTitle(tr("CPPN Snapshot"));
+        generator.setDescription(tr("Snapshot by CPPN-X"));
+
+        QPrinter printer;
+        printer.setOutputFormat(QPrinter::PdfFormat);
+        printer.setOutputFileName(newFileName);
+        //printer.paperSize(QPrinter::DevicePixel);
+        printer.setPaperSize(QSizeF(w, h), QPrinter::DevicePixel);
+        printer.setPageMargins(0,0,0,0,QPrinter::DevicePixel);
+        printer.setFullPage(true);
+
+        QPainter painter(&printer);
+        painter.begin(&generator);
+        painter.fillRect (0, 0, w, h, QColor(255,255,255));
+        painter.setRenderHint( QPainter::Antialiasing );
+        this->scene()->setBackgroundBrush(Qt::white);
+        this->scene()->render(&painter);
+        painter.end();
+    } else {
+    	QPixmap pixmap(w, h);
+    	QPainter painter(&pixmap);
+    	painter.fillRect (0, 0, w, h, QColor(255,255,255));
+    	painter.setRenderHint( QPainter::Antialiasing );
+    	this->scene()->setBackgroundBrush(Qt::white);
+    	this->scene()->render(&painter);
+    	pixmap.save(newFileName);
+    }
 }
 
 /***************************
