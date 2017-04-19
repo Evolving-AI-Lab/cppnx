@@ -6,7 +6,7 @@ This repository contains the source code for the CPPN-Explorer (CPPN-X) tool, wh
 
 **If you use this software in an academic article, please consider citing:**
 
-    @article{huizinga2016emergence, 
+    @article{huizinga2017emergence, 
         title={The Emergence of Canalization and Evolvability in an Open-Ended, Interactive Evolutionary System}, 
         author={Huizinga, Joost and Stanley, Kenneth O and Clune, Jeff}, 
         journal={arXiv preprint arXiv:1704.05143}, 
