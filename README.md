@@ -1,6 +1,18 @@
 ## CPPN-Explorer
 
-This repository contains the source code for the CPPN-Explorer (CPPN-X) tool, which allows the user to examine Compositional Pattern Producing Networks (CPPNs) such as Picbreeder.com genomes. For the accompanying publication, see http://www.evolvingai.org/PicbreederCanalization.
+This repository contains the source code for the CPPN-Explorer (CPPN-X) tool, which allows the user to examine Compositional Pattern Producing Networks (CPPNs) such as Picbreeder.com genomes. The accompanying publication is:
+
+[Huizinga J](http://www.cs.uwyo.edu/~jhuizing/), [Stanley K](http://www.cs.ucf.edu/~kstanley/), [Clune J](http://jeffclune.com). (2017). ["The Emergence of Canalization and Evolvability in an Open-Ended, Interactive Evolutionary System"](http://arxiv.org/abs/1704.05143). arXiv:1704.05143.
+
+**If you use this software in an academic article, please consider citing:**
+
+    @article{huizinga2016emergence, 
+        title={The Emergence of Canalization and Evolvability in an Open-Ended, Interactive Evolutionary System}, 
+        author={Huizinga, Joost and Stanley, Kenneth O and Clune, Jeff}, 
+        journal={arXiv preprint arXiv:1704.05143}, 
+        year={2017}
+    }
+
 
 ## 1. Installation
 
