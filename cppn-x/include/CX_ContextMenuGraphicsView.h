@@ -61,15 +61,19 @@ protected:
 	 * @param object The object to be added to the graphics view.
 	 */
 	void addContextMenuObject(SelectableObject* object){
-	    dbg::out(dbg::info, "menu") << "Adding object: " << object << " to scene: " << scene() << std::endl;
-		connect(object, SIGNAL(contextMenuEvent(SelectableObject*, bool)), this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
+	    dbg::out(dbg::info, "menu") << "Adding object: " << object <<
+	    		" to scene: " << scene() << std::endl;
+		connect(object, SIGNAL(contextMenuEvent(SelectableObject*, bool)),
+				this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
 		object->setHasFocus(&thisHasFocus);
 		_selectableObjects.push_back(object);
 		scene()->addItem(object);
 	}
 
 	void removeContextMenuObject(SelectableObject* object){
-		disconnect(object, SIGNAL(contextMenuEvent(SelectableObject*, bool)), this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
+		object->markDeleted();
+		disconnect(object, SIGNAL(contextMenuEvent(SelectableObject*, bool)),
+				this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
 		_selectableObjects.removeAll(object);
 		scene()->removeItem(object);
 	}

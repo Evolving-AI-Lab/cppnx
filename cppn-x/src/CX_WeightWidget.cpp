@@ -19,6 +19,7 @@
 
 //Local includes
 #include "CX_WeightWidget.h"
+#include "CX_Debug.hpp"
 
 WeightWidget::WeightWidget(QWidget* parent): QGroupBox(parent) {
 	scanning=false;
@@ -333,4 +334,31 @@ void WeightWidget::setNode(QString id){
 //	stopScan();
 //	std::cout << "Bookends: " << bookendStart << " " << bookendEnd <<std::endl;
 	weightSliderWidget->setNode(id);
+}
+
+//Update functions
+void WeightWidget::updateEdge(Edge* edge){
+    dbg::trace trace("window", DBG_HERE);
+	if(edge){
+		edgeSelected(true);
+		setEdge(edge->getWeight(),
+				edge->getOriginalWeight(),
+				util::toQString(edge->getId() + "_" + edge->getBranch()),
+				edge->getBookendStart(),
+				edge->getBookendEnd(),
+				edge->getStepsize());
+	} else {
+		edgeSelected(false);
+	}
+}
+
+void WeightWidget::updateNode(Node* node){
+    dbg::trace trace("window", DBG_HERE);
+	if(node){
+		edgeSelected(false);
+		setNode(util::toQString(node->getBranch()  + "_" +
+				node->getId()));
+	} else {
+
+	}
 }

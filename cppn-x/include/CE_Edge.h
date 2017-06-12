@@ -58,7 +58,13 @@ public:
 	//May show only the label (unless the edge is unlabeled),
 	//only the sign of the connection (not showing the label),
 	//or both
-    enum LabelMode {onlyLabels, onlyConnectionSign, both, showLabel, noLabel};
+    enum LabelMode {
+    	onlyLabels,
+		onlyConnectionSign,
+		both,
+		showLabel,
+		noLabel,
+    	modules};
 
     //Toggle showing the sign of the connection
     enum EdgeSignMode {noSign, showSign, showSignIfNoLabel};

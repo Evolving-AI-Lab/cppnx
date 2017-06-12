@@ -26,6 +26,9 @@ public:
 		colorMode = hsv_mode;
 		hueImage = node->getImage();
 		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
+		connect(node, SIGNAL(imageReinitialized()), this,
+				SLOT(updateHueOrRed()));
+		connect(node, SIGNAL(added()), this, SLOT(updateHueOrRed()));
 	}
 
 	void setSaturationNode(Node* node){
@@ -33,6 +36,9 @@ public:
 		colorMode = hsv_mode;
 		saturationImage = node->getImage();
 		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
+		connect(node, SIGNAL(imageReinitialized()), this,
+				SLOT(updateSatOrGreen()));
+		connect(node, SIGNAL(added()), this, SLOT(updateSatOrGreen()));
 	}
 
 	void setValueNode(Node* node){
@@ -40,7 +46,9 @@ public:
 		colorMode = hsv_mode;
 		valueImage = node->getImage();
 		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
-		connect(node, SIGNAL(imageResized()), this, SLOT(resizeNode()));
+		connect(node, SIGNAL(imageReinitialized()), this,
+				SLOT(resizeNode()));
+		connect(node, SIGNAL(added()), this, SLOT(updateValOrBlue()));
 	}
 
 
@@ -49,6 +57,9 @@ public:
 		colorMode = rgb_mode;
 		hueImage = node->getImage();
 		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
+		connect(node, SIGNAL(imageReinitialized()), this,
+				SLOT(updateHueOrRed()));
+		connect(node, SIGNAL(added()), this, SLOT(updateHueOrRed()));
 	}
 
 	void setGNode(Node* node){
@@ -56,6 +67,9 @@ public:
 		colorMode = rgb_mode;
 		saturationImage = node->getImage();
 		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
+		connect(node, SIGNAL(imageReinitialized()), this,
+				SLOT(updateSatOrGreen()));
+		connect(node, SIGNAL(added()), this, SLOT(updateSatOrGreen()));
 	}
 
 	void setBNode(Node* node){
@@ -63,22 +77,27 @@ public:
 		colorMode = rgb_mode;
 		valueImage = node->getImage();
 		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
-		connect(node, SIGNAL(imageResized()), this, SLOT(resizeNode()));
+		connect(node, SIGNAL(imageReinitialized()), this,
+				SLOT(resizeNode()));
+		connect(node, SIGNAL(added()), this, SLOT(updateValOrBlue()));
 	}
 
 	void reinitImage();
 
 public slots:
 	void update();
+	void updateHueOrRed();
+	void updateSatOrGreen();
+	void updateValOrBlue();
 	virtual void resizeNode();
 
 private:
 	Node* _hueOrRedNode;
 	Node* _satOrGreenNode;
 	Node* _valOrBlueNode;
-	QImage* hueImage;
-	QImage* saturationImage;
-	QImage* valueImage;
+	QSharedPointer<QImage> hueImage;
+	QSharedPointer<QImage> saturationImage;
+	QSharedPointer<QImage> valueImage;
 	ColorMode colorMode;
 
 	size_t _node_x_res;

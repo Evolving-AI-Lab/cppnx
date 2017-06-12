@@ -52,7 +52,9 @@ public:
 		_min_y(-1),
 		_max_y(1),
 		width(IMAGE_WIDTH),
-		height(IMAGE_HEIGHT)
+		height(IMAGE_HEIGHT),
+		_parent(-1),
+		_max_gen(-1)
 	{
 	    //Reserve space for the inputs
 	    //Exactly four inputs have to be provided through the addNode function
@@ -64,6 +66,34 @@ public:
 	    //Before the network can be run
 	    //TODO: We should probably look for a better solution
 //		for(int i =0; i<nr_of_inputs; i++) nodes.append(0);
+	}
+
+	Cppn(Cppn* other):
+		activationFunctions(0),
+		linkWeights(0),
+		lastTargets(0),
+		lastSources(0),
+		nodeSources(0),
+		phenotypeNodes(0),
+		nodeChache(0),
+		linkChache(0),
+		toUpdate(0),
+		toUpdateStart(0),
+		numberOfNodes(0),
+		numberOfEdges(0),
+		nodeMap(),
+		validPhenotype(false),
+		_numberOfModules(0),
+		_maxId(0),
+	    _inputsOrdered(false),
+		_min_x(-1),
+		_max_x(1),
+		_min_y(-1),
+		_max_y(1),
+		width(IMAGE_WIDTH),
+		height(IMAGE_HEIGHT)
+	{
+		copy(other);
 	}
 
 	~Cppn(){
@@ -156,6 +186,11 @@ public:
 	id_t getMaxId() const{return _maxId;}
 	std::string getNextId() const{return util::toString(getMaxId()+1);}
 
+	int getParentId() const{return _parent;}
+	void setParentId(int parent) {_parent = parent;}
+
+	int getMaxGen() const{return _max_gen;}
+	void setMaxGen(int max_gen) {_max_gen = max_gen;}
 	// Picbreeder settings
     //static const int width = IMAGE_WIDTH;
     //static const int height = IMAGE_HEIGHT;
@@ -234,6 +269,8 @@ private:
     int _max_y;
     int width;
     int height;
+    int _parent;
+    int _max_gen;
 };
 
 

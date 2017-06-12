@@ -1,5 +1,5 @@
 This is the cppn-x implementation of the Evolving Artificial Intelligence Laboratory of the University of Wyoming.
-Current version: 0.9 (beta)
+Current version: 1.0
 
 Version: 0.1
 - First version to uploaded to the git repository.
@@ -128,6 +128,13 @@ Version: 0.9.0
 - The program can now display a legend, toggled in the "view" menu.
 - Program can now zoom with menu options and shortcuts.
 
+Version: 1.0.0
+- Genomes can now be downloaded by ID from an online repository.
+- CPPN-X can now load csv matrices.
+- Fixed some issues where the program would crash when loading a new cppn after a previous cppn was already loaded.
+- Added an icon for CPPN-X.
+- CPPN-X should now compile under linux based systems.
+
 Known issues:
 - Undoing or redoing a 'reset all' rapidly selects all nodes that were changed.
 - Selecting a node sometimes causes that node to move.
@@ -139,7 +146,6 @@ Wish-list:
 - Scan interaction effects.
 - Calculate and display hierarchy.
 - Add notes to objects.
-- Create a picture for an arbitrary node.
 - Copy nodes according to "node duplication".
 - Automatically calculate and display various statistics such as modularity, hierarchy, red-blue modularity (and maybe split the network into even more parts).
 - Add other node placements.

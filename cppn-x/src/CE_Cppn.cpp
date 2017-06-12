@@ -5,16 +5,20 @@
  *      Author: joost
  */
 
+// Standard includes
 #include <queue>
 #include <set>
 #include <cmath>
 #include <algorithm>
 
+// Local includes
 #include "CE_Cppn.h"
 #include "CX_Debug.hpp"
 #include "opt_placement.hpp"
+#include "CX_Exceptions.h"
 
-
+// Debug defines
+#define DBOC dbg::out(dbg::info, "cppn")
 
 static const double Pi = 3.14159265358979323846264338327950288419717;
 
@@ -132,7 +136,6 @@ void Cppn::removeNode(Node* node){
 
 void Cppn::addConnection(Edge* edge){
 	dbg::trace trace("cppn", DBG_HERE);
-//	std::cout << "Adding connection: " << edge << " from: " << edge->sourceNode() << " to " << edge->destNode() << std::endl;
 	edge->sourceNode()->addOutgoingEdge(edge);
 	edge->destNode()->addIncommingEdge(edge);
 	_connectivityMap[QPair<Node*, Node*>(edge->sourceNode(), edge->destNode())] = edge;
@@ -249,7 +252,7 @@ QSet<Node*> Cppn::getPredecessors(Node* node){
             continue;
         }
         visited.insert(current);
-        foreach(Edge* edge, current->outgoingEdges()){
+        foreach(Edge* edge, current->incomingEdges()){
             frontier.push_back(edge->sourceNode());
         }
     }
@@ -335,6 +338,7 @@ void Cppn::updateNodes(){
 
 std::vector< std::vector <Node*> > Cppn::buildLayers(){
 	dbg::trace trace("cppn", DBG_HERE);
+	DBOC << "Building layers" << std::endl;
 	std::vector< std::vector <Node*> > layers;
 	layers.push_back(std::vector <Node*>());
 	QList <Node*> notPlaced = nodes;
@@ -342,31 +346,40 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 	std::map <Node*, int> incommingEdges;
 
 	for(int i=0; i<nodes.size(); i++){
-		incommingEdges[nodes[i]]= nodes[i]->incomingEdges().size();
-		dbg::assertion(DBG_ASSERTION((nodes[i]->getType() != XML_TYPE_INPUT) || incommingEdges[nodes[i]] == 0));
+		incommingEdges[nodes[i]] = nodes[i]->incomingEdges().size();
+		dbg::assertion(DBG_ASSERTION((nodes[i]->getType() != XML_TYPE_INPUT) ||
+				incommingEdges[nodes[i]] == 0));
 	}
 
 	int depth = 0;
 	while(notPlaced.size()>0){
 		nextNotPlaced.clear();
 		for(int i=0; i<notPlaced.size(); i++){
-			if(incommingEdges[notPlaced[i]] <= 0){
+			if(incommingEdges[notPlaced[i]] == 0){
 				layers.back().push_back(notPlaced[i]);
 				notPlaced[i]->setDepth(depth);
-			} else {
+			} else if(incommingEdges[notPlaced[i]] > 0) {
 				nextNotPlaced.push_back(notPlaced[i]);
+			} else {
+				dbg::sentinel(DBG_HERE);
 			}
 		}
 
 		for(size_t i=0; i<layers.back().size(); i++){
 			QList<Edge *> outgoingEdges = layers.back()[i]->outgoingEdges();
 			foreach(Edge* outgoing_edge, outgoingEdges){
-				incommingEdges.find(outgoing_edge->destNode())->second = incommingEdges[outgoing_edge->destNode()]-1;
+				incommingEdges.find(outgoing_edge->destNode())->second =
+						incommingEdges[outgoing_edge->destNode()]-1;
 			}
 		}
 
 		layers.push_back(std::vector <Node*>());
 		depth++;
+		if(nextNotPlaced.size() == notPlaced.size()){
+			throw CppnException("Unable to construct network: "
+					"CPPN contains cycle.");
+		}
+		//dbg::assertion(DBG_ASSERTION(nextNotPlaced.size() < notPlaced.size()));
 		notPlaced = nextNotPlaced;
 	}
 
@@ -374,9 +387,13 @@ std::vector< std::vector <Node*> > Cppn::buildLayers(){
 }
 
 
-void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastSource){
+void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget,
+		size_t& lastSource)
+{
 	dbg::trace trace("cppn", DBG_HERE);
-    dbg::out(dbg::info, "cppn") << "Placing node: " << node << " index: " << index << "... " << std::endl;
+    dbg::out(dbg::info, "cppn") << "Placing node: " << node <<
+    		" name: " << node->getName() <<
+    		" index: " << index << "... " << std::endl;
     dbg::check_ptr(dbg::error, node, DBG_HERE);
     dbg::check_bounds(dbg::error, 0, index, nodes.size(), DBG_HERE);
 	activationFunctions[index]=node->getActivationFunction();
@@ -389,22 +406,23 @@ void Cppn::placeNode(Node* node, size_t index, size_t& lastTarget, size_t& lastS
 	foreach(Edge* outgoing_edge, outgoingEdges){
 	    dbg::check_bounds(dbg::error, 0, lastTarget, edges.size(), DBG_HERE);
 		linkWeights[lastTarget] = outgoing_edge->getWeight();
-		dbg::out(dbg::info, "cppn") << "Outgoing edge: " << outgoing_edge << " index:" << lastTarget << " ... " << std::endl;
+		dbg::out(dbg::info, "cppn") << "Outgoing edge: " << outgoing_edge <<
+				" name: " << outgoing_edge->getName() <<
+				" index:" << lastTarget << " ... " << std::endl;
 		outgoing_edge->setIndex(lastTarget);
 		lastTarget++;
 	}
 
 	QList<Edge *> incommingEdges = node->incomingEdges();
 	foreach(Edge* incommingEdge, incommingEdges){
-	    dbg::out(dbg::info, "cppn") << "Incomming edge: " << incommingEdge << " index:" << lastSource << " ... " << std::endl;
+	    dbg::out(dbg::info, "cppn") << "Incomming edge: " << incommingEdge <<
+	    		" name: " << incommingEdge->getName() <<
+	    		" index:" << lastSource << " ... " << std::endl;
 	    dbg::check_bounds(dbg::error, 0, lastSource, edges.size(), DBG_HERE);
 		nodeSources[lastSource] = incommingEdge->getIndex()*width*height;
 		lastSource++;
 	}
 
-//	std::cout << "size: " << dbg::array_size(lastTargets) << std::endl;
-//	std::cout << "size: " << sizeof(*lastTargets) << std::endl;
-//	std::cout << "size: " << nodes.size() + 1 << std::endl;
 	dbg::check_bounds(dbg::error, 0, index+1, nodes.size() + 1, DBG_HERE);
 	dbg::check_bounds(dbg::error, 0, index+1, nodes.size() + 1, DBG_HERE);
 	lastTargets[index+1]=lastTarget;

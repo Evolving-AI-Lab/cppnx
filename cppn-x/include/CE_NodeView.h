@@ -35,7 +35,7 @@ public:
     QPainterPath shape() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    QImage* getImage(){dbg::trace trace("nodeview", DBG_HERE); return _pixels;}
+    QSharedPointer<QImage> getImage(){dbg::trace trace("nodeview", DBG_HERE); return _pixels;}
     Node* getNode(){dbg::trace trace("nodeview", DBG_HERE); return node;}
 
     std::string getNodeBranch() const;
@@ -53,7 +53,7 @@ public slots:
 protected:
 	void init();
 
-    QImage* _pixels;
+	QSharedPointer<QImage> _pixels;
     Node* node;
 
     int _node_width;

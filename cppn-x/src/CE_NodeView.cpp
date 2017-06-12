@@ -45,8 +45,9 @@ void NodeView::init(){
 		connect(node, SIGNAL(imageChanged()), this, SLOT(update()));
 		connect(node, SIGNAL(removed()), this, SLOT(removeImage()));
 		connect(node, SIGNAL(added()), this, SLOT(addImage()));
+		connect(node, SIGNAL(imageReinitialized()), this, SLOT(addImage()));
     } else {
-    	_pixels = 0;
+    	_pixels.clear();
     }
     compatibillityId = 1;
 }
@@ -135,7 +136,7 @@ std::string NodeView::getName() const{
 }
 
 void NodeView::removeImage(){
-	_pixels = 0;
+	_pixels.clear();
 }
 
 void NodeView::addImage(){

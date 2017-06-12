@@ -183,7 +183,7 @@ public:
     QPainterPath shape() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    void setPixels(QImage* pixels_);
+//    void setPixels(QImage* pixels_);
     void setPixel(int x, int y, char r, char g, char b);
     void setPixel(size_t index, char r, char g, char b);
     void setPixel(size_t index, char grey);
@@ -239,7 +239,7 @@ public:
     	labelMode = _labelMode;
     }
 
-    QImage* getImage(){
+    QSharedPointer<QImage> getImage(){
     	return pixels;
     }
 
@@ -305,7 +305,7 @@ signals:
 	void imageChanged();
 	void removed();
 	void added();
-	void imageResized();
+	void imageReinitialized();
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -317,7 +317,7 @@ private:
     QList<Edge *> incomingEdgeList;
     QList<Edge *> outgoingEdgeList;
 
-    QImage* pixels;
+    QSharedPointer<QImage> pixels;
 
     std::string branch;
     std::string id;

@@ -42,6 +42,8 @@ private:
     QHBoxLayout* _genomeDirectoryLayout;
 
     QFrame* _dividerLine2;
+    QCheckBox* _downloadCheckbox;
+    QFrame* _dividerLine3;
     QPushButton* _okButton;
     QPushButton* _cancelButton;
     QHBoxLayout* _okCancelLayout;

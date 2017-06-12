@@ -45,6 +45,7 @@
 #include "CE_Edge.h"
 #include "CE_LabelWidget.h"
 #include "CX_Exceptions.h"
+#include "CX_ModuleColor.h"
 
 
 const double Edge::m_click_easy_width = 10.0;
@@ -290,6 +291,13 @@ void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 	        }
 	    }
         break;
+	case modules:
+		if(source->getModule() == dest->getModule()){
+			lineColor = cx_colors::getModuleColor(source->getModule());
+		} else {
+			lineColor = QColor("black");
+		}
+		break;
 	default:
 	    throw ModeException("Unknown edge label mode: " + util::toString(*labelMode));
 	}

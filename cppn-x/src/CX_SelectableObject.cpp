@@ -13,13 +13,23 @@
 #include "CX_SelectableObject.h"
 
 SelectableObject::SelectableObject(QGraphicsItem * parent):
-QGraphicsWidget(parent), contextMenu(0), partOfContextMenuEvent(false), parentHasFocus(0){
+	QGraphicsWidget(parent),
+	contextMenu(0),
+	partOfContextMenuEvent(false),
+	parentHasFocus(0),
+	_deleted(false)
+{
     setFlag(ItemIsSelectable);
 }
 
-SelectableObject::SelectableObject():QGraphicsWidget(), contextMenu(0), partOfContextMenuEvent(false), parentHasFocus(0){
+SelectableObject::SelectableObject():
+	QGraphicsWidget(),
+    contextMenu(0),
+	partOfContextMenuEvent(false),
+	parentHasFocus(0),
+	_deleted(false)
+{
     setFlag(ItemIsSelectable);
-
 }
 
 SelectableObject::~SelectableObject() {

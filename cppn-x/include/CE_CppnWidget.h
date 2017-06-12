@@ -83,7 +83,9 @@ public:
     CppnWidget(QWidget* widget = 0);
 
     void deleteCppn();
-    void setCppn(QList<Node*> nodes, QList<Edge*> edges, CppnInformation* cppnInformation = 0);
+    void setCppn(QList<Node*> nodes, QList<Edge*> edges,
+    		CppnInformation* cppnInformation = 0);
+    void setCppn(Cppn* cppn);
     Cppn* getCppn(){return cppn;}
 
     QAction* getAddNodeviewAction(){return addNodeviewAction;}
@@ -92,6 +94,7 @@ public:
     QAction* getEdgeShowSignIfNoLabelAction(){return _showSignIfNoLabelAction;}
     QAction* getEdgeShowLabelAction(){return _showLabelAction;}
     QAction* getEdgeNoLabelAction(){return _noLabelAction;}
+    QAction* getEdgeModuleAction(){return _edgeModuleAction;}
     QAction* getToggleAnnotationsAction(){return _toggleAnnotationsAction;}
     QAction* getCircleAction(){return circleAction;}
     QAction* getLayerAction(){return layerAction;}
@@ -213,6 +216,7 @@ public slots:
 
     void setEdgeShowLabel();
     void setEdgeNoLabel();
+    void setEdgeModule();
 
     void setEdgeWeightWidth();
     void setEdgeFixedWidth();
@@ -311,6 +315,7 @@ private:
 
     QAction* _noLabelAction;
     QAction* _showLabelAction;
+    QAction* _edgeModuleAction;
     QActionGroup* _edgeShowLabelGroup;
 
     QAction* _showSignAction;

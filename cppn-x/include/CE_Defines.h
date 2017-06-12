@@ -46,6 +46,8 @@
 #define OUTPUT_RED "red"
 #define OUTPUT_GREEN "green"
 #define OUTPUT_BLUE "blue"
+#define AFFINITY_GREY "grey"
+#define AFFINITY_COLOR "color"
 
 #define NODE_TYPE 1
 #define EDGE_TYPE 2

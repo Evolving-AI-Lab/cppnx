@@ -43,6 +43,14 @@ public:
 
     QPen getSelectedPen(const QColor& defaultColor = QColor(Qt::black));
 
+    void markDeleted(){
+    	_deleted = true;
+    }
+
+    bool isDeleted(){
+    	return _deleted;
+    }
+
 signals:
 	void contextMenuEvent(SelectableObject*, bool);
 	void selectedHasChanged();
@@ -56,6 +64,7 @@ protected:
 	QMenu* contextMenu;
 	bool partOfContextMenuEvent;
 	bool* parentHasFocus;
+	bool _deleted;
 };
 
 #endif /* CX_SELECTABLEOBJECT_H_ */

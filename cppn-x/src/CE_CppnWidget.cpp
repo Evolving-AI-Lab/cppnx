@@ -15,6 +15,9 @@
 #include "CX_ComSetBookends.h"
 #include "CX_Debug.hpp"
 
+// Debug defines
+#define DBOC dbg::out(dbg::info, "cppn")
+
 //const double CppnWidget::left_border_min = 0.0;
 //const double CppnWidget::right_border_min = 0.0;
 //const double CppnWidget::top_border_min = 0.0;
@@ -153,9 +156,17 @@ CppnWidget::CppnWidget(QWidget* widget)
     connect(_noLabelAction, SIGNAL(triggered()), this, SLOT(setEdgeNoLabel()));
     addAction(_noLabelAction);
 
+    _edgeModuleAction =  new QAction(tr("Show edge module"), this);
+    //_edgeModuleAction->setShortcut(tr("Ctrl+5"));
+    _edgeModuleAction->setStatusTip(tr("Show the module of the edge."));
+    _edgeModuleAction->setCheckable(true);
+    connect(_edgeModuleAction, SIGNAL(triggered()), this, SLOT(setEdgeModule()));
+    addAction(_edgeModuleAction);
+
     _edgeShowLabelGroup = new QActionGroup(this);
     _edgeShowLabelGroup->addAction(_showLabelAction);
     _edgeShowLabelGroup->addAction(_noLabelAction);
+    _edgeShowLabelGroup->addAction(_edgeModuleAction);
 
 
     //Create edge sign actions
@@ -332,7 +343,9 @@ CppnWidget::CppnWidget(QWidget* widget)
 
     _toggleAnnotationsAction = new QAction(tr("Toggle annotations"), this);
     _toggleAnnotationsAction->setShortcut(tr("Shift+5"));
-    _toggleAnnotationsAction->setStatusTip(tr("Shows or hides annotations. Add an annotation to an edge by adding :=\"<annotation>\" to the label of that edge."));
+    _toggleAnnotationsAction->setStatusTip(tr("Shows or hides annotations. Add "
+    		"an annotation to an edge by adding :=\"<annotation>\" to the "
+    		"label of that edge."));
     _toggleAnnotationsAction->setCheckable(true);
     _toggleAnnotationsAction->setChecked(true);
     connect(_toggleAnnotationsAction,SIGNAL(triggered()), this, SLOT(toggleAnnotations()));
@@ -503,7 +516,31 @@ void CppnWidget::setCppn(QList<Node*> nodes, QList<Edge*> edges, CppnInformation
 		addEdge(edge);
 	}
 
-	connect(cppn, SIGNAL(newModularity(double)), this, SIGNAL(newModularity(double)));
+	connect(cppn, SIGNAL(newModularity(double)),
+			this, SIGNAL(newModularity(double)));
+	cppn->updateNodes();
+}
+
+void CppnWidget::setCppn(Cppn* cppn_){
+    deleteCppn();
+
+    // For now, we are making a manual copy of the cppn, to make sure all nodes
+    // and edges are properly connected.
+    cppn = new Cppn;
+    cppn->setMinX(cppn_->getMinX());
+    cppn->setMaxX(cppn_->getMaxX());
+    cppn->setMinY(cppn_->getMinY());
+    cppn->setMaxY(cppn_->getMaxY());
+    cppn->setResX(cppn_->getResX());
+    cppn->setResY(cppn_->getResX());
+	foreach(Node* node, cppn_->getNodes()){
+		addNode(node);
+	}
+	foreach(Edge* edge, cppn_->getEdges()){
+		addEdge(edge);
+	}
+	connect(cppn, SIGNAL(newModularity(double)),
+			this, SIGNAL(newModularity(double)));
 	cppn->updateNodes();
 }
 
@@ -529,11 +566,6 @@ void CppnWidget::setSceneRect() {
         top_border = -extra_space;
         bottom_border = +extra_space;
     } else {
-//        int height = Node::node_height + Node::footerBarSize + Node::headerBarSize;
-//        int width = Node::node_width;
-//        dbg::out(dbg::info, "cppnwidget") << "x: " << x_sorted.front()->pos().x() << " left: " << x_sorted.front()->boundingRect().left() << std::endl;
-//        dbg::out(dbg::info, "cppnwidget") << "x: " << x_sorted.back()->pos().x() << " right: " << x_sorted.back()->boundingRect().right() << std::endl;
-//        dbg::out(dbg::info, "cppnwidget") << "x: " << x_sorted.front()->pos().x() << " left: " << x_sorted.front()->boundingRect().left() << std::endl;
         left_border = left_sorted.edgeValue() - extra_space;
         right_border = right_sorted.edgeValue() + extra_space;// + width/2;
         top_border = top_sorted.edgeValue() - extra_space; // - height/2;
@@ -698,8 +730,8 @@ void CppnWidget::positionNodesONP(){
 
 void CppnWidget::addNode(Node* node){
     dbg::trace trace("cppnwidget", DBG_HERE);
-    dbg::out(dbg::info, "cppn") << "Adding node: " << node << std::endl;
-    dbg::out(dbg::info, "cppn") << "       name: " << node->getName() << std::endl;
+    DBOC << "Adding node: " << node << std::endl;
+    DBOC << "       name: " << node->getName() << std::endl;
 
 	node->setPrevPos(node->pos());
 	node->setContextMenu(nodeMenu);
@@ -725,10 +757,14 @@ void CppnWidget::removeNode(Node* node){
 	node->setSelected(false);
 	removeContextMenuObject(node);
 	cppn->removeNode(node);
-	disconnect(node, SIGNAL(updatePositionsRequest()), this, SLOT(updatePreviousPositions()));
-	disconnect(node, SIGNAL(positionChanged(MovableObject*)), this, SLOT(itemMoved(MovableObject*)));
-	disconnect(node, SIGNAL(updateRequest(Node*)), cppn, SLOT(updateNode(Node*)));
-	disconnect(node, SIGNAL(contextMenuEvent(SelectableObject*, bool)), this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
+	disconnect(node, SIGNAL(updatePositionsRequest()),
+			this, SLOT(updatePreviousPositions()));
+	disconnect(node, SIGNAL(positionChanged(MovableObject*)),
+			this, SLOT(itemMoved(MovableObject*)));
+	disconnect(node, SIGNAL(updateRequest(Node*)),
+			cppn, SLOT(updateNode(Node*)));
+	disconnect(node, SIGNAL(contextMenuEvent(SelectableObject*, bool)),
+			this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
     left_sorted.remove(node);
     right_sorted.remove(node);
     top_sorted.remove(node);
@@ -741,6 +777,8 @@ void CppnWidget::removeNode(Node* node){
 
 void CppnWidget::addEdge(Edge* edge){
     dbg::trace trace("cppnwidget", DBG_HERE);
+    DBOC << "Adding edge: " << edge << std::endl;
+    DBOC << "       name: " << edge->getName() << std::endl;
 	edge->setLabelMode(&labelMode);
 	edge->setSignMode(&_signMode);
 	edge->setLineMode(&lineMode);
@@ -751,25 +789,33 @@ void CppnWidget::addEdge(Edge* edge){
 	addContextMenuObject(edge);
 
 	cppn->addConnection(edge);
-	connect(edge, SIGNAL(weightChanged(Edge*, double, bool)), cppn, SLOT(setWeight(Edge*, double, bool)));
-	connect(edge, SIGNAL(weightChanged(Edge*, double, bool)), this, SLOT(weightUpdated(Edge*)));
-	connect(edge, SIGNAL(requestUpdateAll()), cppn, SLOT(updateNodes()));
-	connect(edge, SIGNAL(contextMenuEvent(SelectableObject*, bool)), this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
-	connect(edge, SIGNAL(bookendsChanged(Edge*)), this, SLOT(weightUpdated(Edge*)));
+	connect(edge, SIGNAL(weightChanged(Edge*, double, bool)),
+			cppn, SLOT(setWeight(Edge*, double, bool)));
+	connect(edge, SIGNAL(weightChanged(Edge*, double, bool)),
+			this, SLOT(weightUpdated(Edge*)));
+	connect(edge, SIGNAL(requestUpdateAll()),
+			cppn, SLOT(updateNodes()));
+	connect(edge, SIGNAL(contextMenuEvent(SelectableObject*, bool)),
+			this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
+	connect(edge, SIGNAL(bookendsChanged(Edge*)),
+			this, SLOT(weightUpdated(Edge*)));
 }
 
 
 void CppnWidget::removeEdge(Edge* edge){
     dbg::trace trace("cppnwidget", DBG_HERE);
 	edge->setSelected(false);
-//	std::cout << "Removing edge: " << edge->getBranch() << "_" << edge->getId()  << " (" << edge << ")"<< std::endl;
 	removeContextMenuObject(edge);
 	cppn->removeConnection(edge);
-	disconnect(edge, SIGNAL(weightChanged(Edge*, double, bool)), cppn, SLOT(setWeight(Edge*, double, bool)));
-	disconnect(edge, SIGNAL(weightChanged(Edge*, double, bool)), this, SLOT(weightUpdated(Edge*)));
+	disconnect(edge, SIGNAL(weightChanged(Edge*, double, bool)),
+			cppn, SLOT(setWeight(Edge*, double, bool)));
+	disconnect(edge, SIGNAL(weightChanged(Edge*, double, bool)),
+			this, SLOT(weightUpdated(Edge*)));
 	disconnect(edge, SIGNAL(requestUpdateAll()), cppn, SLOT(updateNodes()));
-	disconnect(edge, SIGNAL(contextMenuEvent(SelectableObject*, bool)), this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
-	disconnect(edge, SIGNAL(bookendsChanged(Edge*)), this, SLOT(weightUpdated(Edge*)));
+	disconnect(edge, SIGNAL(contextMenuEvent(SelectableObject*, bool)),
+			this, SLOT(ContextMenuEvent(SelectableObject*, bool)));
+	disconnect(edge, SIGNAL(bookendsChanged(Edge*)),
+			this, SLOT(weightUpdated(Edge*)));
 }
 
 void CppnWidget::scaleLegend(){
@@ -907,6 +953,12 @@ void CppnWidget::setEdgeShowLabel(){
 void CppnWidget::setEdgeNoLabel(){
     dbg::trace trace("cppnwidget", DBG_HERE);
     labelMode = Edge::noLabel;
+    update();
+}
+
+void CppnWidget::setEdgeModule(){
+    dbg::trace trace("cppnwidget", DBG_HERE);
+    labelMode = Edge::modules;
     update();
 }
 

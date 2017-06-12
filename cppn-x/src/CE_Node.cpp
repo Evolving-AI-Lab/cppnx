@@ -52,6 +52,7 @@
 #include "CE_LabelWidget.h"
 #include "CX_Debug.hpp"
 #include "CE_Cppn.h"
+#include "CX_ModuleColor.h"
 
 //! [0]
 Node::Node(
@@ -76,7 +77,6 @@ Node::Node(
       bias(bias),
       _useCustomColor(false),
 	  _cppn(0)
-
 {
     dbg::trace trace("node", DBG_HERE);
 	init();
@@ -121,7 +121,7 @@ Node::~Node(){
     dbg::trace trace("node", DBG_HERE);
     nodes_in_memory--;
     dbg::out(dbg::info, "node") << "Node deleted: Nodes in memory: " << nodes_in_memory << std::endl;
-	delete (pixels);
+	pixels.clear();
 }
 
 void Node::init(){
@@ -153,8 +153,9 @@ void Node::init(){
 
 void Node::reinitImage(){
 	dbg::trace trace("node", DBG_HERE);
-	if(pixels) delete pixels;
-	pixels = 0;
+	pixels.clear();
+	//if(pixels) delete pixels;
+	//pixels = 0;
     int width = IMAGE_WIDTH;
     int height = IMAGE_HEIGHT;
     if(_cppn){
@@ -162,9 +163,9 @@ void Node::reinitImage(){
     	height = _cppn->getResY();
     }
 
-    pixels = new QImage(width, height, QImage::Format_RGB32);
+    pixels = QSharedPointer<QImage>(new QImage(width, height, QImage::Format_RGB32));
     pixels->fill(0);
-    emit imageResized();
+    emit imageReinitialized();
 }
 
 void Node::setActivationFunction(const std::string& xmlActivationFunction){
@@ -206,13 +207,17 @@ void Node::setActivationFunction(const std::string& xmlActivationFunction){
 void Node::addIncommingEdge(Edge *edge)
 {
     dbg::trace trace("node", DBG_HERE);
-	incomingEdgeList << edge;
+    if(incomingEdgeList.count(edge) == 0){
+    	incomingEdgeList << edge;
+    }
     edge->adjust();
 }
 void Node::addOutgoingEdge(Edge *edge)
 {
     dbg::trace trace("node", DBG_HERE);
-	outgoingEdgeList << edge;
+    if(outgoingEdgeList.count(edge) == 0){
+    	outgoingEdgeList << edge;
+    }
     edge->adjust();
 }
 
@@ -269,8 +274,8 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 
 	if(labelMode){
 		if((*labelMode) == modules){
-			labelColor = QColor();
-			labelColor.setHsv(module*100+100, 255, 255);
+			labelColor = cx_colors::getModuleColor(module);
+			//labelColor.setHsv(module*100+100, 255, 255);
 		}else if(hasLabel()){
 		    labelColor = label->getColor();
 		} else {

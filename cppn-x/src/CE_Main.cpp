@@ -21,6 +21,10 @@
 //Other includes
 #include <zip.h>
 
+#ifndef APP_VERSION
+#define APP_VERSION "0"
+#endif
+
 //Q_IMPORT_PLUGIN(qjpeg)
 //Q_IMPORT_PLUGIN(qgif)
 //Q_IMPORT_PLUGIN(qmng)
@@ -40,6 +44,7 @@ int main(int argc, char **argv) {
 	MovableObject::movableTypes.insert(Legend::Type);
 
 	CppnExaminerApp app(argc, argv);
+	app.setApplicationVersion(APP_VERSION);
 
     //Start the application
     return app.exec();

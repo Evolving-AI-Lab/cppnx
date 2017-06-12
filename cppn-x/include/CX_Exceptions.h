@@ -27,6 +27,24 @@ public:
     }
 };
 
+class CppnException : public std::exception {
+    std::string text;
+
+public:
+
+    CppnException(const std::string &_reason){
+        text = _reason;
+    }
+
+    ~CppnException() throw (){
+
+    }
+
+    virtual const char* what() const throw(){
+        return text.c_str();
+    }
+};
+
 
 
 #endif /* CPPN_X_INCLUDE_CX_EXCEPTIONS_H_ */

@@ -14,6 +14,8 @@
 #include <QDoubleSpinBox>
 
 #include "CX_WeightSliderWidget.h"
+#include "CE_Node.h"
+#include "CE_Edge.h"
 
 class QPushButton;
 class QHBoxLayout;
@@ -53,6 +55,8 @@ public slots:
 	void startFilm();
     void startScan();
     void stopScan();
+    void updateEdge(Edge* edge);
+    void updateNode(Node* node);
 
 signals:
 	void scanStarted();

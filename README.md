@@ -27,8 +27,6 @@ if you encounter any problems.
 
 ### UNIX and MAC systems
 These are the installation instructions for MAC and UNIX based systems.
-Because of a recent MAC specific fix, there is a good chance that it will not compile on UNIX.
-If this is the case, open compile.sh, remove the arguments to qmake, and try again.
 
 #### Install QT 4.8
 For Mac:
