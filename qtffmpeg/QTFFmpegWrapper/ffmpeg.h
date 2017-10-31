@@ -40,6 +40,7 @@ extern "C" {
 //#include "libavformat/utils.h"
 //#include "libavcodec/opt.h"
 #include "libavutil/rational.h"
+#include "libavutil/imgutils.h"
 //#include "options.h"
 #include "libavutil/avstring.h"
 //#include "libavutil/internal.h"

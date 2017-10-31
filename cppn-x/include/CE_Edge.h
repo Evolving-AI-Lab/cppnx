@@ -167,6 +167,19 @@ public:
     }
 
 
+    QString getBranchQ(){
+    	return util::toQString(branch);
+    }
+
+    QString getIdQ(){
+    	return util::toQString(id);
+    }
+
+    QString getNameQ() const{
+    	return util::toQString(branch + "_" + id);
+    }
+
+
     void flash(bool flashOn){
     	if(flashOn && _flash != 0){
     		_flash = -1*_flash;

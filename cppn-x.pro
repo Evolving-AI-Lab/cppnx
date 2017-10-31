@@ -3,7 +3,7 @@
 ######################################################################
 
 # Add additional information
-VERSION = 1.0
+VERSION = 1.0.1
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 QMAKE_TARGET_COMPANY = EvolvingAI Lab
 QMAKE_TARGET_PRODUCT = CPPN-X

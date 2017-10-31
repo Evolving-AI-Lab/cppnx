@@ -1,5 +1,5 @@
 This is the cppn-x implementation of the Evolving Artificial Intelligence Laboratory of the University of Wyoming.
-Current version: 1.0
+Current version: 1.0.1
 
 Version: 0.1
 - First version to uploaded to the git repository.
@@ -134,6 +134,10 @@ Version: 1.0.0
 - Fixed some issues where the program would crash when loading a new cppn after a previous cppn was already loaded.
 - Added an icon for CPPN-X.
 - CPPN-X should now compile under linux based systems.
+
+Version: 1.0.1
+- Fixed the qtffmpeg library. It should now (again) be possible to build CPPN-X with ffmpeg support, so it can generate videos directly.
+- Added an experimental option to create a video for every connection in the network. Only available when CPPN-X is build with ffmpeg support.
 
 Known issues:
 - Undoing or redoing a 'reset all' rapidly selects all nodes that were changed.

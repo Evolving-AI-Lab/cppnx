@@ -21,6 +21,8 @@ THIS SOFTWARE IS PROVIDED BY COPYRIGHT HOLDERS ``AS IS'' AND ANY EXPRESS OR IMPL
 #include <QFile>
 #include <QImage>
 
+// Used to fix a bug in the headers that ffmpeg includes
+#include <math.h>
 #include "ffmpeg.h"
 
 class QVideoEncoder
@@ -29,12 +31,14 @@ class QVideoEncoder
       unsigned Width,Height;
       unsigned Bitrate;
       unsigned Gop;
+	  unsigned frameId;
       bool ok;
 
       // FFmpeg stuff
       ffmpeg::AVDictionary *options;
       ffmpeg::AVFormatContext *pFormatCtx;
       ffmpeg::AVOutputFormat *pOutputFormat;
+	  ffmpeg::AVCodecParameters *pCodecPar;
       ffmpeg::AVCodecContext *pCodecCtx;
       ffmpeg::AVStream *pVideoStream;
       ffmpeg::AVCodec *pCodec;
@@ -71,6 +75,7 @@ class QVideoEncoder
       bool convertImage_sws(const QImage &img);
 
       virtual int encodeImage_p(const QImage &,bool custompts=false,unsigned pts=0);
+    int receiveAndWrite_p();
 
 
    public:

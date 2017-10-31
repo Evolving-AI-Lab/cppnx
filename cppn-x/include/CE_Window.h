@@ -136,6 +136,11 @@ public slots:
     void stopFilm();
 
     /**
+     * Creates a film for every connection in the network.
+     */
+    void filmEveryConnection();
+
+    /**
      * Similar to start film, but always stores images, rather than creating
      * a movie.
      */
@@ -406,6 +411,7 @@ private:
     QAction *_toggleLegendAction;
     QAction *_preferencesAction;
     QAction *_nullModelAction;
+    QAction *_filmEveryConnectionAction;
 
     //Layout objects
     QHBoxLayout *mainLayout;

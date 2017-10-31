@@ -257,6 +257,11 @@ Window::Window(){
             		"export the resulting images"),
             SLOT(exportToImageSeries()));
 
+    _filmEveryConnectionAction = _createAction(tr("Film every connection"),
+            tr("Create a film for every connection"),
+            SLOT(filmEveryConnection()));
+
+
     /***********************************
      ** Add actions to other widgets ***
      ***********************************/
@@ -377,6 +382,9 @@ Window::Window(){
     _experimentalMenu->addAction(_startAnalysisAction);
     _experimentalMenu->addAction(_nullModelAction);
     _experimentalMenu->addAction(_exportToImageSeriesAction);
+#ifdef USE_FFMPEG
+    _experimentalMenu->addAction(_filmEveryConnectionAction);
+#endif
     _experimentalMenu->addAction(cppnWidget->getColorPathAction());
 
     //Menu bar
@@ -1065,11 +1073,55 @@ void Window::saveAs(){
 	actualSave(newFileName);
 }
 
+
+void Window::filmEveryConnection(){
+#ifdef USE_FFMPEG
+	Cppn* cppn = cppnWidget->getCppn();
+	qreal incre=0.05;
+	QString msg = tr("Chose save directory");
+	QString dir = QFileDialog::getExistingDirectory(this, msg);
+	for(size_t i=0; i<cppn->getNrOfEdges(); ++i){
+	//for(size_t i=0; i<1; ++i){
+		Edge* edge = cppn->getEdge(i);
+		QVideoEncoder encoder;
+		QString filepath = dir + "/" + "edge" + edge->getNameQ() + ".mpg";
+		if(!encoder.createFile(filepath, 256, 256, 262144, 10, 30)){
+			std::cout << "Error while creating file." << std::endl;
+			return;
+		}
+		for(qreal w=edge->getWeight(); w>=-3; w-=incre){
+			edge->setWeight(w, true);
+			QImage img = nodeviewWidget->getFinalNodeView()->getImage()->copy(0,0,256,256);
+			encoder.encodeImage(img);
+		}
+		for(qreal w=-3.0; w<=3.0; w+=incre){
+			edge->setWeight(w, true);
+			QImage img = nodeviewWidget->getFinalNodeView()->getImage()->copy(0,0,256,256);
+			encoder.encodeImage(img);
+		}
+		for(qreal w=3.0; w>=edge->getOriginalWeight(); w-=incre){
+			edge->setWeight(w, true);
+			QImage img = nodeviewWidget->getFinalNodeView()->getImage()->copy(0,0,256,256);
+			encoder.encodeImage(img);
+		}
+		if(!encoder.close()){
+			std::cout << "Error while closing the encoder." << std::endl;
+			return;
+		}
+		edge->setWeight(edge->getOriginalWeight(), true);
+	}
+#endif //USE_FFMPEG
+}
+
+
 //Scan and screen capture
 void Window::startFilm(){
     dbg::trace trace("window", DBG_HERE);
     QString msg = tr("Chose save directory");
 	QString newFileName = util::getSupportedFilename(this, msg);
+#ifdef USE_FFMPEG
+	bool success = false;
+#endif //USE_FFMPEG
 	if(newFileName.isEmpty()) return;
 
 	captureDirectory = util::getBase(newFileName);
@@ -1079,16 +1131,18 @@ void Window::startFilm(){
 	nodeViewsToBeCaptured.clear();
 
 	if(this->isMaximized()) this->move(0,0);
-	int width = this->width()+this->width()%2;
-	int height = this->height()+this->height()%2;
+	int width = this->width()-this->width()%16;
+	int height = this->height()-this->height()%16;
 	this->setFixedSize(width, height);
 
 	QDir().mkdir(captureDirectory + "/fullApplication");
 
 #ifdef USE_FFMPEG
 	nodeViewEncoders.clear();
-	encoder.createFile(captureDirectory + "/fullApplication.mpg",this->width(),
-			this->height(),this->width()*this->height()*4,10);
+	success = encoder.createFile(captureDirectory + "/fullApplication.mpg",
+			this->width(),
+			this->height(),this->width()*this->height()*4,10, 30);
+	if(!success) return;
 #endif //USE_FFMPEG
 
 	//Select the final nodeview
@@ -1114,9 +1168,10 @@ void Window::startFilm(){
 
 #ifdef USE_FFMPEG
 			QVideoEncoder* nodeViewEncoder = new QVideoEncoder();
-			nodeViewEncoder->createFile(captureDirectory + "/node" +
+			success = nodeViewEncoder->createFile(captureDirectory + "/node" +
 					util::toQString(nodeViewsToBeCaptured.size()) + ".mpg",
-					256, 256, 262144, 10);
+					256, 256, 262144, 10, 30);
+			if(!success) return;
 			nodeViewEncoders.append(nodeViewEncoder);
 #endif //USE_FFMPEG
 		}
@@ -1158,7 +1213,7 @@ void Window::captureFrame(){
 	pm.save(name);
 
 #ifdef USE_FFMPEG
-	QImage image = test.toImage();
+	QImage image = pm.toImage();
 	image = image.convertToFormat(QImage::Format_RGB32);
 	encoder.encodeImage(image);
 #endif //USE_FFMPEG
@@ -1171,7 +1226,7 @@ void Window::captureFrame(){
 		img.save(name);
 
 #ifdef USE_FFMPEG
-		nodeViewEncoders[i]->encodeImage(nodeViewImage);
+		nodeViewEncoders[i]->encodeImage(img);
 #endif //USE_FFMPEG
 	}
 	frame++;
